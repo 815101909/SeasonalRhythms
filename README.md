@@ -251,4 +251,4 @@ pages/
 ## 联系方式
 
 若有任何问题，请联系：
-- 邮箱: xiao_shi_jie@126.com
+- 邮箱: xiaoxiaovision@foxmail.com
