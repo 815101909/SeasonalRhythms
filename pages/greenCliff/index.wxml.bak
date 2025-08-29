@@ -1,0 +1,625 @@
+<!-- 绿崖时序页面 -->
+<view class="greencliff-container">
+  <!-- 飘落的落叶 -->
+  <view class="leaf leaf-1"></view>
+  <view class="leaf leaf-2"></view>
+  <view class="leaf leaf-3"></view>
+  <view class="leaf leaf-4"></view>
+  <view class="leaf leaf-5"></view>
+  <view class="leaf leaf-6"></view>
+  <view class="leaf leaf-7"></view>
+  <view class="leaf leaf-8"></view>
+  
+  <!-- 页面标题 -->
+  <view class="page-title" wx:if="{{showScrolls}}">
+    <text>一馆一序・时节经纬</text>
+  </view>
+
+  <!-- 展示画轴部分 -->
+  <view class="scrolls-container" wx:if="{{showScrolls}}">
+    <!-- 「晓」城博物馆画轴 -->
+    <view class="scroll-item {{selectedType === 'city' ? 'active' : ''}}" bindtap="onSelectScroll" data-type="city">
+      <view class="scroll-image city-scroll-image">
+        <image src="pic/晓城.jpg" mode="aspectFill"></image>
+      </view>
+      <view class="scroll-info">
+        <view class="scroll-title">{{cityMuseum.title}}</view>
+        <view class="scroll-desc">{{cityMuseum.desc}}</view>
+      </view>
+    </view>
+
+    <!-- 「晓」时博物馆画轴 -->
+    <view class="scroll-item {{selectedType === 'season' ? 'active' : ''}}" bindtap="onSelectScroll" data-type="season">
+      <view class="scroll-image season-scroll-image">
+        <image src="pic/晓时.jpg" mode="aspectFill"></image>
+      </view>
+      <view class="scroll-info">
+        <view class="scroll-title">{{seasonMuseum.title}}</view>
+        <view class="scroll-desc">{{seasonMuseum.desc}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 选择画轴后显示的主内容区域 -->
+  <view class="museum-container" wx:if="{{!showScrolls}}">
+    <!-- 顶部区域包含返回按钮和博物馆标题 -->
+    <view class="top-navigation">
+      <view class="back-btn" bindtap="onBack">
+        <text>返回</text>
+      </view>
+      <view class="museum-banner" wx:if="{{selectedType === 'city'}}">
+        <text>「晓」城博物馆</text>
+        <text wx:if="{{filteredChapter}}" class="filtered-indicator">- {{cityMuseum.chapters.find(chapter => chapter.id === filteredChapter).name}}</text>
+      </view>
+      <view class="museum-banner" wx:if="{{selectedType === 'season'}}">
+        <text>「晓」时博物馆</text>
+      </view>
+      <view class="chapter-controls" wx:if="{{selectedType === 'city'}}">
+        <view wx:if="{{filteredChapter}}" class="reset-filter-btn" bindtap="showAllChapters">
+          <text>显示全部</text>
+        </view>
+        <view class="chapter-select-btn" bindtap="toggleChapterMenu">
+          <text>选择篇章</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 章节选择菜单背景遮罩 -->
+    <view class="chapter-menu-backdrop" bindtap="toggleChapterMenu" wx:if="{{showChapterMenu}}"></view>
+
+    <!-- 章节选择菜单 -->
+    <view class="chapter-menu {{showChapterMenu ? 'show' : ''}}" wx:if="{{selectedType === 'city'}}">
+      <view class="chapter-menu-item" bindtap="selectChapter" data-chapter="concept">
+        <text>概念篇</text>
+      </view>
+      <view class="chapter-menu-item" bindtap="selectChapter" data-chapter="origin">
+        <text>起源篇</text>
+      </view>
+      <view class="chapter-menu-item" bindtap="selectChapter" data-chapter="ancient">
+        <text>古城篇</text>
+      </view>
+      <view class="chapter-menu-item" bindtap="selectChapter" data-chapter="scale">
+        <text>规模篇</text>
+      </view>
+      <view class="chapter-menu-item" bindtap="selectChapter" data-chapter="function">
+        <text>职能篇</text>
+      </view>
+      <view class="chapter-menu-item" bindtap="selectChapter" data-chapter="location">
+        <text>位置篇</text>
+      </view>
+      <view class="chapter-menu-item" bindtap="selectChapter" data-chapter="morphology">
+        <text>形态篇</text>
+      </view>
+      <view class="chapter-menu-item" bindtap="selectChapter" data-chapter="capital">
+        <text>首都篇</text>
+      </view>
+      <view class="chapter-menu-item" bindtap="selectChapter" data-chapter="literature">
+        <text>名著篇</text>
+      </view>
+      <view class="chapter-menu-item" bindtap="selectChapter" data-chapter="ranking">
+        <text>榜单篇</text>
+      </view>
+    </view>
+
+    <!-- 宝盒展示区 -->
+    <view class="treasure-boxes-container {{filteredChapter ? 'filtered' : ''}}">
+      <!-- 寄语使用说明区域 -->
+      <view class="instruction-wrapper" style="grid-column: span 2;" wx:if="{{!filteredChapter}}">
+        <view class="instruction-card">
+          <view class="instruction-title">欢迎来到「晓」城博物馆</view>
+          <view class="instruction-content">这里珍藏城市的年轮，陈列岁月的故事。点击每张卡片，背面即有宝藏哦～</view>
+          <view class="instruction-hint">如果🌳数量不够，可以去其他页面参与答题哦～</view>
+        </view>
+      </view>
+      
+      <!-- 概念篇 -->
+      <view class="treasure-box-wrapper" wx:if="{{!filteredChapter || filteredChapter === 'concept'}}">
+        <view class="flip-card {{flippedChapter.id === 'concept' ? 'flipped' : ''}}" bindtap="openCityChapter" data-chapter="concept">
+          <!-- 卡片正面 -->
+          <view class="flip-card-front">
+            <view class="box-lid">
+              <image class="chapter-image" src="pic/概念篇.jpg" mode="aspectFit"></image>
+            </view>
+          </view>
+          
+          <!-- 卡片背面 -->
+          <view class="flip-card-back">
+            <view class="card-back-header">概念篇</view>
+            <view class="detail-list">
+              <view class="detail-item" wx:for="{{flippedChapter.items}}" wx:key="title" wx:if="{{flippedChapter.id === 'concept'}}" bindtap="showItemDetail" data-item="{{item}}" catchtap>
+                <view class="item-title">{{item.title}}</view>
+              </view>
+            </view>
+            <!-- 显示选中的项目详细内容 -->
+            <view class="item-detail-panel" wx:if="{{selectedItem && flippedChapter.id === 'concept'}}">
+              <view class="item-detail-header">
+                <view class="item-detail-title">{{selectedItem.title}}</view>
+                <view class="item-detail-close" bindtap="closeItemDetail" catchtap>×</view>
+              </view>
+              <view class="item-detail-content">
+                <text>{{selectedItem.content}}</text>
+                
+                <!-- 特殊城市形态的可视化表示 -->
+                <view class="visual-representation" wx:if="{{selectedItem.title === '组团型'}}">
+                  <view class="pearl-necklace-visual">
+                    <view class="transit-line"></view>
+                    <view class="urban-pearls">
+                      <view class="urban-pearl pearl-1"></view>
+                      <view class="urban-pearl pearl-2"></view>
+                      <view class="urban-pearl pearl-3"></view>
+                      <view class="urban-pearl pearl-4"></view>
+                      <view class="urban-pearl pearl-5"></view>
+                    </view>
+                    <view class="nature-areas"></view>
+                  </view>
+                  <view class="visual-legend">
+                    <view class="legend-item">
+                      <view class="legend-dot city-dot"></view>
+                      <text class="legend-text">城市组团</text>
+                    </view>
+                    <view class="legend-item">
+                      <view class="legend-dot transit-dot"></view>
+                      <text class="legend-text">交通干线</text>
+                    </view>
+                    <view class="legend-item">
+                      <view class="legend-dot nature-dot"></view>
+                      <text class="legend-text">绿地水域</text>
+                    </view>
+                  </view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 起源篇 -->
+      <view class="treasure-box-wrapper" wx:if="{{!filteredChapter || filteredChapter === 'origin'}}">
+        <view class="flip-card {{flippedChapter.id === 'origin' ? 'flipped' : ''}}" bindtap="openCityChapter" data-chapter="origin">
+          <view class="flip-card-front">
+            <view class="box-lid">
+              <image class="chapter-image" src="pic/起源篇.jpg" mode="aspectFit"></image>
+            </view>
+          </view>
+          <!-- 背面内容 -->
+          <view class="flip-card-back">
+            <view class="card-back-header">起源篇</view>
+            <view class="detail-list">
+              <view class="detail-item" wx:for="{{flippedChapter.items}}" wx:key="title" wx:if="{{flippedChapter.id === 'origin'}}" bindtap="showItemDetail" data-item="{{item}}" catchtap>
+                <view class="item-title">{{item.title}}</view>
+              </view>
+            </view>
+            <view class="item-detail-panel" wx:if="{{selectedItem && flippedChapter.id === 'origin'}}">
+              <view class="item-detail-header">
+                <view class="item-detail-title">{{selectedItem.title}}</view>
+                <view class="item-detail-close" bindtap="closeItemDetail" catchtap>×</view>
+              </view>
+              <view class="item-detail-content">
+                <text>{{selectedItem.content}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 古城篇 -->
+      <view class="treasure-box-wrapper" wx:if="{{!filteredChapter || filteredChapter === 'ancient'}}">
+        <view class="flip-card {{flippedChapter.id === 'ancient' ? 'flipped' : ''}}" bindtap="openCityChapter" data-chapter="ancient">
+          <view class="flip-card-front">
+            <view class="box-lid">
+              <image class="chapter-image" src="pic/古城篇.jpg" mode="aspectFit"></image>
+            </view>
+          </view>
+          <!-- 背面内容 -->
+          <view class="flip-card-back">
+            <view class="card-back-header">古城篇</view>
+            <view class="detail-list">
+              <view class="detail-item" wx:for="{{flippedChapter.items}}" wx:key="title" wx:if="{{flippedChapter.id === 'ancient'}}" bindtap="showItemDetail" data-item="{{item}}" catchtap>
+                <view class="item-title">{{item.title}}</view>
+              </view>
+            </view>
+            <view class="item-detail-panel" wx:if="{{selectedItem && flippedChapter.id === 'ancient'}}">
+              <view class="item-detail-header">
+                <view class="item-detail-title">{{selectedItem.title}}</view>
+                <view class="item-detail-close" bindtap="closeItemDetail" catchtap>×</view>
+              </view>
+              <view class="item-detail-content">
+                <text>{{selectedItem.content}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 规模篇 -->
+      <view class="treasure-box-wrapper" wx:if="{{!filteredChapter || filteredChapter === 'scale'}}">
+        <view class="flip-card {{flippedChapter.id === 'scale' ? 'flipped' : ''}}" bindtap="openCityChapter" data-chapter="scale">
+          <view class="flip-card-front">
+            <view class="box-lid">
+              <image class="chapter-image" src="pic/规模篇.jpg" mode="aspectFit"></image>
+            </view>
+          </view>
+          <!-- 背面内容 -->
+          <view class="flip-card-back">
+            <view class="card-back-header">规模篇</view>
+            <view class="detail-list">
+              <view class="detail-item" wx:for="{{flippedChapter.items}}" wx:key="title" wx:if="{{flippedChapter.id === 'scale'}}" bindtap="showItemDetail" data-item="{{item}}" catchtap>
+                <view class="item-title">{{item.title}}</view>
+              </view>
+            </view>
+            <view class="item-detail-panel" wx:if="{{selectedItem && flippedChapter.id === 'scale'}}">
+              <view class="item-detail-header">
+                <view class="item-detail-title">{{selectedItem.title}}</view>
+                <view class="item-detail-close" bindtap="closeItemDetail" catchtap>×</view>
+              </view>
+              <view class="item-detail-content">
+                <text>{{selectedItem.content}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 职能篇 -->
+      <view class="treasure-box-wrapper" wx:if="{{!filteredChapter || filteredChapter === 'function'}}">
+        <view class="flip-card {{flippedChapter.id === 'function' ? 'flipped' : ''}}" bindtap="openCityChapter" data-chapter="function">
+          <view class="flip-card-front">
+            <view class="box-lid">
+              <image class="chapter-image" src="pic/职能篇.jpg" mode="aspectFit"></image>
+            </view>
+          </view>
+          <!-- 背面内容 -->
+          <view class="flip-card-back">
+            <view class="card-back-header">职能篇</view>
+            <view class="detail-list">
+              <view class="detail-item" wx:for="{{flippedChapter.items}}" wx:key="title" bindtap="showItemDetail" data-item="{{item}}">
+                <view class="item-title">{{item.title}}</view>
+              </view>
+            </view>
+            <view class="item-detail-panel" wx:if="{{selectedItem}}">
+              <view class="item-detail-header">
+                <view class="item-detail-title">{{selectedItem.title}}</view>
+                <view class="item-detail-close" bindtap="closeItemDetail">×</view>
+              </view>
+              <view class="item-detail-content">
+                <text>{{selectedItem.content}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 位置篇 -->
+      <view class="treasure-box-wrapper" wx:if="{{!filteredChapter || filteredChapter === 'location'}}">
+        <view class="flip-card {{flippedChapter.id === 'location' ? 'flipped' : ''}}" bindtap="openCityChapter" data-chapter="location">
+          <view class="flip-card-front">
+            <view class="box-lid">
+              <image class="chapter-image" src="pic/位置篇.jpg" mode="aspectFit"></image>
+            </view>
+          </view>
+          <!-- 背面内容 -->
+          <view class="flip-card-back">
+            <view class="card-back-header">位置篇</view>
+            <view class="detail-list">
+              <view class="detail-item" wx:for="{{flippedChapter.items}}" wx:key="title" bindtap="showItemDetail" data-item="{{item}}">
+                <view class="item-title">{{item.title}}</view>
+              </view>
+            </view>
+            <view class="item-detail-panel" wx:if="{{selectedItem}}">
+              <view class="item-detail-header">
+                <view class="item-detail-title">{{selectedItem.title}}</view>
+                <view class="item-detail-close" bindtap="closeItemDetail">×</view>
+              </view>
+              <view class="item-detail-content">
+                <text>{{selectedItem.content}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 形态篇 -->
+      <view class="treasure-box-wrapper" wx:if="{{!filteredChapter || filteredChapter === 'morphology'}}">
+        <view class="flip-card {{flippedChapter.id === 'morphology' ? 'flipped' : ''}}" bindtap="openCityChapter" data-chapter="morphology">
+          <view class="flip-card-front">
+            <view class="box-lid">
+              <image class="chapter-image" src="pic/形态篇.jpg" mode="aspectFit"></image>
+            </view>
+          </view>
+          <!-- 背面内容 -->
+          <view class="flip-card-back">
+            <view class="card-back-header">形态篇</view>
+            <view class="detail-list">
+              <view class="detail-item" wx:for="{{flippedChapter.items}}" wx:key="title" bindtap="showItemDetail" data-item="{{item}}">
+                <view class="item-title">{{item.title}}</view>
+              </view>
+            </view>
+            <view class="item-detail-panel" wx:if="{{selectedItem}}">
+              <view class="item-detail-header">
+                <view class="item-detail-title">{{selectedItem.title}}</view>
+                <view class="item-detail-close" bindtap="closeItemDetail">×</view>
+              </view>
+              <view class="item-detail-content">
+                <text>{{selectedItem.content}}</text>
+                
+                <!-- 特殊城市形态的可视化表示 -->
+                <view class="visual-representation" wx:if="{{selectedItem.title === '组团型'}}">
+                  <view class="pearl-necklace-visual">
+                    <view class="transit-line"></view>
+                    <view class="urban-pearls">
+                      <view class="urban-pearl pearl-1"></view>
+                      <view class="urban-pearl pearl-2"></view>
+                      <view class="urban-pearl pearl-3"></view>
+                      <view class="urban-pearl pearl-4"></view>
+                      <view class="urban-pearl pearl-5"></view>
+                    </view>
+                    <view class="nature-areas"></view>
+                  </view>
+                  <view class="visual-legend">
+                    <view class="legend-item">
+                      <view class="legend-dot city-dot"></view>
+                      <text class="legend-text">城市组团</text>
+                    </view>
+                    <view class="legend-item">
+                      <view class="legend-dot transit-dot"></view>
+                      <text class="legend-text">交通干线</text>
+                    </view>
+                    <view class="legend-item">
+                      <view class="legend-dot nature-dot"></view>
+                      <text class="legend-text">绿地水域</text>
+                    </view>
+                  </view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 首都篇 -->
+      <view class="treasure-box-wrapper" wx:if="{{!filteredChapter || filteredChapter === 'capital'}}">
+        <view class="flip-card {{flippedChapter.id === 'capital' ? 'flipped' : ''}}" bindtap="openCityChapter" data-chapter="capital">
+          <view class="flip-card-front">
+            <view class="box-lid">
+              <image class="chapter-image" src="pic/首都篇.jpg" mode="aspectFit"></image>
+            </view>
+          </view>
+          <!-- 背面内容 -->
+          <view class="flip-card-back">
+            <view class="card-back-header">首都篇</view>
+            <view class="detail-list">
+              <view class="detail-item" wx:for="{{flippedChapter.items}}" wx:key="title" bindtap="showItemDetail" data-item="{{item}}">
+                <view class="item-title">{{item.title}}</view>
+              </view>
+            </view>
+            <view class="item-detail-panel" wx:if="{{selectedItem}}">
+              <view class="item-detail-header">
+                <view class="item-detail-title">{{selectedItem.title}}</view>
+                <view class="item-detail-close" bindtap="closeItemDetail">×</view>
+              </view>
+              <view class="item-detail-content">
+                <text>{{selectedItem.content}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 名著篇 -->
+      <view class="treasure-box-wrapper" wx:if="{{!filteredChapter || filteredChapter === 'literature'}}">
+        <view class="flip-card {{flippedChapter.id === 'literature' ? 'flipped' : ''}}" bindtap="openCityChapter" data-chapter="literature">
+          <view class="flip-card-front">
+            <view class="box-lid">
+              <image class="chapter-image" src="pic/名著篇.jpg" mode="aspectFit"></image>
+            </view>
+          </view>
+          <!-- 背面内容 -->
+          <view class="flip-card-back">
+            <view class="card-back-header">名著篇</view>
+            <view class="detail-list">
+              <view class="detail-item" wx:for="{{flippedChapter.items}}" wx:key="title" bindtap="showItemDetail" data-item="{{item}}">
+                <view class="item-title">{{item.title}}</view>
+              </view>
+            </view>
+            <view class="item-detail-panel" wx:if="{{selectedItem}}">
+              <view class="item-detail-header">
+                <view class="item-detail-title">{{selectedItem.title}}</view>
+                <view class="item-detail-close" bindtap="closeItemDetail">×</view>
+              </view>
+              <view class="item-detail-content">
+                <text>{{selectedItem.content}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 榜单篇 -->
+      <view class="treasure-box-wrapper" wx:if="{{!filteredChapter || filteredChapter === 'ranking'}}">
+        <view class="flip-card {{flippedChapter.id === 'ranking' ? 'flipped' : ''}}" bindtap="openCityChapter" data-chapter="ranking">
+          <view class="flip-card-front">
+            <view class="box-lid">
+              <image class="chapter-image" src="pic/榜单篇.jpg" mode="aspectFit"></image>
+            </view>
+          </view>
+          <!-- 背面内容 -->
+          <view class="flip-card-back">
+            <view class="card-back-header">榜单篇</view>
+            <view class="detail-list">
+              <view class="detail-item" wx:for="{{flippedChapter.items}}" wx:key="title" bindtap="showItemDetail" data-item="{{item}}">
+                <view class="item-title">{{item.title}}</view>
+              </view>
+            </view>
+            <view class="item-detail-panel" wx:if="{{selectedItem}}">
+              <view class="item-detail-header">
+                <view class="item-detail-title">{{selectedItem.title}}</view>
+                <view class="item-detail-close" bindtap="closeItemDetail">×</view>
+              </view>
+              <view class="item-detail-content">
+                <text>{{selectedItem.content}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 晓时博物馆内容 -->
+  <view class="museum-content {{contentAnimation ? 'content-show slide-in' : ''}}" wx:if="{{!showScrolls && selectedType === 'season'}}">
+    <!-- 重中之重板块：中华瑰宝——24节气文化 -->
+    <view class="treasure-section">
+      <view class="treasure-title">中华瑰宝 — 二十四节气文化</view>
+      <view class="treasure-subtitle">非物质文化遗产</view>
+      
+      <!-- 节气轮盘 -->
+      <view class="solar-terms-wheel">
+        <!-- Direction markers -->
+        <view class="direction-marker north">子</view>
+        <view class="direction-marker east">卯</view>
+        <view class="direction-marker south">午</view>
+        <view class="direction-marker west">酉</view>
+        
+        <!-- 节气轮盘图片 -->
+        <image class="wheel-image" src="../../images/solar-terms-wheel.png" mode="aspectFit"></image>
+        
+        <!-- 可点击的节气点 -->
+        <view class="wheel-interactive">
+          <!-- 春季节气 -->
+          <view class="term-group spring-terms">
+            <view class="term-point {{seasonMuseum.compass.selectedTerm === item.name ? 'selected' : ''}}" wx:for="{{seasonMuseum.springTerms}}" wx:key="name" 
+                 data-term="{{item.name}}" bindtap="onSelectTerm" 
+                 style="top: {{item.position.top}}; left: {{item.position.left}};">
+              <view class="term-icon">{{item.icon}}</view>
+            </view>
+          </view>
+          
+          <!-- 夏季节气 -->
+          <view class="term-group summer-terms">
+            <!-- 夏季节气点 -->
+            <view class="term-point {{seasonMuseum.compass.selectedTerm === item.name ? 'selected' : ''}}" wx:for="{{seasonMuseum.summerTerms}}" wx:key="name" 
+                 data-term="{{item.name}}" bindtap="onSelectTerm" 
+                 style="top: {{item.position.top}}; left: {{item.position.left}};">
+              <view class="term-icon">{{item.icon}}</view>
+            </view>
+          </view>
+          
+          <!-- 秋季节气 -->
+          <view class="term-group autumn-terms">
+            <!-- 秋季节气点 -->
+            <view class="term-point {{seasonMuseum.compass.selectedTerm === item.name ? 'selected' : ''}}" wx:for="{{seasonMuseum.autumnTerms}}" wx:key="name" 
+                 data-term="{{item.name}}" bindtap="onSelectTerm" 
+                 style="top: {{item.position.top}}; left: {{item.position.left}};">
+              <view class="term-icon">{{item.icon}}</view>
+            </view>
+          </view>
+          
+          <!-- 冬季节气 -->
+          <view class="term-group winter-terms">
+            <!-- 冬季节气点 -->
+            <view class="term-point {{seasonMuseum.compass.selectedTerm === item.name ? 'selected' : ''}}" wx:for="{{seasonMuseum.winterTerms}}" wx:key="name" 
+                 data-term="{{item.name}}" bindtap="onSelectTerm" 
+                 style="top: {{item.position.top}}; left: {{item.position.left}};">
+              <view class="term-icon">{{item.icon}}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 节气详情 -->
+      <view wx:if="{{selectedTerm}}" class="term-detail {{selectedTerm.season}}">
+        <view class="term-name" data-icon="{{selectedTerm.icon}}">{{selectedTerm.name}}</view>
+        <view class="term-date">{{selectedTerm.date}}</view>
+        <view class="term-description">{{selectedTerm.description}}</view>
+        <view class="term-culture">{{selectedTerm.culture}}</view>
+      </view>
+    </view>
+
+    <!-- 时节博物馆其他内容 -->
+    <scroll-view scroll-y class="museum-sections">
+      <!-- 1. 自然节律与四季更迭 -->
+      <view class="museum-section">
+        <view class="section-header">
+          <view class="section-number">01</view>
+          <view class="section-title">自然节律与四季更迭</view>
+        </view>
+        <view class="section-content">
+          <view class="content-card">
+            <view class="card-title">天文与气候</view>
+            <view class="card-content">
+              <text>地球绕太阳公转和自转形成了昼夜与四季的更替。这种天体运动的规律决定了全球不同地区阳光照射角度和时长的差异，进而影响气候特征的形成。</text>
+            </view>
+          </view>
+          <view class="content-card">
+            <view class="card-title">气候类型划分</view>
+            <view class="card-content">
+              <text>全球气候类型多样，从常年酷热的热带雨林到终年寒冷的极地气候。科普耶恩气候分类法将世界气候划分为热带、温带、寒带等主要类型，并进一步细分为多种亚型。</text>
+            </view>
+          </view>
+          <view class="content-card">
+            <view class="card-title">全球四季呈现</view>
+            <view class="card-content">
+              <text>世界各地的四季呈现出丰富多彩的景观：北欧的极光季节、日本的樱花季、加拿大的枫叶季、澳大利亚的珊瑚产卵季等，展现出大自然的神奇魅力。</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 2. 人类与时间的互动 -->
+      <view class="museum-section">
+        <view class="section-header">
+          <view class="section-number">02</view>
+          <view class="section-title">人类与时间的互动</view>
+        </view>
+        <view class="section-content">
+          <view class="content-card">
+            <view class="card-title">古代计时工具</view>
+            <view class="card-content">
+              <text>古代人类创造了多种计时工具：日晷用太阳投影指示时间；沙漏以流沙计时；水钟（刻漏）使用水流控制时间流逝；机械钟的发明则彻底改变了人类的时间观念。</text>
+            </view>
+          </view>
+          <view class="content-card">
+            <view class="card-title">不同历法</view>
+            <view class="card-content">
+              <text>全球存在多种历法系统：阳历以太阳运行为基础；阴历依据月亮盈亏周期；阴阳合历如中国农历结合了两者特点；此外还有玛雅历、伊斯兰历等独特历法，反映了不同文明对时间的理解。</text>
+            </view>
+          </view>
+          <view class="content-card">
+            <view class="card-title">节日与庆典</view>
+            <view class="card-content">
+              <text>人类创造了丰富的节日来标记时间：春节、复活节、感恩节等与季节变化相关；收获节、丰收节则庆祝农业周期的完成；冬至、夏至等天文节日则源自人类对宇宙规律的观察。</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 3. 艺术中的时间表达 -->
+      <view class="museum-section">
+        <view class="section-header">
+          <view class="section-number">03</view>
+          <view class="section-title">艺术中的时间表达</view>
+        </view>
+        <view class="section-content">
+          <view class="content-card">
+            <view class="card-title">绘画</view>
+            <view class="card-content">
+              <text>从莫奈的《干草堆》系列展现不同时间的光影变化，到梵高的《星月夜》表达时间流动的内在感受，再到中国传统山水画中的"四时景色"，艺术家们用画笔捕捉时间的流转与季节的更迭。</text>
+            </view>
+          </view>
+          <view class="content-card">
+            <view class="card-title">文学</view>
+            <view class="card-content">
+              <text>诗歌中的季节意象丰富多彩：如杜甫《春夜喜雨》中"好雨知时节，当春乃发生"；孟浩然《春晓》中"春眠不觉晓，处处闻啼鸟"；以及莎士比亚十四行诗中对时间流逝的深刻思考。</text>
+            </view>
+          </view>
+          <view class="content-card">
+            <view class="card-title">音乐</view>
+            <view class="card-content">
+              <text>音乐以时间为载体表达情感：维瓦尔第的《四季》小提琴协奏曲生动描绘了春夏秋冬的特点；德彪西的《月光》捕捉了月夜的静谧；柴可夫斯基的《四季》钢琴曲集则描绘了俄罗斯一年中的景象与情感。</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</view> 

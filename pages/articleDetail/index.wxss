@@ -1,0 +1,173 @@
+/* 文章详情页样式 */
+.article-container {
+  padding: 30rpx;
+  min-height: 100vh;
+  background-color: #e8f5e9; /* 与主页背景颜色一致 */
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+  position: relative;
+}
+
+/* 加载中状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+}
+
+.loading-icon {
+  width: 60rpx;
+  height: 60rpx;
+  border: 6rpx solid rgba(163, 190, 140, 0.3);
+  border-top: 6rpx solid rgba(163, 190, 140, 0.9);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #666;
+  margin-top: 20rpx;
+}
+
+/* 顶部导航 */
+.article-nav {
+  position: fixed;
+  top: 30rpx;
+  left: 30rpx;
+  right: 30rpx;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* 返回按钮 */
+.back-btn {
+  background-color: rgba(163, 190, 140, 0.8); /* 背景半透明 */
+  color: white;
+  padding: 10rpx 30rpx;
+  border-radius: 30rpx;
+  font-size: 28rpx;
+  box-shadow: 0 2rpx 5rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 文章内容 */
+.article-content {
+  padding-top: 80rpx; /* 为顶部导航留出空间 */
+  padding-bottom: 50rpx;
+}
+
+/* 文章标题 */
+.article-title {
+  font-size: 44rpx;
+  font-weight: bold;
+  color: #2e7d32;
+  text-align: center;
+  margin: 40rpx 0 60rpx;
+  text-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.1);
+}
+
+.article-title:after {
+  content: "";
+  display: block;
+  width: 120rpx;
+  height: 6rpx;
+  background: linear-gradient(to right, #88c0d0, #a3be8c);
+  margin: 20rpx auto;
+  border-radius: 3rpx;
+}
+
+/* API内容区域 */
+.api-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 40rpx;
+}
+
+/* 内容项容器 */
+.content-item {
+  margin-bottom: 40rpx;
+  width: 690rpx;
+}
+
+/* A4纸图片容器 */
+.image-container {
+  width: 690rpx;
+  margin-bottom: 30rpx;
+  background-color: white;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.2);
+  border-radius: 8rpx;
+  overflow: hidden;
+  /* 添加纸张质感 */
+  position: relative;
+}
+
+.image-container:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%);
+  pointer-events: none;
+}
+
+/* A4纸图片 */
+.a4-image {
+  width: 100%;
+  display: block;
+}
+
+/* 图片占位覆盖层 */
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+}
+
+.placeholder-text {
+  font-size: 28rpx;
+  color: #777;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 10rpx 20rpx;
+  border-radius: 10rpx;
+}
+
+/* 无内容提示 */
+.no-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400rpx;
+  width: 100%;
+}
+
+.no-content-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 底部装饰 */
+.article-footer {
+  text-align: center;
+  margin-top: 60rpx;
+  color: #a3be8c;
+  font-size: 24rpx;
+  opacity: 0.8;
+} 

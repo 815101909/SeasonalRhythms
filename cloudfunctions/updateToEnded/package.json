@@ -1,0 +1,14 @@
+{
+  "name": "updateToEnded",
+  "version": "1.0.0",
+  "description": "更新PK状态为已结束",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+} 

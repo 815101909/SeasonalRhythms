@@ -1,0 +1,1055 @@
+/* 绿崖时序页面样式 */
+
+/* 全屏加载界面样式 */
+.loading-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  overflow: hidden;
+}
+
+.loading-content {
+  text-align: center;
+  color: #2e7d32;
+}
+
+.loading-animation {
+  margin-bottom: 60rpx;
+}
+
+.loading-emoji {
+  font-size: 160rpx;
+  animation: bounce 1.5s ease-in-out infinite;
+  filter: drop-shadow(0 10rpx 20rpx rgba(46, 125, 50, 0.3));
+}
+
+.loading-text {
+  font-size: 36rpx;
+  font-weight: 500;
+  color: #388e3c;
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+  opacity: 0.9;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  40% {
+    transform: translateY(-30rpx) scale(1.1);
+  }
+  60% {
+    transform: translateY(-15rpx) scale(1.05);
+  }
+}
+
+.greencliff-container {
+  padding: 20rpx;
+  background-color: #e8f5e9; /* 浅绿色背景 */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+  position: relative;
+  width: 100vw;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* 落叶动画效果 */
+.leaf {
+  position: absolute;
+  top: -60rpx;
+  z-index: 1;
+  opacity: 0.8;
+}
+
+.leaf::before {
+  content: "🍂";
+  font-size: 32rpx;
+  display: block;
+  transform-origin: center;
+}
+
+.leaf-1::before { content: "🍂"; }
+.leaf-2::before { content: "🍁"; }
+.leaf-3::before { content: "🍃"; }
+.leaf-4::before { content: "🍂"; }
+.leaf-5::before { content: "🍁"; }
+.leaf-6::before { content: "🍃"; }
+.leaf-7::before { content: "🍂"; }
+.leaf-8::before { content: "🍁"; }
+
+.leaf-1 {
+  left: 10%;
+  animation: falling 15s linear infinite;
+  animation-delay: 0s;
+}
+
+.leaf-2 {
+  left: 25%;
+  animation: falling 18s linear infinite;
+  animation-delay: 1.5s;
+}
+
+.leaf-3 {
+  left: 40%;
+  animation: falling 12s linear infinite;
+  animation-delay: 3s;
+}
+
+.leaf-4 {
+  left: 55%;
+  animation: falling 16s linear infinite;
+  animation-delay: 4.5s;
+}
+
+.leaf-5 {
+  left: 65%;
+  animation: falling 14s linear infinite;
+  animation-delay: 6s;
+}
+
+.leaf-6 {
+  left: 75%;
+  animation: falling 19s linear infinite;
+  animation-delay: 7.5s;
+}
+
+.leaf-7 {
+  left: 85%;
+  animation: falling 13s linear infinite;
+  animation-delay: 9s;
+}
+
+.leaf-8 {
+  left: 92%;
+  animation: falling 17s linear infinite;
+  animation-delay: 10.5s;
+}
+
+@keyframes falling {
+  0% {
+    top: -60rpx;
+    transform: translateX(0) rotate(0deg);
+  }
+  100% {
+    top: 105vh;
+    transform: translateX(100rpx) rotate(360deg);
+  }
+}
+
+/* 全局字体类 */
+.font-serif {
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+}
+
+.font-sans {
+  font-family: "Source Han Sans", "思源黑体", "Noto Sans SC", sans-serif;
+}
+
+/* 页面标题 */
+.page-title {
+  text-align: center;
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #2c5d47;
+  margin: 40rpx 0 30rpx;
+  text-shadow: 0 2rpx 4rpx rgba(255, 255, 255, 0.8);
+  font-family: "Source Han Serif", "思源宋体", serif;
+}
+
+.page-title:after {
+  content: "";
+  display: block;
+  width: 120rpx;
+  height: 6rpx;
+  background: linear-gradient(to right, #88c0d0, #a3be8c);
+  margin: 16rpx auto;
+  border-radius: 3rpx;
+}
+
+/* 画轴容器 */
+.scrolls-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0; /* 减少上下内边距 */
+  margin-top: 10rpx; /* 从15rpx减少到10rpx */
+  z-index: 2; /* 确保在动态背景之上 */
+}
+
+/* 两行排列博物馆 */
+.scroll-item {
+  width: 610rpx;
+  height: 480rpx; /* 从500rpx减少到480rpx */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  opacity: 0.9;
+  position: relative;
+  margin-bottom: 100rpx; /* 增加间距从15rpx到40rpx */
+  border-radius: 16rpx;
+  background-color: transparent;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.scroll-item.active {
+  transform: scale(1.02);
+  opacity: 1;
+  box-shadow: 0 8rpx 25rpx rgba(0, 0, 0, 0.15);
+}
+
+.scroll-image {
+  width: 100%;
+  height: calc(100% - 50rpx); /* 减去下方信息栏的空间 */
+  overflow: hidden;
+  position: relative;
+}
+
+.scroll-image image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.city-scroll-image:after,
+.season-scroll-image:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80rpx;
+  background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+}
+
+/* 标题和描述信息容器 */
+.scroll-info {
+  width: 100%;
+  padding: 15rpx 30rpx;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(250, 245, 220, 0.95); /* 调深一点的米黄色，增加不透明度 */
+  position: absolute;
+  bottom: 10rpx; /* 从底部向上移动，让顶部只超出图片10rpx */
+  left: 0;
+  z-index: 3;
+  backdrop-filter: blur(5rpx);
+  box-sizing: border-box;
+}
+
+/* 滚动标题 */
+.scroll-title {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #2c5d47;
+  margin-bottom: 6rpx;
+  font-family: "Source Han Serif", "思源宋体", serif;
+}
+
+/* 描述文字 */
+.scroll-desc {
+  font-size: 24rpx;
+  color: #666;
+  font-family: "Source Han Serif", "思源宋体", serif;
+}
+
+
+
+/* 主要内容区域 - 选择画轴后显示 */
+.museum-container {
+  width: 100vw;
+  min-height: 100vh;
+  background-color: #e8f5e9;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* 顶部导航 */
+.top-navigation {
+  width: 100%;
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: rgba(232, 245, 233, 0.95); /* 保持浅绿色背景 */
+  padding: 20rpx 30rpx;
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  backdrop-filter: blur(5rpx);
+  font-family: "Source Han Serif", "思源宋体", serif;
+  border-bottom: 1rpx solid rgba(163, 190, 140, 0.3);
+}
+
+.back-btn {
+  background-color: rgba(163, 190, 140, 0.8); /* 背景半透明 */
+  color: white;
+  padding: 10rpx 30rpx;
+  border-radius: 30rpx;
+  font-size: 28rpx;
+  box-shadow: 0 2rpx 5rpx rgba(0, 0, 0, 0.1);
+}
+
+.chapter-select-btn {
+  margin-right: 10rpx; /* 向右移动10rpx确保不溢出 */
+}
+
+.museum-banner {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #2e7d32;
+  text-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.1);
+  font-family: "Source Han Serif", "思源宋体", serif;
+}
+
+
+
+/* 章节选择菜单 */
+.chapter-menu {
+  width: 300rpx;
+  background-color: rgba(232, 245, 233, 0.95); /* 恢复为浅绿色背景 */
+  border-radius: 10rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
+  position: fixed;
+  top: 110rpx;
+  right: 30rpx;
+  z-index: 11;
+  opacity: 0;
+  transform: translateY(-20rpx);
+  transition: all 0.3s ease;
+  pointer-events: none;
+  backdrop-filter: blur(5rpx);
+}
+
+.chapter-menu.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.chapter-menu-item {
+  padding: 20rpx 30rpx;
+  border-bottom: 1rpx solid rgba(238, 238, 238, 0.6);
+  font-size: 28rpx;
+}
+
+.chapter-menu-item:last-child {
+  border-bottom: none;
+}
+
+/* 城市博物馆内容 */
+.city-museum-content {
+  width: 100%;
+  padding: 35rpx 20rpx 30rpx; /* 从45rpx减少到35rpx */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #e8f5e9; /* 恢复为浅绿色背景 */
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* 时节博物馆内容 */
+.season-museum-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0rpx 20rpx 15rpx; /* 从5rpx减少到0rpx */
+  background-color: #e8f5e9; /* 恢复为浅绿色背景 */
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* 欢迎提示卡片 */
+.instruction-card {
+  background-color: rgba(232, 245, 233, 0.9); /* 恢复为浅绿色背景 */
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+/* 欢迎提示标题 */
+.instruction-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #2e7d32;
+  margin-bottom: 12rpx;
+  font-family: "Source Han Serif", "思源宋体", serif;
+}
+
+/* 欢迎提示内容样式，与标题区分 */
+.instruction-content {
+  font-size: 26rpx;
+  color: #666;
+  font-family: "Source Han Serif", "思源宋体", serif;
+  margin-top: 10rpx;
+}
+
+/* 晓时博物馆欢迎提示卡片 - 再向上平移10rpx */
+.season-museum-content .instruction-card {
+  margin-top: 5rpx; /* 从10rpx减少到5rpx */
+  width: 75%;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 28rpx;
+  box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.08);
+  background: linear-gradient(to bottom, rgba(232, 245, 233, 0.95), rgba(220, 237, 225, 0.9));
+  border: 1px solid rgba(163, 190, 140, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.season-museum-content .instruction-card::before {
+  content: "";
+  position: absolute;
+  width: 200rpx;
+  height: 200rpx;
+  background: radial-gradient(circle, rgba(129, 199, 132, 0.1), transparent 70%);
+  top: -100rpx;
+  right: -100rpx;
+  border-radius: 50%;
+}
+
+.season-museum-content .instruction-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  background: linear-gradient(45deg, #2e7d32, #81c784);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 12rpx;
+  display: inline-block;
+}
+
+.season-museum-content .instruction-content {
+  font-size: 24rpx;
+  color: #555;
+  line-height: 1.3;
+}
+
+.instruction-hint {
+  font-size: 24rpx;
+  color: #888;
+  margin-top: 10rpx;
+}
+
+/* 区域标题 */
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #2e7d32;
+  margin: 20rpx 0;
+  padding-left: 20rpx;
+  border-left: 8rpx solid #4CAF50;
+  line-height: 1.2;
+}
+
+/* 博物馆区域容器 */
+.museum-areas-container {
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.museum-areas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  gap: 30rpx;
+}
+
+.museum-area-card {
+  width: calc(50% - 25rpx);
+  height: 200rpx; /* 从215rpx减少到200rpx */
+  background-color: rgba(232, 245, 233, 0.9);
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.08);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.museum-area-card:active {
+  transform: scale(0.98);
+}
+
+.area-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.area-title {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10rpx 20rpx;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  font-size: 28rpx;
+  text-align: center;
+}
+
+/* 博物馆区域卡片上的解锁状态 */
+.museum-area-card .unlock-status {
+  position: absolute;
+  top: 10rpx;
+  right: 10rpx;
+  font-size: 22rpx;
+  color: #00a2ae; /* 青色 */
+  background-color: rgba(232, 245, 233, 0.9); /* 恢复为浅绿色背景 */
+  padding: 4rpx 12rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(3rpx);
+  z-index: 2;
+}
+
+.museum-area-card .unlock-status.free {
+  color: #4caf50;
+}
+
+/* 章节卡片区域 */
+.chapters-container {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 10rpx 10rpx 0;
+  margin-top: -35rpx; /* 从-27rpx更向上平移 */
+}
+
+/* 章节卡片 */
+.chapter-card {
+  width: 345rpx; 
+  height: 350rpx; /* 从365rpx减少到350rpx */
+  margin-bottom: 15rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.1);
+  perspective: 1000rpx;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.chapter-front {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  backface-visibility: hidden;
+  background-color: rgba(232, 245, 233, 0.9); /* 恢复为浅绿色背景 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  backdrop-filter: blur(3rpx);
+  padding-top: 30rpx;
+  border-radius: 16rpx;
+}
+
+.chapter-image {
+  width: 100%;
+  height: 260rpx; /* 从275rpx减少到260rpx */
+  object-fit: cover;
+  border-radius: 14rpx;
+  overflow: hidden;
+}
+
+.chapter-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: rgba(163, 190, 140, 0.9); /* 使用和返回按钮一样的颜色但稍微透明 */
+  margin: 12rpx 0 0; /* 减少底部边距 */
+  text-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.1);
+}
+
+.unlock-status {
+  font-size: 24rpx;
+  color: #00a2ae; /* 青色 */
+  position: absolute;
+  top: 10rpx;
+  right: 15rpx;
+  background-color: rgba(232, 245, 233, 0.9); /* 恢复为浅绿色背景 */
+  padding: 6rpx 15rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(3rpx);
+  z-index: 2;
+}
+
+.unlock-status.free {
+  color: #4caf50;
+}
+
+/* 新增：已激活状态样式 - 与免费状态保持一致 */
+.unlock-status.activated {
+  color: #4caf50;
+}
+/* 博物馆区域卡片上的解锁状态 */
+.museum-area-card .unlock-status {
+  position: absolute;
+  top: 10rpx;
+  right: 10rpx;
+  font-size: 22rpx;
+  color: #00a2ae;
+  background-color: rgba(232, 245, 233, 0.9);
+  padding: 4rpx 12rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(3rpx);
+  z-index: 2;
+}
+
+.museum-area-card .unlock-status.free {
+  color: #4caf50;
+}
+
+/* 新增：博物馆区域已激活状态样式 - 与免费状态保持一致 */
+.museum-area-card .unlock-status.activated {
+  color: #4caf50;
+}
+/* 解锁提示 */
+.lock-hint {
+  width: 100%;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  backdrop-filter: blur(5rpx);
+}
+
+.lock-icon {
+  font-size: 120rpx;
+  margin-bottom: 30rpx;
+}
+
+.lock-title {
+  font-size: 40rpx;
+  font-weight: bold;
+  margin-bottom: 20rpx;
+}
+
+.lock-message {
+  font-size: 32rpx;
+  text-align: center;
+  margin-bottom: 40rpx;
+}
+
+.unlock-button {
+  background-color: #4caf50;
+  color: white;
+  padding: 20rpx 60rpx;
+  border-radius: 40rpx;
+  font-size: 32rpx;
+}
+
+/* 音频控制器 */
+.audio-controller {
+  position: fixed;
+  bottom: 40rpx;
+  right: 40rpx;
+  width: 80rpx;
+  height: 80rpx;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.2);
+  z-index: 20;
+}
+
+.audio-icon {
+  font-size: 40rpx;
+  color: #2e7d32;
+}
+
+/* 添加诗词轮播区样式 */
+.city-poetry-container {
+  margin: 0rpx 20rpx 15rpx; /* 从下边距减少5rpx */
+  padding: 15rpx;
+  background-color: transparent;
+  border-radius: 15rpx;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.08);
+  width: calc(100% - 40rpx);
+  position: relative;
+  overflow: hidden;
+}
+
+.poetry-bg-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.3;
+  object-fit: cover;
+}
+
+.poetry-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10rpx;
+  color: #333;
+  font-size: 28rpx;
+  font-weight: bold;
+  position: relative;
+  z-index: 1;
+  font-family: "Source Han Serif", "思源宋体", serif;
+}
+
+.poetry-title-decor {
+  height: 2rpx;
+  width: 50rpx;
+  background-color: #a8dfba;
+  margin: 0 15rpx;
+}
+
+.poetry-carousel {
+  height: 180rpx; /* 从200rpx减少到180rpx */
+  width: 100%;
+}
+
+.poetry-swiper {
+  width: 100%;
+}
+
+.poetry-card {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.poetry-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background-color: transparent;
+  border-radius: 12rpx;
+  padding: 15rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  border: 1px solid rgba(163, 190, 140, 0.5);
+  z-index: 1;
+}
+
+.poetry-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5rpx;
+  background: linear-gradient(to right, #a3be8c, #88c0d0);
+  z-index: 2;
+}
+
+.poet-city-row {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6rpx;
+  position: relative;
+  z-index: 2;
+}
+
+.poetry-poet {
+  font-size: 24rpx; /* 减小字体 */
+  color: #2c5d47;
+  font-weight: 600;
+  text-align: left;
+  background-color: transparent;
+  padding: 6rpx 0;
+  position: relative;
+  z-index: 2;
+  font-family: "Source Han Serif", "思源宋体", serif;
+}
+
+.poetry-verse {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 5rpx 0;
+  flex: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.verse-line {
+  font-size: 28rpx; /* 减小字体 */
+  color: #2c5d47;
+  font-weight: 600;
+  width: 100%;
+  text-align: center;
+  margin: 5rpx 0;
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 1);
+  position: relative;
+  z-index: 2;
+  background-color: transparent;
+  padding: 3rpx 0;
+  font-family: "Source Han Serif", "思源宋体", serif;
+}
+
+.poetry-city {
+  font-size: 22rpx; /* 减小字体 */
+  color: #2c5d47;
+  background-color: rgba(232, 245, 233, 0.8);
+  padding: 2rpx 12rpx; /* 减小内边距 */
+  border-radius: 20rpx;
+  text-align: center;
+  border: 1px solid rgba(163, 190, 140, 0.5);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+  position: relative;
+  z-index: 2;
+  font-weight: 600;
+  font-family: "Source Han Serif", "思源宋体", serif;
+}
+
+/* 24节气分区容器 */
+.solar-terms-container {
+  margin: 0rpx auto 20rpx; /* 从5rpx减少到0rpx，底部从30rpx减少到20rpx */
+  width: 95%;
+  background-color: transparent;
+  border-radius: 16rpx;
+  padding: 15rpx; /* 从20rpx减少到15rpx */
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.solar-terms-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  z-index: 1;
+}
+
+/* 节气轮播区标题 */
+.solar-terms-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15rpx;
+  position: relative;
+  z-index: 2;
+}
+
+.solar-terms-title text {
+  font-size: 30rpx;
+  color: #333333;
+  font-weight: bold;
+  margin: 0 15rpx;
+  position: relative;
+  text-shadow: none;
+  font-family: "Source Han Serif", "思源宋体", serif;
+}
+
+.title-decor {
+  height: 1rpx;
+  flex: 1;
+  background: linear-gradient(to right, transparent, #81c784, transparent);
+  position: relative;
+}
+
+.title-decor::before, .title-decor::after {
+  content: "";
+  position: absolute;
+  width: 8rpx;
+  height: 8rpx;
+  background-color: #81c784;
+  border-radius: 50%;
+  top: -3.5rpx;
+}
+
+.title-decor::before {
+  left: 25%;
+}
+
+.title-decor::after {
+  right: 25%;
+}
+
+/* 节气轮播区 */
+.terms-swiper {
+  height: 120rpx;
+  width: 100%;
+}
+
+.term-swiper-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.term-simple {
+  width: 96%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 8rpx 0;
+  border-radius: 45rpx;
+  background: transparent;
+  position: relative;
+  overflow: hidden;
+  z-index: 3;
+  border: none;
+  box-shadow: none;
+}
+
+.term-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin: 5rpx 0;
+}
+
+.term-name {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #2c5d47;
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 1);
+  font-family: "Source Han Serif", "思源宋体", serif;
+}
+
+.term-separator {
+  margin: 0 10rpx;
+  color: #2c5d47;
+  font-size: 18rpx;
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 1);
+  font-family: "Source Han Serif", "思源宋体", serif;
+}
+
+.term-phenology {
+  font-size: 24rpx;
+  color: #2c5d47;
+  display: inline;
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 1);
+  font-family: "Source Han Serif", "思源宋体", serif;
+}
+
+/* 季节按钮区 */
+.season-buttons {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-top: 15rpx;
+  position: relative;
+  z-index: 2;
+}
+
+.season-button {
+  width: 18%;
+  padding: 14rpx 0;
+  border-radius: 30rpx;
+  text-align: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  transform: perspective(800rpx) rotateY(0deg);
+}
+
+.season-button:active {
+  transform: perspective(800rpx) rotateY(10deg) scale(0.95);
+}
+
+.season-button::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(255, 255, 255, 0.2), transparent);
+  pointer-events: none;
+}
+
+.season-button-text {
+  font-size: 24rpx;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: 1;
+  font-family: "Source Han Serif", "思源宋体", serif;
+}
+
+.all-button {
+  background: linear-gradient(45deg, rgba(77, 182, 172, 0.7), rgba(128, 203, 196, 0.7));
+  border-bottom: 3rpx solid rgba(0, 137, 123, 0.5);
+}
+
+.spring-button {
+  background: linear-gradient(45deg, rgba(174, 213, 129, 0.7), rgba(197, 225, 165, 0.7));
+  border-bottom: 3rpx solid rgba(124, 179, 66, 0.5);
+}
+
+.summer-button {
+  background: linear-gradient(45deg, rgba(79, 195, 247, 0.7), rgba(129, 212, 250, 0.7));
+  border-bottom: 3rpx solid rgba(3, 155, 229, 0.5);
+}
+
+.autumn-button {
+  background: linear-gradient(45deg, rgba(255, 183, 77, 0.7), rgba(255, 213, 79, 0.7));
+  border-bottom: 3rpx solid rgba(255, 152, 0, 0.5);
+}
+
+.winter-button {
+  background: linear-gradient(45deg, rgba(121, 134, 203, 0.7), rgba(159, 168, 218, 0.7));
+  border-bottom: 3rpx solid rgba(63, 81, 181, 0.5);
+}

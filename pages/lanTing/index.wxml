@@ -1,0 +1,238 @@
+<!-- lanTing页面 - 知识PK大赛 -->
+<view class="lanting-container">
+  <!-- 页面标题 -->
+  <view class="title-section">
+    <view class="title-row">
+      <view class="main-title">一队一景·时城争锋</view>
+    </view>
+    
+    <!-- 阵营选择区域 -->
+    <view class="faction-selection" wx:if="{{!userFaction}}">
+      <view class="selection-title">选择你的阵营</view>
+      <view class="selection-subtitle">（只有一次选择机会）</view>
+      <view class="faction-options">
+        <view class="faction-option-simple tower" bindtap="selectFaction" data-faction="tower">
+          <text>🏯 楼台烟雨中</text>
+        </view>
+        <view class="faction-option-simple rain" bindtap="selectFaction" data-faction="rain">
+          <text>🌧️ 好雨知时节</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 已选择阵营提示 -->
+    <view class="faction-selected" wx:if="{{userFaction}}">
+      <view class="selected-title">你的阵营</view>
+      <view class="selected-faction">{{userFaction === 'tower' ? '🏯 楼台烟雨中' : '🌧️ 好雨知时节'}}</view>
+    </view>
+    
+    <!-- 擂台通知样式 -->
+    <view class="battle-notice">
+      <view class="notice-header">
+        <view class="notice-title">擂台通知</view>
+      </view>
+      <view class="notice-content">
+        <text class="notice-line">"穿越楼台，感知时节！"</text>
+        <text class="notice-schedule"> 19:30 的阵营知识PK大赛，等你来战</text>
+        <view class="pk-entrance-row">
+          <view class="pk-entrance" bindtap="navigateToPK">阵营PK入口</view>
+          <view class="pk-countdown">{{pkCountdownText}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 阵营展示区域 -->
+  <view class="factions-row">
+    <view class="faction-card tower-faction">
+      <image class="faction-image" src="pics/楼台烟雨中.jpg" mode="aspectFill"></image>
+      <view class="faction-overlay"></view>
+      <view class="faction-info">
+        <view class="faction-name">楼台烟雨中</view>
+        <view class="faction-members">{{towerMemberCount}}人</view>
+      </view>
+    </view>
+    
+    <view class="faction-card rain-faction">
+      <image class="faction-image" src="pics/好雨知时节.jpg" mode="aspectFill"></image>
+      <view class="faction-overlay"></view>
+      <view class="faction-info">
+        <view class="faction-name">好雨知时节</view>
+        <view class="faction-members">{{rainMemberCount}}人</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 训练按钮 -->
+  <view class="join-buttons">
+    <view class="join-button tower-button" bindtap="startTraining" data-faction="tower">
+      城市训练
+    </view>
+    <view class="join-button rain-button" bindtap="startTraining" data-faction="rain">
+      时节训练
+    </view>
+  </view>
+
+  <!-- 排行榜 - 仅在非训练状态显示 -->
+  <view class="leaderboard-section" wx:if="{{currentState === 'home'}}">
+    <view class="leaderboard-header">
+      <view class="leaderboard-title">排行榜</view>
+      <!-- 小树收获展示 -->
+      <view class="tree-counter">
+        <text class="tree-icon">🌳</text>
+        <text class="tree-count">{{lantingTrees}}颗</text>
+        <text class="my-label">我的</text>
+      </view>
+    </view>
+    
+    <!-- 获胜阵营 -->
+    <view class="daily-winner">
+      <view class="winner-header">昨日获胜阵营</view>
+      <view class="winner-content">
+        <view class="winner-faction">{{winnerFaction}}</view>
+        <view class="winner-reward">奖励：2颗🌳/人</view>
+      </view>
+    </view>
+    
+    <!-- 个人奖励前三名 -->
+    <view class="top-winners">
+      <view class="winner-header">个人奖励前三名</view>
+      <view class="winner-list">
+        <view class="winner-item" wx:for="{{topThree}}" wx:key="index">
+          <view class="winner-rank">{{index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}}</view>
+          <view class="winner-info">
+            <view class="winner-name">{{item.name}}</view>
+            <view class="winner-faction-tag">{{item.faction === 'tower' ? '楼台烟雨中' : '好雨知时节'}}</view>
+          </view>
+          <view class="winner-trees">{{item.score}}颗🌳</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 训练区域 -->
+  <view class="training-section" wx:if="{{currentState === 'training'}}">
+    <view class="training-header">
+      <view class="training-title">{{trainingFaction === 'tower' ? '城市知识训练' : '时节知识训练'}}</view>
+      <view class="training-subtitle">为 19:30 的阵营PK做准备</view>
+      <view class="back-btn" bindtap="backToHome">返回</view>
+    </view>
+    
+    <!-- 题目区域 -->
+    <view class="question-container">
+      <view class="question-number">
+        第 {{currentQuestionIndex + 1}}/{{totalQuestions}} 题
+        <text class="question-type">({{questionType === 'single' ? '单选' : questionType === 'multi' ? '多选' : '填空'}})</text>
+      </view>
+      <view class="question-text">{{currentQuestion.content}}</view>
+      
+      <!-- 选项列表 - 单选和多选题显示 -->
+      <view class="options-list" wx:if="{{questionType !== 'fill'}}">
+        <view 
+          wx:for="{{currentQuestion.options}}" 
+          wx:key="index"
+          class="option-item {{questionType === 'multi' ? (selectedOptions[index] ? 'selected' : '') : (selectedOption === index ? 'selected' : '')}}"
+          bindtap="selectOption"
+          data-option-index="{{index}}"
+        >
+          <text class="option-letter">{{optionLetters[index]}}</text>
+          <text class="option-text">{{item}}</text>
+        </view>
+      </view>
+
+      <!-- 填空题输入框 -->
+      <view class="fill-answer-container" wx:if="{{questionType === 'fill'}}">
+        <view 
+          class="fill-blank-item" 
+          wx:for="{{currentQuestion.correctAnswer}}" 
+          wx:key="index"
+        >
+          <text class="blank-number">空{{index + 1}}</text>
+          <input 
+            class="fill-answer-input" 
+            type="text" 
+            placeholder="请输入答案" 
+            value="{{fillAnswers[index]}}"
+            bindinput="onFillAnswerInput"
+            data-index="{{index}}"
+          />
+        </view>
+      </view>
+      
+      <!-- 提交按钮 -->
+      <button 
+        class="submit-btn" 
+        type="primary" 
+        bindtap="submitAnswer"
+        disabled="{{questionType === 'multi' ? Object.keys(selectedOptions).length === 0 : (questionType === 'single' ? selectedOption === null : fillAnswers.length === 0)}}"
+      >
+        提交答案
+      </button>
+    </view>
+    
+    <!-- 训练进度统计 -->
+    <view class="training-stats">
+      <view class="stat-item">
+        <text class="stat-label">答题数:</text>
+        <text class="stat-value">{{answeredQuestions}}/{{totalAllQuestions}}</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-label">正确率:</text>
+        <text class="stat-value">{{correctRate}}%</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 结果展示弹窗 -->
+  <view class="result-modal" wx:if="{{showResult}}">
+    <view class="result-content">
+      <view class="result-title">{{resultData.title}}</view>
+      <view class="result-message">{{resultData.message}}</view>
+      
+      <view class="final-scores" wx:if="{{resultData.scores.length > 0}}">
+        <view class="final-score-item" wx:for="{{resultData.scores}}" wx:key="teamId">
+          <text>{{item.name}}: {{item.score}}题</text>
+        </view>
+      </view>
+      
+      <view class="reward-info" wx:if="{{resultData.reward && !resultData.isTraining}}">
+        <text>恭喜获得 {{resultData.reward}} 颗🌳！</text>
+      </view>
+      
+      <view class="training-tips" wx:if="{{resultData.isTraining}}">
+        <text>记得东八区 19:30 参加阵营PK赢取🌳奖励！</text>
+      </view>
+      
+      <button class="close-result" bindtap="closeResult">确定</button>
+    </view>
+  </view>
+
+  <!-- 答案解释弹窗 -->
+  <view class="explanation-modal" wx:if="{{showExplanationModal}}">
+    <view class="explanation-content">
+      <view class="explanation-header">
+        <view class="explanation-title">{{explanationData.title}}</view>
+      </view>
+      
+      <view class="answer-comparison">
+        <view class="answer-item">
+          <view class="answer-label">你的答案：</view>
+          <view class="answer-value user-answer">{{explanationData.userAnswer}}</view>
+        </view>
+        <view class="answer-item">
+          <view class="answer-label">正确答案：</view>
+          <view class="answer-value correct-answer">{{explanationData.correctAnswer}}</view>
+        </view>
+      </view>
+      
+      <view class="explanation-text">
+        <view class="explanation-label">解释：</view>
+        <view class="explanation-detail">{{explanationData.content}}</view>
+      </view>
+      
+      <view class="explanation-buttons">
+        <button class="explanation-btn" bindtap="confirmExplanation">继续下一题</button>
+      </view>
+    </view>
+  </view>
+</view>

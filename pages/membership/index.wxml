@@ -1,0 +1,54 @@
+<!-- pages/membership/index.wxml -->
+<view class="container">
+  <view class="back-button" bindtap="navigateBack">
+    <image src="/images/back-arrow.svg" class="back-arrow"></image>
+  </view>
+  <!-- 返回按钮已移除 -->
+  
+  <!-- 加载中状态 -->
+  <view class="loading-placeholder" wx:if="{{loading}}">
+    <view class="loading-text">加载中...</view>
+  </view>
+  
+  <!-- 会员内容区域 -->
+  <view class="membership-content" wx:else>
+
+    <!-- 宣传图片区域 -->
+    <view class="image-display-area">
+      <image wx:if="{{imageUrl}}" src="{{imageUrl}}" mode="aspectFit" class="membership-image"></image>
+    </view>
+    
+    <!-- 空白区域 - 占据中间位置 -->
+    <view class="empty-space"></view>
+    
+    <!-- 底部固定区域 -->
+    <view class="bottom-fixed-area">
+      <!-- 会员价格方案 -->
+      <view class="membership-prices">
+        <view class="section-title">会员方案</view>
+        <view class="prices-list">
+          <view 
+            class="price-item {{index === selectedPlan ? 'selected' : ''}} {{item.recommend ? 'recommend' : ''}}" 
+            wx:for="{{membershipInfo.prices}}" 
+            wx:key="id"
+            bindtap="selectPlan"
+            data-index="{{index}}"
+          >
+            <view class="price-tag" wx:if="{{item.recommend}}">推荐</view>
+            <view class="price-name">{{item.name}}</view>
+            <view class="price-value">
+              <text class="price-current">¥{{item.price}}</text>
+              <text class="price-original">¥{{item.original}}</text>
+            </view>
+            <view class="price-unit">{{item.unit}}</view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 购买按钮 -->
+      <view class="purchase-button" bindtap="purchaseMembership">
+        立即开通
+      </view>
+    </view>
+  </view>
+</view>

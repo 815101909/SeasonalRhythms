@@ -1,0 +1,1027 @@
+/* cloudDwelling页面样式 - 用户主页 */
+.cloud-dwelling-container {
+  min-height: 100vh;
+  padding: 20rpx;
+  background-color: #e8f5e9;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+}
+
+/* 各区块通用样式 */
+.user-profile-section, .season-display-section, .exploration-section, .activity-section, .footprints-section, .settings-section {
+  padding: 24rpx;
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.08);
+  margin-bottom: 20rpx;
+}
+
+/* 用户操作按钮区域 */
+.user-actions-section {
+  padding: 20rpx 24rpx;
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.08);
+  margin-bottom: 20rpx;
+}
+
+/* 用户信息区域 */
+.user-profile-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+/* 会员信息区域 */
+.member-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: -120rpx;
+  min-width: 120rpx;
+  margin-right: 60rpx;
+}
+
+.member-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8rpx;
+}
+
+.member-badge {
+  display: flex;
+  align-items: center;
+  padding: 6rpx 12rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+  font-weight: bold;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.1);
+}
+
+.member-badge.vip {
+  background: linear-gradient(135deg, #ffd700, #ffb347);
+  color: #8b4513;
+}
+
+.member-badge.normal {
+  background: linear-gradient(135deg, #e0e0e0, #bdbdbd);
+  color: #666;
+}
+
+.member-icon {
+  margin-right: 4rpx;
+  font-size: 20rpx;
+}
+
+.member-text {
+  font-size: 24rpx;
+}
+
+.member-expire {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 30rpx;
+  color: #666;
+  margin-right: -50rpx;
+}
+
+.expire-label {
+  font-size: 23rpx;
+  color: #999;
+  margin-bottom: 2rpx;
+}
+
+.expire-date {
+  font-size: 23rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.member-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.upgrade-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 24rpx;
+  color: #666;
+  margin-right: -50rpx;
+}
+
+.avatar-container {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+  overflow: hidden;
+  margin-right: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+}
+
+.user-avatar {
+  width: 100%;
+  height: 100%;
+  font-size: 70rpx;
+  color: white;
+  font-weight: bold;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.user-avatar-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.username-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8rpx;
+  flex-wrap: wrap;
+}
+
+.username {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-right: 8rpx;
+}
+
+/* 用户编号样式 */
+.user-id {
+  margin-top: 4rpx;
+  margin-bottom: 4rpx;
+  cursor: pointer;
+}
+
+.user-id-text {
+  color: #555;
+  background-color: rgba(76, 175, 80, 0.08);
+  padding: 2rpx 8rpx;
+  border-radius: 6rpx;
+  font-family: 'Courier New', monospace;
+  font-size: 20rpx;
+  display: inline-flex;
+  box-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+}
+
+.user-id:active .user-id-text {
+  background-color: rgba(76, 175, 80, 0.15);
+  transform: scale(0.98);
+}
+
+.not-logged {
+  color: #999;
+  font-size: 26rpx;
+}
+
+.login-button-inline {
+  background: linear-gradient(135deg, #81c784, #4caf50) !important;
+  color: white !important;
+  font-size: 24rpx !important;
+  padding: 0 16rpx !important;
+  border-radius: 20rpx !important;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.3s ease !important;
+  margin: 0 8rpx 0 4rpx !important;
+  line-height: 1.8 !important;
+  min-height: 0 !important;
+  font-weight: normal !important;
+  height: 40rpx !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  min-width: 120rpx !important;
+  border: none !important;
+}
+
+.login-button-inline::after {
+  border: none !important;
+}
+
+.login-button-inline:active {
+  transform: scale(0.95);
+  box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 用户操作按钮 */
+.user-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.settings-button, .membership-button, .tree-rules-button, .tree-exchange-button {
+  background: linear-gradient(135deg, #81c784, #4caf50);
+  color: white;
+  padding: 12rpx 16rpx;
+  border-radius: 24rpx;
+  font-size: 22rpx;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  flex: 1;
+  text-align: center;
+  max-width: 160rpx;
+}
+
+.settings-button:active, .membership-button:active, .tree-rules-button:active, .tree-exchange-button:active {
+  transform: scale(0.97);
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
+}
+
+.user-stats {
+  font-size: 24rpx;
+  color: #4CAF50;
+}
+
+.tree-count-container {
+  display: flex;
+  align-items: center;
+}
+
+.login-state {
+  margin-left: 4rpx;
+}
+
+.tree-count-total {
+  background-color: rgba(76, 175, 80, 0.15);
+  padding: 4rpx 10rpx;
+  border-radius: 12rpx;
+  font-weight: bold;
+  font-size: 24rpx;
+  display: inline-block;
+  width: fit-content;
+  box-shadow: 0 1rpx 3rpx rgba(0, 0, 0, 0.05);
+  height: 36rpx;
+  line-height: 28rpx;
+  box-sizing: border-box;
+}
+
+.tree-details-row {
+  display: flex;
+  font-size: 20rpx;
+  margin-top: 6rpx;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.tree-source {
+  color: #555;
+  background-color: rgba(76, 175, 80, 0.08);
+  padding: 2rpx 8rpx;
+  border-radius: 6rpx;
+  display: inline-flex;
+  box-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.03);
+}
+
+/* 通用部分标题 */
+.section-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #2e7d32;
+  margin-bottom: 12rpx;
+  padding-left: 14rpx;
+  border-left: 5rpx solid #4CAF50;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  height: 32rpx;
+}
+
+/* 时节展示区域 */
+.season-display-section {
+  /* 使用通用样式，这里无需额外定义 */
+}
+
+.current-season {
+  display: flex;
+  margin-bottom: 16rpx;
+}
+
+.season-image-container {
+  width: 240rpx;
+  height: 180rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  margin-right: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.season-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.season-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.season-header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 8rpx;
+}
+
+.season-name-date {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 6rpx;
+}
+
+.season-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-right: 12rpx;
+}
+
+.season-date {
+  font-size: 22rpx;
+  color: #666;
+}
+
+.season-countdown {
+  font-size: 20rpx;
+  color: #2e7d32;
+  background-color: rgba(76, 175, 80, 0.1);
+  padding: 4rpx 10rpx;
+  border-radius: 16rpx;
+  display: inline-block;
+  margin-bottom: 8rpx;
+}
+
+.season-description {
+  font-size: 24rpx;
+  color: #333;
+  line-height: 1.5;
+}
+
+.season-quote {
+  font-size: 24rpx;
+  color: #666;
+  font-style: italic;
+  text-align: center;
+  padding: 16rpx 0;
+  line-height: 1.6;
+}
+
+/* 时节探索区域 */
+.exploration-section {
+  /* 使用通用样式，这里无需额外定义 */
+}
+
+.exploration-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-top: 10rpx;
+}
+
+.exploration-card {
+  display: flex;
+  align-items: center;
+  padding: 16rpx;
+  background-color: rgba(232, 245, 233, 0.6);
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  height: 90rpx;
+}
+
+.exploration-card:active {
+  transform: scale(0.98);
+  background-color: rgba(232, 245, 233, 0.9);
+}
+
+.card-icon {
+  font-size: 40rpx;
+  margin-right: 16rpx;
+}
+
+.card-content {
+  flex: 1;
+}
+
+.card-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4rpx;
+}
+
+.card-description {
+  font-size: 22rpx;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* 用户活动区域 */
+.activity-section {
+  margin-top: 20rpx;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10rpx;
+}
+
+.activity-item {
+  display: flex;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid #eee;
+  align-items: center;
+  min-height: 60rpx;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-time {
+  width: 140rpx;
+  font-size: 24rpx;
+  color: #888;
+  padding-right: 16rpx;
+}
+
+.activity-content {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.activity-text {
+  font-size: 26rpx;
+  color: #333;
+  line-height: 1.5;
+}
+
+.activity-reward {
+  font-size: 24rpx;
+  color: #4CAF50;
+  font-weight: bold;
+  margin-left: 10rpx;
+}
+
+/* 空状态样式 */
+.empty-activities {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx 0;
+  background: rgba(249, 251, 231, 0.3);
+  border-radius: 12rpx;
+  margin: 10rpx 0;
+}
+
+.empty-activities .empty-icon {
+  font-size: 48rpx;
+  margin-bottom: 16rpx;
+  color: #bbb;
+}
+
+.empty-activities .empty-text {
+  font-size: 26rpx;
+  color: #999;
+  line-height: 1.5;
+}
+
+/* 足迹列表样式 */
+.footprints-section {
+  /* 使用通用样式，无需设置额外margin */
+}
+
+.footprints-container {
+  margin-top: 16rpx;
+}
+
+.footprints-scroll {
+  white-space: nowrap;
+  width: 100%;
+}
+
+.footprints-list {
+  display: inline-flex;
+  padding: 8rpx 0;
+  align-items: center;
+}
+
+.footprint-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 20rpx;
+  padding: 12rpx;
+  width: 130rpx;
+  height: 160rpx;
+  background: rgba(249, 251, 231, 0.6);
+  border: 1rpx solid #e6e6e6;
+  border-radius: 10rpx;
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.footprint-card::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 6rpx;
+  background: linear-gradient(to right, #a8e6cf, #dcedc1);
+}
+
+.footprint-icon {
+  font-size: 40rpx;
+  margin-bottom: 12rpx;
+  animation: footprint-pulse 2s infinite ease-in-out;
+}
+
+@keyframes footprint-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.footprint-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.footprint-city {
+  font-size: 22rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4rpx;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.footprint-date {
+  font-size: 18rpx;
+  color: #888;
+  text-align: center;
+}
+
+.footprints-more {
+  text-align: center;
+  color: #4caf50;
+  font-size: 22rpx;
+  margin-top: 16rpx;
+  padding: 8rpx 0;
+}
+
+.empty-footprints {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32rpx 0;
+}
+
+.empty-icon {
+  font-size: 50rpx;
+  margin-bottom: 16rpx;
+  opacity: 0.7;
+}
+
+.empty-text {
+  color: #999;
+  font-size: 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.empty-action {
+  background-color: #f0f9e8;
+  color: #4caf50;
+  padding: 8rpx 24rpx;
+  border-radius: 24rpx;
+  font-size: 22rpx;
+}
+
+/* 系统设置区域 */
+.settings-section {
+  /* 使用通用样式，无需额外定义 */
+}
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10rpx;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #eee;
+  height: 60rpx;
+}
+
+.settings-item:last-child {
+  border-bottom: none;
+}
+
+.settings-icon {
+  font-size: 32rpx;
+  margin-right: 16rpx;
+  width: 40rpx;
+  text-align: center;
+}
+
+.settings-content {
+  flex: 1;
+}
+
+.settings-text {
+  font-size: 24rpx;
+  color: #333;
+}
+
+.settings-arrow {
+  color: #aaa;
+  font-size: 24rpx;
+  margin-left: 10rpx;
+}
+
+.app-version {
+  text-align: center;
+  font-size: 20rpx;
+  color: #999;
+  margin-top: 20rpx;
+  padding: 10rpx 0;
+}
+
+/* 关于我们弹窗样式 */
+.about-dialog-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.about-dialog {
+  width: 80%;
+  background-color: white;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.15);
+  animation: dialogFadeIn 0.3s;
+}
+
+@keyframes dialogFadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.about-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 24rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.about-dialog-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+.about-dialog-close {
+  font-size: 40rpx;
+  color: #999;
+  width: 50rpx;
+  height: 50rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.about-dialog-content {
+  padding: 30rpx 24rpx;
+}
+
+.about-app-name {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16rpx;
+  text-align: center;
+}
+
+.about-app-version {
+  font-size: 24rpx;
+  color: #999;
+  font-weight: normal;
+  margin-left: 10rpx;
+}
+
+.about-app-desc {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 24rpx;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+.about-app-contact {
+  font-size: 24rpx;
+  padding: 10rpx 0;
+  margin-bottom: 16rpx;
+  display: flex;
+  align-items: center;
+}
+
+.contact-label {
+  color: #666;
+}
+
+.contact-value {
+  color: #2e7d32;
+  text-decoration: underline;
+}
+
+.about-app-copyright {
+  font-size: 22rpx;
+  color: #999;
+  text-align: center;
+  margin-top: 20rpx;
+}
+
+/* 小树规则弹窗样式 */
+.tree-rules-dialog-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.tree-rules-dialog {
+  width: 80%;
+  background-color: white;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.15);
+  animation: dialogFadeIn 0.3s;
+}
+
+.tree-rules-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 24rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.tree-rules-dialog-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+.tree-rules-dialog-close {
+  font-size: 40rpx;
+  color: #999;
+  width: 50rpx;
+  height: 50rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tree-rules-dialog-content {
+  padding: 30rpx 24rpx;
+}
+
+.tree-rules-text {
+  line-height: 1.6;
+}
+
+.rule-item {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 16rpx;
+  padding-left: 40rpx; /* 增加左侧内边距，为图标留出更多空间 */
+  position: relative;
+}
+
+.rule-item:before {
+  content: '🌳';
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.rule-item:last-child {
+  margin-bottom: 0;
+}
+
+/* 小树兑换弹窗样式 */
+.tree-exchange-dialog-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.tree-exchange-dialog {
+  width: 600rpx;
+  max-height: 80vh;
+  background-color: white;
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.3);
+}
+
+.tree-exchange-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  background: linear-gradient(135deg, #81c784, #4caf50);
+  color: white;
+}
+
+.tree-exchange-dialog-title {
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.tree-exchange-dialog-close {
+  font-size: 40rpx;
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.tree-exchange-dialog-content {
+  padding: 30rpx;
+}
+
+.current-trees {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  border-radius: 12rpx;
+  margin-bottom: 30rpx;
+}
+
+.trees-label {
+  font-size: 28rpx;
+  color: #666;
+  margin-right: 10rpx;
+}
+
+.trees-count {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #4caf50;
+}
+
+.exchange-options {
+  margin-bottom: 30rpx;
+}
+
+.exchange-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  background-color: #f9f9f9;
+  border-radius: 12rpx;
+  border: 2rpx solid transparent;
+  transition: all 0.3s ease;
+}
+
+.exchange-option:last-child {
+  margin-bottom: 0;
+}
+
+.exchange-option:active {
+  transform: scale(0.98);
+}
+
+.option-info {
+  flex: 1;
+}
+
+.option-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.option-cost {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.option-status {
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+  font-weight: bold;
+}
+
+.option-status.available {
+  background-color: #4caf50;
+  color: white;
+}
+
+.option-status.unavailable {
+  background-color: #e0e0e0;
+  color: #999;
+}
+
+.exchange-option .option-status.available {
+  background-color: #4caf50;
+}
+
+.exchange-option:hover .option-status.available {
+  background-color: #45a049;
+}
+
+.exchange-tips {
+  padding: 20rpx;
+  background-color: #fff3cd;
+  border-radius: 12rpx;
+  border-left: 4rpx solid #ffc107;
+}
+
+.exchange-tips text {
+  font-size: 24rpx;
+  color: #856404;
+  line-height: 1.5;
+}

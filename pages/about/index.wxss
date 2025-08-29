@@ -1,0 +1,151 @@
+.about-container {
+  min-height: 100vh;
+  background-color: #e8f5e9;
+  padding: 40rpx 30rpx;
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+
+.app-icon {
+  width: 120rpx;
+  height: 120rpx;
+  background: linear-gradient(135deg, #81c784, #4caf50);
+  color: white;
+  font-size: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24rpx;
+  margin-right: 20rpx;
+  box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.app-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-name {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.app-version {
+  font-size: 24rpx;
+  color: #666;
+  margin-top: 4rpx;
+}
+
+.divider {
+  height: 1rpx;
+  background-color: #ddd;
+  margin: 20rpx 0;
+}
+
+.section {
+  background-color: white;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #2e7d32;
+  margin-bottom: 16rpx;
+  padding-left: 14rpx;
+  border-left: 5rpx solid #4CAF50;
+}
+
+.description {
+  font-size: 24rpx;
+  color: #333;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+.feature-list {
+  margin-top: 10rpx;
+}
+
+.feature-item {
+  display: flex;
+  margin-bottom: 10rpx;
+  align-items: flex-start;
+}
+
+.feature-dot {
+  color: #4CAF50;
+  margin-right: 10rpx;
+  font-size: 24rpx;
+}
+
+.feature-text {
+  font-size: 24rpx;
+  color: #333;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.team-list {
+  margin-top: 10rpx;
+}
+
+.team-member {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12rpx 0;
+  border-bottom: 1rpx solid #eee;
+}
+
+.team-member:last-child {
+  border-bottom: none;
+}
+
+.member-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.member-name {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.member-role {
+  font-size: 22rpx;
+  color: #666;
+  margin-top: 4rpx;
+}
+
+.member-email {
+  font-size: 22rpx;
+  color: #2e7d32;
+  text-decoration: underline;
+}
+
+.copyright {
+  margin-top: 40rpx;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  color: #999;
+  font-size: 22rpx;
+  line-height: 1.5;
+} 
+ 
+ 
+ 
+ 
+ 
+ 

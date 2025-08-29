@@ -1,0 +1,828 @@
+/* 绿崖时序页面样式 */
+.greencliff-container {
+  padding: 20rpx;
+  background-color: #e8f5e9; /* 浅绿色背景 */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+  position: relative;
+  overflow: hidden; /* 防止动画元素溢出 */
+}
+
+/* 落叶动画效果 */
+.leaf {
+  position: absolute;
+  top: -60rpx;
+  z-index: 1;
+  opacity: 0.8;
+}
+
+.leaf::before {
+  content: "🍂";
+  font-size: 32rpx;
+  display: block;
+  transform-origin: center;
+}
+
+.leaf-1::before { content: "🍂"; }
+.leaf-2::before { content: "🍁"; }
+.leaf-3::before { content: "🍃"; }
+.leaf-4::before { content: "🍂"; }
+.leaf-5::before { content: "🍁"; }
+.leaf-6::before { content: "🍃"; }
+.leaf-7::before { content: "🍂"; }
+.leaf-8::before { content: "🍁"; }
+
+.leaf-1 {
+  left: 10%;
+  animation: falling 15s linear infinite;
+  animation-delay: 0s;
+}
+
+.leaf-2 {
+  left: 25%;
+  animation: falling 18s linear infinite;
+  animation-delay: 1.5s;
+}
+
+.leaf-3 {
+  left: 40%;
+  animation: falling 12s linear infinite;
+  animation-delay: 3s;
+}
+
+.leaf-4 {
+  left: 55%;
+  animation: falling 16s linear infinite;
+  animation-delay: 4.5s;
+}
+
+.leaf-5 {
+  left: 65%;
+  animation: falling 14s linear infinite;
+  animation-delay: 6s;
+}
+
+.leaf-6 {
+  left: 75%;
+  animation: falling 19s linear infinite;
+  animation-delay: 7.5s;
+}
+
+.leaf-7 {
+  left: 85%;
+  animation: falling 13s linear infinite;
+  animation-delay: 9s;
+}
+
+.leaf-8 {
+  left: 92%;
+  animation: falling 17s linear infinite;
+  animation-delay: 10.5s;
+}
+
+@keyframes falling {
+  0% {
+    top: -60rpx;
+    transform: translateX(0) rotate(0deg);
+  }
+  100% {
+    top: 105vh;
+    transform: translateX(100rpx) rotate(360deg);
+  }
+}
+
+/* 全局字体类 */
+.font-serif {
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+}
+
+.font-sans {
+  font-family: "Source Han Sans", "思源黑体", "Noto Sans SC", sans-serif;
+}
+
+/* 页面标题 */
+.page-title {
+  text-align: center;
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+  margin: 30rpx 0 30rpx; /* 增加下边距 */
+  position: relative;
+  z-index: 2; /* 确保在动态背景之上 */
+}
+
+.page-title:after {
+  content: "";
+  display: block;
+  width: 120rpx;
+  height: 6rpx;
+  background: linear-gradient(to right, #88c0d0, #a3be8c);
+  margin: 16rpx auto;
+  border-radius: 3rpx;
+}
+
+/* 画轴容器 */
+.scrolls-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0; /* 减少上下内边距 */
+  margin-top: 30rpx; /* 修改为向下平移30rpx */
+  z-index: 2; /* 确保在动态背景之上 */
+}
+
+/* 两行排列博物馆 */
+.scroll-item {
+  width: 590rpx;
+  height: 570rpx; /* 保持正方形但高度减少30rpx */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  opacity: 0.9;
+  position: relative;
+  margin-bottom: 60rpx;
+  border-radius: 16rpx;
+  background-color: transparent; /* 最最最最浅的黄色 */
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.scroll-item.active {
+  transform: scale(1.02);
+  opacity: 1;
+  box-shadow: 0 8rpx 25rpx rgba(0, 0, 0, 0.15);
+}
+
+.scroll-image {
+  width: 100%;
+  height: calc(100% - 50rpx); /* 减去下方信息栏的空间 */
+  overflow: hidden;
+  position: relative;
+}
+
+.scroll-image image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.city-scroll-image:after,
+.season-scroll-image:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80rpx;
+  background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+}
+
+/* 标题和描述信息容器 */
+.scroll-info {
+  width: 100%;
+  padding: 15rpx 30rpx;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(250, 245, 220, 0.95); /* 调深一点的米黄色，增加不透明度 */
+  position: absolute;
+  bottom: 10rpx; /* 从底部向上移动，让顶部只超出图片10rpx */
+  left: 0;
+  z-index: 3;
+  backdrop-filter: blur(5rpx);
+  box-sizing: border-box;
+  border-top: 1px solid rgba(210, 200, 170, 0.3); /* 添加上边框增强层次感 */
+}
+
+.scroll-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #442; /* 调深一点的文字颜色 */
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+  flex: 1;
+}
+
+.scroll-desc {
+  font-size: 28rpx;
+  color: #664; /* 调深一点的文字颜色 */
+  font-family: "Source Han Sans", "思源黑体", "Noto Sans SC", sans-serif;
+  flex: 1;
+  text-align: right;
+  margin-top: 0;
+}
+
+/* 博物馆内容区域 */
+.museum-container {
+  position: relative;
+  padding-top: 20rpx;
+  width: 100%;
+}
+
+.back-btn {
+  position: absolute;
+  top: 20rpx;
+  left: 20rpx;
+  z-index: 100;
+  padding: 12rpx 24rpx;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 30rpx;
+  font-size: 26rpx;
+  color: #333;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+}
+
+.back-btn:before {
+  content: "←";
+  margin-right: 10rpx;
+}
+
+/* 博物馆介绍 */
+.museum-content {
+  padding: 30rpx;
+  background-color: transparent; /* 最最最最浅的黄色 */
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  margin-top: 60rpx;
+  min-height: 80vh;
+  opacity: 0;
+  transform: translateY(30rpx);
+  transition: all 0.5s ease;
+}
+
+.museum-content.content-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.museum-content.slide-in {
+  animation: slide-in 0.5s ease forwards;
+}
+
+@keyframes slide-in {
+  0% {
+    opacity: 0;
+    transform: translateY(30rpx);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 博物馆头部样式 */
+.museum-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1px solid #eee;
+}
+
+.museum-icon {
+  font-size: 50rpx;
+  margin-right: 20rpx;
+}
+
+.museum-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.main-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+}
+
+.sub-title {
+  font-size: 24rpx;
+  color: #666;
+  margin-top: 6rpx;
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+}
+
+.museum-introduction {
+  margin-bottom: 30rpx;
+  background-color: #f5f7fa;
+  padding: 20rpx;
+  border-radius: 8rpx;
+}
+
+.intro-text {
+  font-size: 28rpx;
+  color: #555;
+  line-height: 1.6;
+  font-family: "Source Han Sans", "思源黑体", "Noto Sans SC", sans-serif;
+}
+
+/* 博物馆部分样式 */
+.museum-sections {
+  height: calc(100vh - 300rpx);
+  overflow-y: auto;
+}
+
+.museum-section {
+  margin-bottom: 40rpx;
+  background-color: #fff;
+  border-radius: 12rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  padding: 20rpx;
+  background-color: #f8f8f8;
+  border-bottom: 1px solid #eee;
+}
+
+.section-number {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #88c0d0;
+  margin-right: 20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+}
+
+.section-content {
+  padding: 20rpx;
+}
+
+.content-card {
+  margin-bottom: 20rpx;
+  background-color: #f9f9f9;
+  border-radius: 8rpx;
+  overflow: hidden;
+  border-left: 4rpx solid #88c0d0;
+}
+
+.card-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  padding: 16rpx;
+  background-color: #f0f0f0;
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+}
+
+.card-content {
+  padding: 16rpx;
+  font-size: 26rpx;
+  color: #555;
+  line-height: 1.6;
+  font-family: "Source Han Sans", "思源黑体", "Noto Sans SC", sans-serif;
+}
+
+/* 重中之重板块 */
+.treasure-section {
+  background-color: #fff8e1;
+  padding: 30rpx;
+  border-radius: 12rpx;
+  margin-bottom: 30rpx;
+  position: relative;
+}
+
+.treasure-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+}
+
+.treasure-subtitle {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 20rpx;
+}
+
+/* 节气轮盘 */
+.solar-terms-wheel {
+  position: relative;
+  width: 100%;
+  height: 600rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.wheel-image {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+}
+
+.wheel-interactive {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.term-group {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.term-point {
+  position: absolute;
+  width: 50rpx;
+  height: 50rpx;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.term-point:active {
+  transform: scale(1.1);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.3);
+}
+
+.term-icon {
+  font-size: 28rpx;
+}
+
+/* 节气详情 */
+.term-detail {
+  margin-top: 30rpx;
+  padding: 20rpx;
+  background-color: #fff;
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.term-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+}
+
+.term-date {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 16rpx;
+  font-family: "Source Han Sans", "思源黑体", "Noto Sans SC", sans-serif;
+}
+
+.term-description {
+  font-size: 28rpx;
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 20rpx;
+  font-family: "Source Han Sans", "思源黑体", "Noto Sans SC", sans-serif;
+}
+
+.term-culture {
+  font-size: 26rpx;
+  color: #777;
+  line-height: 1.6;
+  padding-top: 20rpx;
+  border-top: 1rpx dashed #eee;
+  font-family: "Source Han Sans", "思源黑体", "Noto Sans SC", sans-serif;
+}
+
+/* 宝盒展示区域 */
+.treasure-boxes-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 30rpx;
+  padding: 20rpx;
+  margin-top: 20rpx;
+}
+
+/* 宝盒容器 */
+.treasure-box-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10rpx;
+}
+
+/* 宝盒样式 */
+.treasure-box {
+  width: 100%;
+  aspect-ratio: 1/1;
+  background-color: #f9eed6;
+  border-radius: 12rpx;
+  position: relative;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  transform-style: preserve-3d;
+  z-index: 2;
+}
+
+.treasure-box.active {
+  background-color: #f0e5c6;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.15);
+}
+
+/* 展开指示器 */
+.expand-indicator {
+  position: absolute;
+  bottom: 10rpx;
+  right: 10rpx;
+  font-size: 24rpx;
+  color: #997c40;
+  opacity: 0.7;
+  transform: rotate(0deg);
+  transition: transform 0.3s ease;
+}
+
+.expand-indicator.expanded {
+  transform: rotate(180deg);
+}
+
+/* Add back the box-lid, box-number, and box-title styles */
+.box-lid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f9eed6 30%, #f0e5c6 100%);
+  border-radius: 12rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20rpx;
+  box-sizing: border-box;
+  border: 1px solid rgba(210, 190, 140, 0.3);
+}
+
+.box-number {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #ba8c49;
+  margin-bottom: 20rpx;
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+}
+
+.box-title {
+  font-size: 36rpx;
+  color: #5d4a2c;
+  text-align: center;
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+}
+
+/* 章节内容区域 */
+.chapter-content {
+  background-color: #fff8e9;
+  border-radius: 0 0 12rpx 12rpx;
+  margin-top: -12rpx;
+  padding: 30rpx 20rpx 20rpx;
+  box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.1);
+  transform-origin: top center;
+  z-index: 1;
+  max-height: 0;
+  overflow: hidden;
+  transition: all 0.3s ease-out;
+  opacity: 0;
+}
+
+.chapter-content.expanded {
+  max-height: 1000rpx;
+  opacity: 1;
+  margin-bottom: 40rpx;
+}
+
+/* 详情列表样式 */
+.detail-list {
+  margin-bottom: 20rpx;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20rpx;
+  background-color: #fffbf0;
+  margin-bottom: 10rpx;
+  border-radius: 8rpx;
+  border-left: 3rpx solid #d4b97c;
+  transition: all 0.2s ease;
+}
+
+.detail-item:active {
+  background-color: #f5ecd4;
+  transform: translateX(5rpx);
+}
+
+.item-title {
+  font-size: 28rpx;
+  color: #5d4a2c;
+  font-weight: 500;
+  text-align: center;
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+}
+
+.item-icon {
+  font-size: 24rpx;
+  color: #ba8c49;
+}
+
+/* 详情面板样式 */
+.item-detail-panel {
+  background-color: #ffffff;
+  border-radius: 10rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  padding: 20rpx;
+  margin-top: 20rpx;
+  animation: fade-in 0.3s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.item-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 15rpx;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 15rpx;
+}
+
+.item-detail-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #5d4a2c;
+  font-family: "Source Han Serif", "思源宋体", "Noto Serif SC", serif;
+}
+
+.item-detail-close {
+  font-size: 32rpx;
+  color: #999;
+  padding: 0 10rpx;
+}
+
+.item-detail-content {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+  font-family: "Source Han Sans", "思源黑体", "Noto Sans SC", sans-serif;
+}
+
+/* 珍珠项链城市布局可视化样式 */
+.visual-representation {
+  margin-top: 30rpx;
+  padding: 20rpx;
+  border-radius: 10rpx;
+  background-color: #f9f9f9;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05);
+}
+
+.pearl-necklace-visual {
+  position: relative;
+  height: 200rpx;
+  margin: 40rpx 0;
+  background-color: #e8f5e9;
+  border-radius: 8rpx;
+  overflow: hidden;
+}
+
+.transit-line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 8rpx;
+  background: linear-gradient(to right, #2e7d32, #4caf50, #2e7d32);
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.urban-pearls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.urban-pearl {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background-color: #f5f5f5;
+  box-shadow: 0 0 10rpx rgba(0,0,0,0.2);
+  position: relative;
+  z-index: 3;
+  animation: pearl-pulse 3s infinite alternate;
+}
+
+.pearl-1 { animation-delay: 0s; background-color: #e3f2fd; }
+.pearl-2 { animation-delay: 0.6s; background-color: #bbdefb; }
+.pearl-3 { animation-delay: 1.2s; background-color: #90caf9; }
+.pearl-4 { animation-delay: 1.8s; background-color: #bbdefb; }
+.pearl-5 { animation-delay: 2.4s; background-color: #e3f2fd; }
+
+@keyframes pearl-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 5rpx rgba(0,0,0,0.2);
+  }
+  100% {
+    transform: scale(1.1);
+    box-shadow: 0 0 15rpx rgba(76,175,80,0.4);
+  }
+}
+
+.nature-areas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    #a5d6a7 0px,
+    #a5d6a7 5px,
+    #c8e6c9 5px,
+    #c8e6c9 10px
+  );
+  opacity: 0.3;
+  z-index: 0;
+}
+
+.visual-legend {
+  display: flex;
+  justify-content: center;
+  margin-top: 20rpx;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin: 0 20rpx;
+}
+
+.legend-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  margin-right: 10rpx;
+}
+
+.city-dot {
+  background-color: #90caf9;
+  box-shadow: 0 0 5rpx rgba(0,0,0,0.2);
+}
+
+.transit-dot {
+  background-color: #4caf50;
+}
+
+.nature-dot {
+  background: #a5d6a7;
+  background: repeating-linear-gradient(
+    45deg,
+    #a5d6a7 0px,
+    #a5d6a7 3px,
+    #c8e6c9 3px,
+    #c8e6c9 6px
+  );
+}
+
+.legend-text {
+  font-size: 24rpx;
+  color: #555;
+} 

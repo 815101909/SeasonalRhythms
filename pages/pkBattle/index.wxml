@@ -1,0 +1,278 @@
+<!-- 阵营PK对战页面 -->
+<view class="pk-container">
+  <!-- 顶部阵营展示区域 -->
+  <view class="factions-header">
+    <view class="faction-status tower">
+      <image class="faction-avatar" src="../lanTing/pics/楼台烟雨中.jpg" mode="aspectFill"></image>
+      <view class="faction-info">
+        <view class="faction-name">楼台烟雨中</view>
+        <view class="faction-stats">
+          <view class="faction-count">{{towerCount}}人</view>
+          <view class="faction-score">{{towerScore}}分</view>
+        </view>
+      </view>
+    </view>
+    
+    <view class="vs-badge">VS</view>
+    
+    <view class="faction-status rain">
+      <image class="faction-avatar" src="../lanTing/pics/好雨知时节.jpg" mode="aspectFill"></image>
+      <view class="faction-info">
+        <view class="faction-name">好雨知时节</view>
+        <view class="faction-stats">
+          <view class="faction-count">{{rainCount}}人</view>
+          <view class="faction-score">{{rainScore}}分</view>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 状态指示器 -->
+  <view class="status-indicator">
+    <view class="status-text">{{statusText}}</view>
+    <view class="timer" wx:if="{{showTimer}}">{{timeRemaining}}s</view>
+  </view>
+  
+  <!-- 题目区域 -->
+  <view class="question-area" wx:if="{{currentState === 'question'}}">
+    <!-- PK结束遮罩 -->
+    <view class="pk-ended-overlay" wx:if="{{pkStatus === 'ended'}}">
+      <view class="pk-ended-message">
+        <text class="pk-ended-title">PK已结束</text>
+        <text class="pk-ended-desc">正在统计最终结果...</text>
+      </view>
+    </view>
+    <view class="question-header">
+      <view class="question-type">
+        {{currentQuestionType === 'single' ? '单选题' : 
+          currentQuestionType === 'multiple' ? '多选题' : '填空题'}}
+      </view>
+      <view class="question-number">第 {{currentQuestionIndex + 1}}/{{totalQuestions}} 题</view>
+    </view>
+    
+    <view class="question-text">{{currentQuestion.content}}</view>
+    
+    <!-- 单选题选项 -->
+    <view class="options-list" wx:if="{{currentQuestionType === 'single'}}">
+      <view 
+        wx:for="{{currentQuestion.options}}" 
+        wx:key="index"
+        class="option-item {{selectedOption === index ? 'selected' : ''}}"
+        bindtap="selectOption"
+        data-option-index="{{index}}"
+      >
+        <text class="option-letter">{{optionLetters[index]}}</text>
+        <text class="option-text">{{item}}</text>
+      </view>
+    </view>
+    
+    <!-- 多选题选项 -->
+    <view class="options-list" wx:if="{{currentQuestionType === 'multiple'}}">
+      <view 
+        wx:for="{{currentQuestion.options}}" 
+        wx:key="index"
+        class="option-item {{selectedOptions[index] ? 'selected' : ''}}"
+        bindtap="toggleOption"
+        data-option-index="{{index}}"
+      >
+        <text class="option-letter">{{optionLetters[index]}}</text>
+        <text class="option-text">{{item}}</text>
+      </view>
+    </view>
+    
+    <!-- 填空题输入框 -->
+    <view class="fill-answer-container" wx:if="{{currentQuestionType === 'fill'}}">
+      <view 
+        class="fill-blank-item" 
+        wx:for="{{currentQuestion.correctAnswer}}" 
+        wx:key="index"
+      >
+        <text class="blank-number">空{{index + 1}}</text>
+        <input 
+          class="fill-answer-input" 
+          type="text" 
+          placeholder="请输入答案" 
+          value="{{fillAnswers[index]}}"
+          bindinput="updateFillAnswer"
+          data-index="{{index}}"
+        />
+      </view>
+    </view>
+    
+    <!-- 提交按钮 -->
+    <button class="submit-answer" bindtap="submitAnswer" disabled="{{!canSubmit}}">
+      提交答案
+    </button>
+
+    <!-- 答题统计 -->
+    <view class="answer-statistics">
+      <view class="stat-item">
+        <text class="stat-label">已答题数：</text>
+        <text class="stat-value">{{answeredQuestions}}</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-label">正确题数：</text>
+        <text class="stat-value">{{correctAnswers}}</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-label">正确率：</text>
+        <text class="stat-value">{{answeredQuestions > 0 ? ((correctAnswers/answeredQuestions*100) | 0) : 0}}%</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 等待区域 -->
+  <view class="waiting-area" wx:if="{{currentState === 'waiting'}}">
+    <view class="waiting-text">
+      <view>等待主持人发布下一题...</view>
+      <view class="waiting-subtext">已答{{answeredQuestions}}题，正确{{correctAnswers}}题</view>
+    </view>
+    <view class="loading-dots">
+      <view class="dot"></view>
+      <view class="dot"></view>
+      <view class="dot"></view>
+    </view>
+  </view>
+  
+  <!-- 结果区域 -->
+  <view class="result-area" wx:if="{{currentState === 'result'}}">
+    <view class="result-header">
+      <view class="result-title">PK结果公布</view>
+    </view>
+    
+    <view class="winner-announcement">
+      <view class="winner-title">获胜阵营</view>
+      <view class="winner-faction">明日公布，PK结束后系统会自动发放奖励</view>
+      <view class="winner-reward">奖励: 2颗🌳</view>
+    </view>
+    
+    <!-- 个人成绩区域 -->
+    <view class="personal-result">
+      <view class="personal-title">我的成绩</view>
+      <view class="personal-content">
+        <view class="personal-item">
+          <view class="personal-label">我的排名</view>
+          <view class="personal-value">{{userRanking > 0 ? userRanking : '未上榜'}}</view>
+        </view>
+        <view class="personal-item">
+          <view class="personal-label">正确率</view>
+          <view class="personal-value">{{answeredQuestions > 0 ? ((correctAnswers/answeredQuestions*100) | 0) : 0}}%</view>
+        </view>
+        <view class="personal-item">
+          <view class="personal-label">获得奖励</view>
+          <view class="personal-value">{{userReward}}颗🌳</view>
+        </view>
+      </view>
+    </view>
+    
+    <view class="top-performers">
+      <view class="performers-title">今日排行榜</view>
+      <view class="performer-list">
+        <view class="performer-item {{item.isCurrentUser ? 'current-user' : ''}}" wx:for="{{topPerformers}}" wx:key="index" wx:if="{{index < 10}}">
+          <view class="performer-rank">
+            <text wx:if="{{index === 0}}">🥇 1</text>
+            <text wx:elif="{{index === 1}}">🥈 2</text>
+            <text wx:elif="{{index === 2}}">🥉 3</text>
+            <text wx:else>{{index + 1}}</text>
+          </view>
+          <view class="performer-info">
+            <view class="performer-name">{{item.name}}{{item.isCurrentUser ? ' (我)' : ''}}</view>
+            <view class="performer-faction">{{item.faction === 'tower' ? '楼台烟雨中' : '好雨知时节'}}</view>
+          </view>
+          <view class="performer-score">{{item.score}}分</view>
+        </view>
+      </view>
+    </view>
+    
+    <view class="pk-statistics">
+      <view class="statistics-title">PK统计</view>
+      <view class="statistics-grid">
+        <view class="stat-item">
+          <view class="stat-label">总题数</view>
+          <view class="stat-value">{{totalQuestions}}</view>
+        </view>
+        <view class="stat-item">
+          <view class="stat-label">参与人数</view>
+          <view class="stat-value">{{towerCount + rainCount}}</view>
+        </view>
+        <view class="stat-item">
+          <view class="stat-label">总答题数</view>
+          <view class="stat-value">{{totalAnswers}}</view>
+        </view>
+        <view class="stat-item">
+          <view class="stat-label">平均正确率</view>
+          <view class="stat-value">{{avgCorrectRate}}%</view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 参考答案区域 -->
+    <view class="answers-reference">
+      <view class="reference-header" bindtap="toggleAnswersDisplay">
+        <view class="reference-title">参考答案</view>
+        <view class="toggle-icon">{{showAnswers ? '收起' : '展开'}}</view>
+      </view>
+      
+      <view class="answers-content" wx:if="{{showAnswers}}">
+        <!-- 单选题答案 -->
+        <view class="answer-section">
+          <view class="answer-category">单选题</view>
+          <view class="answer-list">
+            <view class="answer-item" wx:for="{{questions.single}}" wx:key="id">
+              <view class="answer-question">{{index + 1}}. {{item.content}}</view>
+              <view class="answer-content">
+                <text class="answer-label">正确答案: </text>
+                <text class="answer-value">{{item.correctAnswer}}</text>
+              </view>
+              <view class="answer-explanation" wx:if="{{item.explanation}}">
+                <text class="explanation-label">解释: </text>
+                <text class="explanation-text">{{item.explanation}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 多选题答案 -->
+        <view class="answer-section">
+          <view class="answer-category">多选题</view>
+          <view class="answer-list">
+            <view class="answer-item" wx:for="{{questions.multiple}}" wx:key="id">
+              <view class="answer-question">{{index + 6}}. {{item.content}}</view>
+              <view class="answer-content">
+                <text class="answer-label">正确答案: </text>
+                <text class="answer-value">{{item.correctAnswer}}</text>
+              </view>
+              <view class="answer-explanation" wx:if="{{item.explanation}}">
+                <text class="explanation-label">解释: </text>
+                <text class="explanation-text">{{item.explanation}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 填空题答案 -->
+        <view class="answer-section">
+          <view class="answer-category">填空题</view>
+          <view class="answer-list">
+            <view class="answer-item" wx:for="{{questions.fill}}" wx:key="id">
+              <view class="answer-question">{{index + 11}}. {{item.content}}</view>
+              <view class="answer-content">
+                <text class="answer-label">正确答案: </text>
+                <text class="answer-value">{{item.correctAnswer}}</text>
+              </view>
+              <view class="answer-explanation" wx:if="{{item.explanation}}">
+                <text class="explanation-label">解释: </text>
+                <text class="explanation-text">{{item.explanation}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <button class="return-home" bindtap="returnToHome">返回首页</button>
+  </view>
+</view> 
+
+
+

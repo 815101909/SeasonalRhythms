@@ -1,0 +1,52 @@
+<view class="about-container">
+  <view class="app-header">
+    <view class="app-icon">节</view>
+    <view class="app-title">
+      <text class="app-name">{{appInfo.name}}</text>
+      <text class="app-version">{{appInfo.version}}</text>
+    </view>
+  </view>
+  
+  <view class="divider"></view>
+  
+  <view class="section">
+    <view class="section-title">应用简介</view>
+    <view class="description">{{appInfo.description}}</view>
+  </view>
+  
+  <view class="section">
+    <view class="section-title">主要功能</view>
+    <view class="feature-list">
+      <view class="feature-item" wx:for="{{appInfo.features}}" wx:key="index">
+        <text class="feature-dot">•</text>
+        <text class="feature-text">{{item}}</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="section">
+    <view class="section-title">开发团队</view>
+    <view class="team-list">
+      <view class="team-member" wx:for="{{appInfo.team}}" wx:key="name">
+        <view class="member-info">
+          <text class="member-name">{{item.name}}</text>
+          <text class="member-role">{{item.role}}</text>
+        </view>
+        <view class="member-email" bindtap="copyEmail" data-email="{{item.email}}">
+          {{item.email}}
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <view class="copyright">
+    <text>Copyright © {{currentYear}} 小舟摇团队</text>
+    <text>All Rights Reserved</text>
+  </view>
+</view> 
+ 
+ 
+ 
+ 
+ 
+ 

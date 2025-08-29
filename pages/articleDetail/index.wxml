@@ -1,0 +1,49 @@
+<!-- 文章详情页 -->
+<view class="article-container">
+  <!-- 加载中状态 -->
+  <view class="loading-container" wx:if="{{loading}}">
+    <view class="loading-icon"></view>
+    <text class="loading-text">内容加载中...</text>
+  </view>
+
+  <!-- 文章内容 -->
+  <view class="article-content" wx:else>
+    <!-- 顶部导航 -->
+    <view class="article-nav">
+      <view class="back-btn" bindtap="navigateBack">
+        <text>返回</text>
+      </view>
+    </view>
+    
+    <!-- 文章标题 -->
+    <view class="article-title">
+      <text>{{title}}</text>
+    </view>
+
+    <!-- API文档图片展示区 -->
+    <view class="api-content">
+      <block wx:if="{{images.length > 0}}">
+        <view class="content-item" wx:for="{{images}}" wx:key="index">
+          <!-- A4纸图片容器 -->
+          <view class="image-container" bindtap="previewImage" data-index="{{index}}">
+            <image src="{{item.url}}" mode="widthFix" class="a4-image"></image>
+            <view class="image-overlay" wx:if="{{item.isPlaceholder}}">
+              <text class="placeholder-text">等待后端上传A4格式图片</text>
+            </view>
+          </view>
+        </view>
+      </block>
+      
+      <view class="no-content" wx:else>
+        <view class="no-content-text">
+          <text>内容准备中，敬请期待...</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 底部装饰 -->
+    <view class="article-footer">
+      <text>〰〰〰 小舟摇风溪 〰〰〰</text>
+    </view>
+  </view>
+</view> 

@@ -1,0 +1,33 @@
+<!-- 足迹列表页面 -->
+<view class="footprints-container">
+  <view class="header">
+    <view class="title">我的足迹</view>
+  </view>
+
+  <block wx:if="{{footprints && footprints.length > 0}}">
+    <view class="footprints-list">
+      <view class="footprint-item" wx:for="{{footprints}}" wx:key="timestamp" data-city="{{item}}">
+        <view class="footprint-icon-wrapper">
+          <text class="footprint-icon">👣</text>
+        </view>
+        <view class="footprint-info">
+          <view class="footprint-city">{{item.cityName}}</view>
+          <view class="footprint-date">{{item.date}}</view>
+        </view>
+        <view class="footprint-arrow" bindtap="viewCity" data-city="{{item}}">
+          <text>→</text>
+        </view>
+      </view>
+    </view>
+  </block>
+  
+  <view class="empty-state" wx:else>
+    <view class="empty-icon">🗺️</view>
+    <view class="empty-text">您还没有留下足迹</view>
+    <view class="action-btn" bindtap="goToTimeSequence">去城市漫游</view>
+  </view>
+
+  <view class="footer">
+    <view class="footer-text">足迹记录您浏览过的城市</view>
+  </view>
+</view>

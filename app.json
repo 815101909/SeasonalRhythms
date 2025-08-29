@@ -1,0 +1,56 @@
+{
+  "pages": [
+    "pages/greenCliff/index",
+    "pages/cloudDwelling/index",
+    "pages/timeSequence/index",
+    "pages/lanTing/index",
+    "pages/pkBattle/index",
+    "pages/articleDetail/index",
+    "pages/membership/index",
+    "pages/footprints/index",
+    "pages/agreement/index",
+    "pages/contact/index"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#e8f5e9",
+    "navigationBarTitleText": "小舟摇风溪",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#e8f5e9"
+  },
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#4CAF50",
+    "backgroundColor": "#e8f5e9",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/cloudDwelling/index",
+        "text": "晓主页",
+        "iconPath": "images/icons/profile.png",
+        "selectedIconPath": "images/icons/profile.png"
+      },
+      {
+        "pagePath": "pages/greenCliff/index",
+        "text": "博物馆",
+        "iconPath": "images/icons/museum.png",
+        "selectedIconPath": "images/icons/museum.png"
+      },
+      {
+        "pagePath": "pages/timeSequence/index",
+        "text": "漫游记",
+        "iconPath": "images/icons/note.png",
+        "selectedIconPath": "images/icons/note.png"
+      },
+      {
+        "pagePath": "pages/lanTing/index",
+        "text": "晓竞赛",
+        "iconPath": "images/icons/competition.png",
+        "selectedIconPath": "images/icons/competition.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "cloud": true
+}

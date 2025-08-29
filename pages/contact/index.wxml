@@ -1,0 +1,62 @@
+<view class="contact-container">
+  <view class="header">
+    <view class="title">联系客服</view>
+    <view class="subtitle">有任何问题，欢迎随时联系我们</view>
+  </view>
+  
+  <view class="contact-ways">
+    <view class="section-title">联系方式</view>
+    
+    <view class="contact-list">
+      <view class="contact-item" wx:for="{{contactWays}}" wx:key="title">
+        <view class="contact-icon">{{item.icon}}</view>
+        <view class="contact-info">
+          <view class="contact-title">{{item.title}}</view>
+          <view class="contact-value">{{item.value}}</view>
+        </view>
+        <view class="contact-action">
+          <view 
+            class="action-button" 
+            wx:if="{{item.copyable}}" 
+            bindtap="copyText" 
+            data-text="{{item.value}}"
+          >复制</view>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <view class="faq-section">
+    <view class="section-title">常见问题</view>
+    
+    <view class="faq-list">
+      <view class="faq-item" wx:for="{{faqs}}" wx:key="question">
+        <view class="faq-question">
+          <text class="q-mark">Q:</text>
+          <text class="question-text">{{item.question}}</text>
+        </view>
+        <view class="faq-answer">
+          <text class="a-mark">A:</text>
+          <text class="answer-text">{{item.answer}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="qr-section">
+    <image 
+      class="qr-image" 
+      src="{{qrImageUrl}}" 
+      mode="aspectFit"
+      bindtap="previewQRImage"
+      wx:if="{{qrImageUrl}}"
+    ></image>
+  </view>
+
+</view>
+ 
+ 
+ 
+ 
+ 
+ 

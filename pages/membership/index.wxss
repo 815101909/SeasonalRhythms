@@ -1,0 +1,301 @@
+/* pages/membership/index.wxss */
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f8f8f8;
+}
+
+.back-button {
+  position: absolute;
+  top: 110rpx; /* 调整此值以向下移动按钮 */
+  left: 20rpx;
+  z-index: 100;
+  width: 70rpx; /* 设置宽度 */
+  height: 70rpx; /* 设置高度 */
+  background-color: rgba(255, 255, 255, 0.8); /* 白色背景，带透明度 */
+  border-radius: 50%; /* 圆形 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.1); /* 添加阴影 */
+}
+
+.back-arrow {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+/* 返回按钮放在最左侧 */
+.back-btn {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30rpx;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 10rpx 20rpx;
+  border-radius: 30rpx;
+  width: fit-content;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  align-self: flex-start;
+}
+
+.back-icon {
+  font-size: 40rpx;
+  margin-right: 10rpx;
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.back-text {
+  font-size: 28rpx;
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.loading-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300rpx;
+  width: 100%;
+}
+
+.loading-text {
+  color: #999;
+  font-size: 28rpx;
+}
+
+.membership-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex: 1;
+  height: calc(100vh - 60rpx);
+  padding-top: 70rpx; /* 从40rpx增加到70rpx，向下平移30rpx */
+}
+
+.image-display-area {
+  width: 100%;
+  height: 0;
+  padding-bottom: calc(141.4% - 5rpx);
+  background-color: #fff;
+  border-radius: 20rpx;
+  margin-bottom: 5rpx;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+  margin-top: 50rpx; /* 新增此行，增加顶部间距 */
+}
+
+.member-status-area {
+  width: 100%;
+  padding: 20rpx;
+  background-color: #f0f8ff; /* 淡蓝色背景 */
+  border-radius: 10rpx;
+  margin-bottom: 20rpx;
+  text-align: center;
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.05);
+}
+
+.status-text {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333; /* 深灰色文字 */
+  margin-bottom: 10rpx;
+}
+
+.expire-text {
+  font-size: 28rpx;
+  color: #666; /* 中灰色文字 */
+}
+
+.membership-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* 保持图片比例 */
+  border-radius: 10rpx;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 空白区域占据中间空间 */
+.empty-space {
+  flex: 1;
+  min-height: 5rpx;
+}
+
+/* 底部固定区域 */
+.bottom-fixed-area {
+  width: 100%;
+  margin-top: 5rpx;
+  padding-bottom: 50rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #2e7d32;
+  margin-bottom: 20rpx;
+  padding-left: 15rpx;
+  border-left: 8rpx solid #4caf50;
+}
+
+/* 会员等级样式 */
+.membership-levels {
+  background-color: #fff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.levels-list {
+  display: flex;
+  justify-content: space-between;
+}
+
+.level-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 33.3%;
+}
+
+.level-icon {
+  font-size: 50rpx;
+  margin-bottom: 10rpx;
+}
+
+.level-name {
+  font-size: 26rpx;
+  color: #333;
+}
+
+/* 会员特权样式 */
+.membership-features {
+  background-color: #fff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.features-list {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  width: 50%;
+  margin-bottom: 20rpx;
+}
+
+.feature-icon {
+  color: #4caf50;
+  margin-right: 10rpx;
+  font-size: 28rpx;
+}
+
+.feature-text {
+  font-size: 26rpx;
+  color: #333;
+}
+
+/* 会员价格方案样式 */
+.membership-prices {
+  background-color: #fff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.prices-list {
+  display: flex;
+  justify-content: space-between;
+}
+
+.price-item {
+  width: 30%;
+  border-radius: 15rpx;
+  border: 2rpx solid #e0e0e0;
+  padding: 20rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.price-item.selected {
+  border-color: #4caf50;
+  background-color: #f0f9f0;
+  transform: translateY(-5rpx);
+  box-shadow: 0 6rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.price-item.recommend {
+  border-color: #ff9800;
+}
+
+.price-tag {
+  position: absolute;
+  top: -10rpx;
+  right: -10rpx;
+  background-color: #ff9800;
+  color: white;
+  font-size: 20rpx;
+  padding: 5rpx 10rpx;
+  border-radius: 10rpx;
+}
+
+.price-name {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.price-value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10rpx;
+}
+
+.price-current {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #f44336;
+}
+
+.price-original {
+  font-size: 24rpx;
+  color: #999;
+  text-decoration: line-through;
+}
+
+.price-unit {
+  font-size: 22rpx;
+  color: #666;
+}
+
+/* 购买按钮样式 */
+.purchase-button {
+  margin-top: 30rpx;
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+  height: 90rpx;
+  border-radius: 45rpx;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 32rpx;
+  font-weight: bold;
+  box-shadow: 0 8rpx 16rpx rgba(76, 175, 80, 0.3);
+}
