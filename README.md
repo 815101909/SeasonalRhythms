@@ -167,48 +167,7 @@ pages/
 5. **缓存机制**：对API数据进行本地缓存，提高加载速度
 6. **城市卡片**：通过API获取城市信息，支持挑战、打印和分享功能
 
-## API服务
 
-晓时节小程序所有数据均通过远程API获取，主要包括以下核心模块：
-
-### 1. 节气信息API
-
-节气信息API提供二十四节气的详细信息，主要接口：
-- `/seasons/current` - 获取当前节气信息，包括名称、日期、描述、诗句及图片
-- `/seasons/all` - 获取全部节气列表，包含所有二十四节气的基本信息
-- `/seasons/detail` - 获取指定节气详情，包含特定节气的全部信息和额外数据
-
-### 2. 会员系统API
-
-会员系统API提供会员管理和购买功能，主要接口：
-- `/membership/info` - 获取会员价格方案和宣传图片
-- `/membership/purchase` - 处理会员购买请求，调用微信支付接口
-- `/membership/status` - 查询用户会员状态，返回会员有效期和剩余天数
-- `/membership/records` - 获取会员购买记录，包含历史购买信息
-
-### 3. 城市卡片API
-
-城市卡片API提供城市信息、封面、挑战等功能，主要接口：
-- `/cities` - 获取城市卡片信息，包含已解锁和未解锁的城市列表
-- `/cities/cover` - 获取城市封面信息，包括名称、坐标、人口等基本信息
-- `/cities/detail` - 获取城市详情，包括自然地理、气候时节、人文气息等模块
-- `/cities/sections/{sectionId}` - 获取城市特定板块详情
-- `/cities/challenge/info` - 获取城市知识挑战信息，包括挑战题目类型和奖励
-- `/cities/print` - 获取城市信息的打印版本，支持多种格式
-- `/cities/audio` - 获取城市的音频解说，包括语音导览和文字稿
-
-### 4. 博物馆内容API
-
-博物馆API提供晓城博物馆和晓时博物馆的内容访问，主要接口：
-- `/museum/city-chapters` - 获取城市博物馆的所有章节信息，包括解锁状态和树木消耗数量
-- `/museum/city-chapter/{chapterId}` - 获取特定城市章节的详细内容
-- `/museum/city-poetry` - 获取诗画古城数据，包含城市对应的古诗词
-- `/museum/season-areas` - 获取时节博物馆的所有区域信息
-- `/museum/season-area/{areaId}` - 获取特定时节区域的详细内容
-- `/museum/solar-terms` - 获取二十四节气概览信息
-- `/user/unlock` - 提交内容解锁请求，消耗树木获取特定内容
-
-所有API详细信息请参考项目根目录的<mcfile name="API.md" path="d:\LearnProject\WorkProject\xiaoshijie\xiaoshijie-frontend\API.md"></mcfile>文件。API的基础URL为`https://api.xiaoshijie.com/v1`，所有接口统一使用标准JSON格式传递数据。
 
 ## 本地开发与调试
 
@@ -219,10 +178,9 @@ pages/
 
 2.  **API环境配置**
 
-    - **开发环境**：默认使用本地Mock数据或配置的开发环境API。
-    - **预览和真机调试**：使用开发环境API。
-    - **发布版本**：使用生产环境API。
-    - 确保在微信开发者工具的“项目设置”中，正确配置了“不校验合法域名、web-view（业务域名）、TLS 版本以及 HTTPS 证书”选项（仅限开发调试使用）。
+    - **开发环境**：使用腾讯云存储
+    - **预览和真机调试**：使用开发云环境。
+    - **发布版本**：使用开发云环境。
 
 3.  **调试**
 
