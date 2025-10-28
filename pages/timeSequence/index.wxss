@@ -316,7 +316,7 @@
   box-sizing: border-box;
 }
 
-/* 封面和视频并排显示区域 */
+/* 封面和视频并排显示区域 + 滑动隐藏动画 */
 .media-container {
   display: flex;
   flex-direction: row;
@@ -325,6 +325,24 @@
   width: calc(100% - 40rpx);
   height: 230rpx; /* 从180rpx增加到230rpx */
   align-items: stretch;
+  flex-shrink: 0;
+  min-height: 230rpx;
+  max-height: 230rpx;
+  /* 过渡动画 */
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  animation: media-slide-in 0.3s ease-out;
+}
+
+/* 封面视频入场动画 */
+@keyframes media-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 封面样式 */
@@ -516,6 +534,82 @@
   min-height: 100rpx;
   transition: transform 0.3s ease;
   font-family: "Source Han Serif", "Noto Serif SC", "思源宋体", serif;
+  
+  /* 初始状态：隐藏 */
+  opacity: 0;
+  transform: translateY(60rpx);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+/* 板块可见时的状态（仅VIP用户） */
+.info-section.section-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 非会员用户：禁用动画，直接显示 */
+.info-section.no-animation {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  animation: none !important;
+  transition: transform 0.3s ease;
+}
+
+.info-section.no-animation .floating-image,
+.info-section.no-animation .info-content {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+/* 为不同板块添加不同的动画延迟和效果（仅VIP用户） */
+.info-section:nth-child(1).section-visible {
+  transition-delay: 0s;
+  animation: slide-in-left 0.8s ease-out;
+}
+
+.info-section:nth-child(2).section-visible {
+  transition-delay: 0.1s;
+  animation: slide-in-right 0.8s ease-out 0.1s;
+}
+
+.info-section:nth-child(3).section-visible {
+  transition-delay: 0.2s;
+  animation: slide-in-left 0.8s ease-out 0.2s;
+}
+
+.info-section:nth-child(4).section-visible {
+  transition-delay: 0.3s;
+  animation: slide-in-right 0.8s ease-out 0.3s;
+}
+
+.info-section:nth-child(5).section-visible {
+  transition-delay: 0.4s;
+  animation: slide-in-left 0.8s ease-out 0.4s;
+}
+
+/* 从左侧滑入 */
+@keyframes slide-in-left {
+  0% {
+    opacity: 0;
+    transform: translateX(-50rpx) translateY(30rpx);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0);
+  }
+}
+
+/* 从右侧滑入 */
+@keyframes slide-in-right {
+  0% {
+    opacity: 0;
+    transform: translateX(50rpx) translateY(30rpx);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0);
+  }
 }
 
 .info-section:active {
@@ -813,6 +907,28 @@
   position: relative;
   z-index: 2;
   font-family: "Source Han Serif", "Noto Serif SC", "思源宋体", serif;
+  
+  /* 文字初始状态 */
+  opacity: 0;
+  transform: translateY(20rpx);
+}
+
+/* 板块可见时文字动画 */
+.info-section.section-visible .info-content {
+  animation: text-fade-in 0.8s ease-out forwards;
+  animation-delay: 0.4s;
+}
+
+/* 文字淡入动画 */
+@keyframes text-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .info-content text {
@@ -903,6 +1019,31 @@
   z-index: 3;
   position: relative;
   transition: all 0.3s ease-in-out;
+  
+  /* 图片初始状态 */
+  opacity: 0;
+  transform: scale(0.8) rotate(-3deg);
+}
+
+/* 板块可见时图片动画 */
+.info-section.section-visible .floating-image {
+  animation: image-pop-in 0.6s ease-out forwards;
+  animation-delay: 0.3s;
+}
+
+/* 图片弹入动画 */
+@keyframes image-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) rotate(-3deg);
+  }
+  60% {
+    transform: scale(1.05) rotate(1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
 }
 
 /* 占位图样式 */
@@ -2574,6 +2715,7 @@
   align-items: center;
   background-color: #fafafa;
   border-bottom: 1px solid #eaeaea;
+  flex-shrink: 0;
 }
 
 .museum-title {
@@ -3612,4 +3754,670 @@
 .lock-button:active {
   transform: translateY(2rpx);
   box-shadow: 0 4rpx 10rpx rgba(255, 107, 107, 0.3);
+}
+
+/* ==================== 地标功能样式 ==================== */
+
+/* 横向地标容器 - 扩大版 + 入场动画 */
+.landmarks-horizontal-container {
+  width: 100%;
+  padding: 18rpx 20rpx 20rpx;
+  background: linear-gradient(135deg, rgba(255, 248, 220, 0.8) 0%, rgba(255, 240, 245, 0.8) 100%);
+  border-bottom: 2rpx solid rgba(255, 200, 150, 0.3);
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.05);
+  overflow: visible;
+  flex-shrink: 0;
+  animation: container-slide-in 0.8s ease-out;
+}
+
+/* 容器入场动画 */
+@keyframes container-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 地标旅程 - 横向布局 */
+.landmarks-journey {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 左侧标题区 - 横向排列，右移 */
+.title-section {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-left: 30rpx;
+  flex-shrink: 0;
+  gap: 6rpx;
+}
+
+/* emoji - 左侧 */
+.title-emoji {
+  font-size: 24rpx;
+  line-height: 1;
+  animation: title-fade-in 0.6s ease-out, title-glow 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 8rpx rgba(255, 215, 0, 0.3));
+}
+
+/* 文字 - 右侧 */
+.title-text {
+  font-size: 24rpx;
+  font-weight: bold;
+  color: #8B4513;
+  font-family: "Source Han Sans", "Noto Sans SC", "思源黑体", sans-serif;
+  text-shadow: 0 0 8rpx rgba(255, 215, 0, 0.3);
+  line-height: 1;
+}
+
+@keyframes title-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 标题呼吸发光动画 */
+@keyframes title-glow {
+  0%, 100% {
+    text-shadow: 0 0 8rpx rgba(255, 215, 0, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    text-shadow: 0 0 15rpx rgba(255, 215, 0, 0.6), 0 0 25rpx rgba(255, 180, 100, 0.3);
+    transform: scale(1.02);
+  }
+}
+
+/* 地标路径容器 - 右侧区域，整体右移 */
+.landmarks-path {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 12rpx;
+  padding: 0 15rpx 0 15rpx;
+  margin: 0 0 0 10rpx;
+}
+
+/* 地标节点 + 悬浮交互 */
+.landmark-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 48rpx;
+  height: 48rpx;
+  cursor: pointer;
+  animation: landmark-wave 3s ease-in-out infinite;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+/* 地标悬停效果 */
+.landmark-node:active {
+  transform: translateY(0) scale(1.15);
+  filter: brightness(1.2);
+}
+
+/* 波动动画 - 错开时间营造波浪效果 */
+@keyframes landmark-wave {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-12rpx) scale(1.05);
+  }
+}
+
+/* 不同地标的波动延迟 */
+.landmark-wave-0 {
+  animation-delay: 0s;
+}
+
+.landmark-wave-1 {
+  animation-delay: 0.3s;
+}
+
+.landmark-wave-2 {
+  animation-delay: 0.6s;
+}
+
+/* 地标emoji - 更小 + 摇摆 */
+.landmark-emoji {
+  font-size: 32rpx;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 3rpx 6rpx rgba(0, 0, 0, 0.15));
+  transition: all 0.3s ease;
+  animation: emoji-swing 4s ease-in-out infinite;
+}
+
+/* emoji摇摆动画 */
+@keyframes emoji-swing {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.landmark-node:active .landmark-emoji {
+  transform: scale(0.9) rotate(0deg);
+}
+
+/* 地标名称 - 隐藏 */
+.landmark-name {
+  display: none;
+}
+
+/* 脉冲动画 - 更小，略微偏下 */
+.landmark-pulse {
+  position: absolute;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 38rpx;
+  height: 38rpx;
+  border-radius: 50%;
+  background-color: rgba(255, 200, 100, 0.3);
+  animation: landmark-pulse 2s ease-out infinite;
+  z-index: 0;
+}
+
+@keyframes landmark-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* 已点亮的地标光效 - 更小，略微偏下 */
+.landmark-glow {
+  position: absolute;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 45rpx;
+  height: 45rpx;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.8) 0%, rgba(255, 165, 0, 0.4) 50%, transparent 100%);
+  animation: glow-rotate 3s linear infinite;
+  z-index: 0;
+}
+
+@keyframes glow-rotate {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(180deg) scale(1.1);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg) scale(1);
+  }
+}
+
+/* 已点亮的地标 */
+.landmark-node.lit .landmark-emoji {
+  animation: lit-bounce 0.6s ease-out;
+  filter: drop-shadow(0 0 18rpx rgba(255, 215, 0, 0.9));
+}
+
+@keyframes lit-bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+}
+
+.landmark-node.lit .landmark-pulse {
+  background-color: rgba(255, 215, 0, 0.5);
+}
+
+/* 箭头连接器 - S形道路 */
+.landmark-arrow {
+  display: flex;
+  align-items: center;
+  margin: 0 10rpx;
+  position: relative;
+  height: 50rpx;
+}
+
+/* 箭头线条 - 搭桥式虚线延伸 */
+.arrow-line {
+  width: 60rpx;
+  height: 28rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 灰色虚线（未点亮状态） - 静态完整显示 */
+.arrow-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='28' viewBox='0 0 60 28' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 0 14 Q 15 4, 30 14 T 60 14' stroke='%23D3D3D3' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-dasharray='5 4'/%3E%3C/svg%3E");
+  background-size: 60rpx 28rpx;
+  background-repeat: no-repeat;
+  background-position: left center;
+  opacity: 0.5;
+}
+
+/* 点亮后的彩色虚线 - 循环搭桥动画 */
+.landmark-arrow.lit .arrow-line::before {
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='28' viewBox='0 0 60 28' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 0 14 Q 15 4, 30 14 T 60 14' stroke='%23FFB464' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-dasharray='5 4'/%3E%3C/svg%3E");
+  opacity: 1;
+  animation: bridge-loop 2s ease-in-out infinite;
+}
+
+/* 循环搭桥动画 - 无限循环 */
+@keyframes bridge-loop {
+  0%, 100% {
+    width: 0%;
+  }
+  50% {
+    width: 100%;
+  }
+}
+
+/* 移除箭头 */
+
+/* 地标弹窗 */
+.landmark-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: modal-fade-in 0.3s ease-out;
+}
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 弹窗内容 */
+.landmark-modal-content {
+  width: 85%;
+  max-width: 600rpx;
+  height: 70vh;
+  max-height: 800rpx;
+  background-color: transparent;
+  border-radius: 30rpx;
+  position: relative;
+  animation: modal-slide-up 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+}
+
+@keyframes modal-slide-up {
+  from {
+    transform: translateY(100rpx) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* ==================== 古灯（灯笼）背景样式 ==================== */
+
+/* 古灯背景容器 */
+.ancient-lantern-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  transition: all 0.6s ease;
+}
+
+/* 灯笼顶部装饰 */
+.lantern-top {
+  width: 180rpx;
+  height: 40rpx;
+  background: linear-gradient(to bottom, #8B4513 0%, #A0522D 100%);
+  border-radius: 20rpx 20rpx 0 0;
+  position: relative;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2);
+  transition: all 0.6s ease;
+}
+
+.lantern-top::before {
+  content: '';
+  position: absolute;
+  top: -15rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30rpx;
+  height: 15rpx;
+  background: #654321;
+  border-radius: 50% 50% 0 0;
+}
+
+/* 灯笼主体 */
+.lantern-body {
+  width: 500rpx;
+  height: 700rpx;
+  position: relative;
+  background: linear-gradient(to right,
+    rgba(200, 200, 200, 0.3) 0%,
+    rgba(220, 220, 220, 0.4) 20%,
+    rgba(240, 240, 240, 0.5) 50%,
+    rgba(220, 220, 220, 0.4) 80%,
+    rgba(200, 200, 200, 0.3) 100%);
+  border-radius: 40rpx;
+  overflow: hidden;
+  box-shadow: inset 0 0 40rpx rgba(0, 0, 0, 0.1),
+              0 10rpx 40rpx rgba(0, 0, 0, 0.15);
+  transition: all 0.6s ease;
+}
+
+/* 地标图片 - 在灯笼内部 */
+.lantern-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(8rpx) grayscale(50%);
+  opacity: 0.4;
+  transition: all 0.6s ease;
+  z-index: 1;
+}
+
+/* 灯笼发光层 */
+.lantern-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at center,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(200, 200, 200, 0.2) 100%);
+  z-index: 2;
+  transition: all 0.6s ease;
+}
+
+/* 灯笼底部装饰 */
+.lantern-bottom {
+  width: 180rpx;
+  height: 40rpx;
+  background: linear-gradient(to top, #8B4513 0%, #A0522D 100%);
+  border-radius: 0 0 20rpx 20rpx;
+  box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.25);
+  transition: all 0.6s ease;
+}
+
+/* 灯穗 */
+.lantern-tassel {
+  width: 20rpx;
+  height: 80rpx;
+  background: linear-gradient(to bottom,
+    #8B4513 0%,
+    #CD853F 50%,
+    transparent 100%);
+  border-radius: 10rpx;
+  margin-top: -5rpx;
+  transition: all 0.6s ease;
+}
+
+/* ==================== 点亮后的样式 ==================== */
+
+/* 点亮后 - 灯笼主体发光 */
+.ancient-lantern-bg.lit .lantern-body {
+  background: linear-gradient(to right,
+    rgba(255, 200, 100, 0.6) 0%,
+    rgba(255, 220, 120, 0.8) 20%,
+    rgba(255, 235, 150, 0.95) 50%,
+    rgba(255, 220, 120, 0.8) 80%,
+    rgba(255, 200, 100, 0.6) 100%);
+  box-shadow: inset 0 0 60rpx rgba(255, 215, 0, 0.4),
+              0 0 80rpx rgba(255, 215, 0, 0.6),
+              0 0 120rpx rgba(255, 165, 0, 0.4);
+  animation: lantern-flicker 3s ease-in-out infinite;
+}
+
+@keyframes lantern-flicker {
+  0%, 100% {
+    box-shadow: inset 0 0 60rpx rgba(255, 215, 0, 0.4),
+                0 0 80rpx rgba(255, 215, 0, 0.6),
+                0 0 120rpx rgba(255, 165, 0, 0.4);
+  }
+  50% {
+    box-shadow: inset 0 0 80rpx rgba(255, 215, 0, 0.5),
+                0 0 100rpx rgba(255, 215, 0, 0.7),
+                0 0 140rpx rgba(255, 165, 0, 0.5);
+  }
+}
+
+/* 点亮后 - 图片变清晰 */
+.ancient-lantern-bg.lit .lantern-image {
+  filter: blur(3rpx) grayscale(0%);
+  opacity: 0.7;
+}
+
+/* 点亮后 - 发光层变亮 */
+.ancient-lantern-bg.lit .lantern-glow {
+  background: radial-gradient(ellipse at center,
+    rgba(255, 255, 200, 0.3) 0%,
+    rgba(255, 235, 150, 0.2) 40%,
+    rgba(255, 215, 100, 0.1) 100%);
+}
+
+/* 点亮后 - 顶部和底部装饰变亮 */
+.ancient-lantern-bg.lit .lantern-top,
+.ancient-lantern-bg.lit .lantern-bottom {
+  filter: brightness(1.2);
+}
+
+/* 点亮后 - 灯穗发光 */
+.ancient-lantern-bg.lit .lantern-tassel {
+  background: linear-gradient(to bottom,
+    #CD853F 0%,
+    #FFD700 50%,
+    rgba(255, 215, 0, 0.5) 100%);
+  filter: drop-shadow(0 0 10rpx rgba(255, 215, 0, 0.6));
+}
+
+/* 信息区域 */
+.landmark-modal-info {
+  position: relative;
+  z-index: 10;
+  padding: 80rpx 50rpx 120rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* 弹窗emoji */
+.landmark-modal-emoji {
+  font-size: 120rpx;
+  margin-bottom: 30rpx;
+  animation: modal-emoji-bounce 0.6s ease-out;
+  filter: drop-shadow(0 8rpx 16rpx rgba(0, 0, 0, 0.3));
+  text-shadow: 0 0 20rpx rgba(255, 255, 255, 0.8);
+}
+
+@keyframes modal-emoji-bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-20rpx) scale(1.1);
+  }
+}
+
+/* 标题 */
+.landmark-modal-title {
+  font-size: 44rpx;
+  font-weight: bold;
+  color: #2c1810;
+  margin-bottom: 20rpx;
+  font-family: "Source Han Sans", "Noto Sans SC", "思源黑体", sans-serif;
+  text-shadow: 0 2rpx 8rpx rgba(255, 255, 255, 0.9),
+               0 0 20rpx rgba(255, 255, 255, 0.6);
+}
+
+/* 描述 */
+.landmark-modal-desc {
+  font-size: 28rpx;
+  color: #4a3728;
+  line-height: 1.8;
+  padding: 0 20rpx;
+  font-family: "Source Han Serif", "Noto Serif SC", "思源宋体", serif;
+  text-shadow: 0 1rpx 4rpx rgba(255, 255, 255, 0.8),
+               0 0 15rpx rgba(255, 255, 255, 0.5);
+}
+
+/* 点亮按钮 */
+.landmark-light-btn {
+  position: absolute;
+  bottom: 50rpx;
+  right: 50rpx;
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+  transition: all 0.3s ease;
+}
+
+@keyframes btn-pulse {
+  0%, 100% {
+    box-shadow: 0 8rpx 20rpx rgba(255, 165, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 8rpx 30rpx rgba(255, 165, 0, 0.7);
+  }
+}
+
+.landmark-light-btn:active {
+  transform: scale(0.9);
+}
+
+.light-btn-icon {
+  font-size: 48rpx;
+  margin-bottom: 5rpx;
+  filter: grayscale(100%);
+  opacity: 0.6;
+}
+
+/* 点亮后图标恢复彩色并添加闪烁动画 */
+.landmark-light-btn.lit .light-btn-icon {
+  filter: grayscale(0%);
+  opacity: 1;
+  animation: sparkle 1s ease-out;
+}
+
+.light-btn-text {
+  font-size: 24rpx;
+  color: #757575;
+  font-weight: bold;
+  font-family: "Source Han Sans", "Noto Sans SC", "思源黑体", sans-serif;
+}
+
+/* 点亮后文字变白色 */
+.landmark-light-btn.lit .light-btn-text {
+  color: white;
+}
+
+/* 已点亮状态 - 黄色背景 */
+.landmark-light-btn.lit {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  box-shadow: 0 8rpx 20rpx rgba(255, 165, 0, 0.4);
+  animation: btn-pulse 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.3) rotate(10deg);
+  }
+  75% {
+    transform: scale(1.3) rotate(-10deg);
+  }
+}
+
+/* 关闭按钮 */
+.landmark-close-btn {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  width: 70rpx;
+  height: 70rpx;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 55rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  font-weight: 300;
+  line-height: 1;
+  backdrop-filter: blur(10rpx);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.landmark-close-btn:active {
+  background-color: rgba(0, 0, 0, 0.8);
+  transform: scale(0.9);
 }

@@ -239,7 +239,9 @@ async function generateCities(year = new Date().getFullYear(), selectedMonth = n
           streetTreasuresImage: streetTreasuresImageUrl,
           // 音频
           audioUrl: await getTemporaryImageUrl(cityCard.audio, 'audio'),
-          audioTitle: '城市音频导览'
+          audioTitle: '城市音频导览',
+          // 地标数据
+          landmark: cityCard.landmark || []
         });
       } else if (!isPastDate) {
         // 未来的日期，显示未解锁状态
@@ -1013,6 +1015,18 @@ Page({
     isVIP: false, // 用户会员状态
     showMembershipLock: false, // 是否显示会员锁定提示
     maxScrollForNonMember: 300, // 非会员最大滚动距离（rpx）
+    
+    // 板块动画状态
+    sectionAnimations: [false, false, false, false, false], // 5个板块的动画状态
+    
+    // 地标功能
+    cityLandmarks: [], // 当前城市的地标列表
+    showLandmarkModal: false, // 是否显示地标弹窗
+    currentLandmark: null, // 当前查看的地标
+    
+    // 封面和视频显示控制
+    showMediaContainer: true, // 是否显示封面和视频
+    lastScrollTop: 0, // 上次滚动位置
   },
 
   /**
@@ -1161,19 +1175,101 @@ Page({
    
    // 处理内容滚动事件
    onContentScroll(e) {
-    // VIP用户无需任何限制检查
+    const { scrollTop } = e.detail;
+    const lastScrollTop = this.data.lastScrollTop;
+    
+    // 判断滚动方向并控制封面和视频显示
+    // 向上滑动（scrollTop > lastScrollTop）且超过50rpx时隐藏
+    // 向下滑动（scrollTop < lastScrollTop）且小于30rpx时显示
+    if (scrollTop > 50 && scrollTop > lastScrollTop) {
+      // 上拉，隐藏
+      if (this.data.showMediaContainer) {
+        this.setData({ showMediaContainer: false });
+      }
+    } else if (scrollTop < 30) {
+      // 下拉到顶部附近，显示
+      if (!this.data.showMediaContainer) {
+        this.setData({ showMediaContainer: true });
+      }
+    }
+    
+    // 更新上次滚动位置
+    this.setData({ lastScrollTop: scrollTop });
+    
+    // 仅VIP用户触发板块动画检测
     if (this.data.isVIP) {
+      this.checkSectionVisibility(scrollTop);
       return;
     }
     
     // 非VIP用户检查滚动限制
-    const { scrollTop } = e.detail;
     if (scrollTop > this.data.maxScrollForNonMember) {
       this.setData({
         showMembershipLock: true
       });
       return false; // 阻止滚动事件
     }
+  },
+  
+  // 检测板块是否进入视口
+  checkSectionVisibility(scrollTop) {
+    const query = wx.createSelectorQuery().in(this);
+    const sectionAnimations = [...this.data.sectionAnimations];
+    let hasUpdate = false;
+    
+    // 记录哪些板块需要查询（用于后续索引映射）
+    const sectionsToQuery = [];
+    
+    // 检查每个板块
+    for (let i = 0; i < 5; i++) {
+      // 如果该板块动画已触发，跳过
+      if (sectionAnimations[i]) continue;
+      
+      sectionsToQuery.push(i);
+      query.select(`#section-${i}`).boundingClientRect();
+    }
+    
+    // 如果没有需要查询的板块，直接返回
+    if (sectionsToQuery.length === 0) return;
+    
+    query.selectViewport().scrollOffset();
+    
+    query.exec((res) => {
+      if (!res || res.length === 0) return;
+      
+      // 获取视口信息（最后一个元素）
+      const viewportInfo = res[res.length - 1];
+      const windowInfo = wx.getWindowInfo();
+      const windowHeight = windowInfo.windowHeight;
+      
+      // 检查每个板块的位置
+      for (let i = 0; i < res.length - 1; i++) {
+        const rect = res[i];
+        if (!rect) continue;
+        
+        // 找到对应的板块索引（使用映射数组）
+        const sectionIndex = sectionsToQuery[i];
+        
+        // 如果该板块已经触发过动画，跳过
+        if (sectionAnimations[sectionIndex]) continue;
+        
+        // 计算板块是否进入视口
+        // 当板块顶部距离视口底部小于80%窗口高度时触发
+        const threshold = windowHeight * 0.8;
+        if (rect.top < threshold && rect.top + rect.height > 0) {
+          sectionAnimations[sectionIndex] = true;
+          hasUpdate = true;
+          console.log(`板块 ${sectionIndex} 触发动画`);
+        }
+      }
+      
+      // 如果有更新，更新数据
+      if (hasUpdate) {
+        this.setData({
+          sectionAnimations: sectionAnimations
+        });
+      }
+    });
   },
    
    // 点击会员锁定区域
@@ -1364,7 +1460,9 @@ Page({
       this.setData({
         showCityDetail: true,
         selectedCity: targetCity,
-        showCityMuseum: false // 确保显示城市详情而非博物馆
+        showCityMuseum: false, // 确保显示城市详情而非博物馆
+        showMediaContainer: true, // 重置封面视频显示
+        lastScrollTop: 0 // 重置滚动位置
       });
     } else {
       // 未找到城市，显示提示
@@ -1647,18 +1745,37 @@ Page({
   },
   
   // 城市点击
-  onCityTap: function(e) {
+  onCityTap: async function(e) {
     const city = e.currentTarget.dataset.city;
     
     if (city.unlocked) {
+      // 初始化该城市的地标数据（异步转换云存储图片）
+      const landmarks = await this.generateLandmarksForCity(city);
+      
       this.setData({
         showCityDetail: true,
         selectedCity: city,
-        showCityMuseum: false // Ensure museum view is hidden initially
+        showCityMuseum: false, // Ensure museum view is hidden initially
+        sectionAnimations: [false, false, false, false, false], // 重置动画状态
+        cityLandmarks: landmarks, // 设置地标数据
+        showMediaContainer: true, // 重置封面视频显示
+        lastScrollTop: 0 // 重置滚动位置
       }, async () => {
         // 初始化音频上下文
         await this.initAudioContext();
         this.toggleBgMusic(); // 自动播放背景音乐
+        
+        // 仅VIP用户触发板块动画
+        if (this.data.isVIP) {
+          // 延迟触发第一个板块的动画（页面打开后立即显示）
+          setTimeout(() => {
+            const sectionAnimations = [...this.data.sectionAnimations];
+            sectionAnimations[0] = true; // 第一个板块立即显示
+            this.setData({
+              sectionAnimations: sectionAnimations
+            });
+          }, 100);
+        }
       });
     } else {
       wx.showToast({
@@ -1681,6 +1798,288 @@ Page({
         bgMusicContext: null,
         isBgMusicPlaying: false
       });
+    }
+  },
+  
+  // ==================== 地标功能 ====================
+  
+  // 为城市生成地标数据（从真实数据读取，支持云存储图片）
+  generateLandmarksForCity: async function(city) {
+    const cityName = city.name || '📍 默认';
+    let landmarks = [];
+    
+    console.log('生成地标数据 - 城市:', cityName);
+    console.log('city.landmark:', city.landmark);
+    
+    // 优先从城市数据的landmark字段读取
+    if (city.landmark && Array.isArray(city.landmark) && city.landmark.length > 0) {
+      console.log('使用真实地标数据，数量:', city.landmark.length);
+      // 使用真实数据，并转换云存储图片
+      const landmarkPromises = city.landmark.map(async (item, index) => {
+        // 默认emoji列表（如果数据中没有emoji字段）- 地标主题
+        const defaultEmojis = ['🏛️', '🗼', '🌉', '🏯', '⛩️', '🗽', '🏰', '🕌', '🗿'];
+        
+        // emoji：优先使用数据中的emoji字段，否则使用默认emoji
+        const emoji = item.emoji || defaultEmojis[index % defaultEmojis.length];
+        
+        // picture字段处理：只用于弹窗背景图
+        let imageUrl = '';
+        if (item.picture) {
+          // 如果是云存储链接，转换为临时HTTP链接
+          if (item.picture.startsWith('cloud://')) {
+            try {
+              const c = new wx.cloud.Cloud({
+                identityless: true,
+                resourceAppid: 'wx85d92d28575a70f4',
+                resourceEnv: 'cloud1-1gsyt78b92c539ef',
+              });
+              await c.init();
+              const result = await c.getTempFileURL({
+                fileList: [item.picture]
+              });
+              
+              if (result.fileList && result.fileList[0] && result.fileList[0].tempFileURL) {
+                imageUrl = result.fileList[0].tempFileURL;
+              } else {
+                console.error('地标图片云存储链接转换失败:', result);
+              }
+            } catch (err) {
+              console.error('地标图片转换临时链接失败:', err);
+            }
+          } else if (item.picture.startsWith('http://') || item.picture.startsWith('https://')) {
+            // HTTP链接直接使用
+            imageUrl = item.picture;
+          }
+        }
+        
+        // 如果没有图片，使用城市封面作为背景
+        if (!imageUrl) {
+          imageUrl = city.iconUrl || '';
+        }
+        
+        console.log(`地标${index + 1} - emoji: ${emoji}, name: ${item.name}, 图片: ${imageUrl}`);
+        
+        return {
+          id: index + 1,
+          emoji: emoji, // 地标节点显示的emoji
+          name: item.name || '未命名地标',
+          description: item.description || '暂无描述',
+          image: imageUrl, // 弹窗背景图
+          lit: false // 默认未点亮
+        };
+      });
+      
+      landmarks = await Promise.all(landmarkPromises);
+      console.log('地标数据转换完成:', landmarks);
+    } else {
+      // 如果没有数据，使用默认地标
+      console.log('未找到地标数据，使用默认地标');
+      landmarks = [
+        { id: 1, emoji: '🏛️', name: '古典建筑', description: '这是一座历史悠久的建筑，见证了这座城市的变迁', image: city.iconUrl || '', lit: false },
+        { id: 2, emoji: '🗼', name: '地标之塔', description: '城市的象征，在这里可以俯瞰整座城市的美景', image: city.iconUrl || '', lit: false },
+        { id: 3, emoji: '🌉', name: '标志桥梁', description: '连接城市南北的重要交通枢纽，也是最美的风景线', image: city.iconUrl || '', lit: false },
+        { id: 4, emoji: '🏯', name: '古城遗址', description: '古老的城楼遗址，承载着城市千年的历史记忆', image: city.iconUrl || '', lit: false }
+      ];
+    }
+    
+    // 从本地存储加载已点亮状态
+    const storageKey = `landmarks_${cityName}`;
+    try {
+      const savedLandmarks = wx.getStorageSync(storageKey);
+      if (savedLandmarks && Array.isArray(savedLandmarks)) {
+        // 合并保存的点亮状态
+        landmarks = landmarks.map((landmark, index) => ({
+          ...landmark,
+          lit: savedLandmarks[index]?.lit || false
+        }));
+      }
+    } catch (e) {
+      console.error('读取地标状态失败:', e);
+    }
+    
+    return landmarks;
+  },
+  
+  // 点击地标
+  onLandmarkTap: function(e) {
+    const index = e.currentTarget.dataset.index;
+    const landmark = this.data.cityLandmarks[index];
+    const landmarks = this.data.cityLandmarks;
+    
+    if (!landmark) return;
+    
+    // 检查是否可以点击（必须前面的都已点亮）
+    for (let i = 0; i < index; i++) {
+      if (!landmarks[i].lit) {
+        wx.showToast({
+          title: `请先点亮：${landmarks[i].name}`,
+          icon: 'none',
+          duration: 2000
+        });
+        return;
+      }
+    }
+    
+    // 可以点击，显示弹窗
+    this.setData({
+      currentLandmark: landmark,
+      showLandmarkModal: true
+    });
+  },
+  
+  // 关闭地标弹窗
+  closeLandmarkModal: function() {
+    this.setData({
+      showLandmarkModal: false
+    });
+  },
+  
+  // 阻止事件冒泡
+  stopPropagation: function() {
+    // 空函数，只是用来阻止冒泡
+  },
+  
+  // 点亮地标
+  lightUpLandmark: function() {
+    if (!this.data.currentLandmark) return;
+    
+    // 如果已经点亮，不做处理
+    if (this.data.currentLandmark.lit) {
+      wx.showToast({
+        title: '已经点亮过了哦~',
+        icon: 'none'
+      });
+      return;
+    }
+    
+    // 获取当前地标的索引
+    const landmarks = [...this.data.cityLandmarks];
+    const index = landmarks.findIndex(l => l.id === this.data.currentLandmark.id);
+    
+    if (index === -1) return;
+    
+    // 检查是否按顺序点亮（必须前面的都点亮了）
+    for (let i = 0; i < index; i++) {
+      if (!landmarks[i].lit) {
+        wx.showModal({
+          title: '提示',
+          content: `请先点亮前面的地标：${landmarks[i].name}`,
+          showCancel: false,
+          confirmText: '知道了'
+        });
+        return;
+      }
+    }
+    
+    // 播放点亮音效
+    this.playLightUpSound();
+    
+    // 震动反馈
+    wx.vibrateShort({
+      type: 'medium'
+    });
+    
+    // 更新地标列表中的点亮状态
+    landmarks[index].lit = true;
+    
+    // 更新当前地标状态
+    const updatedCurrentLandmark = { ...this.data.currentLandmark, lit: true };
+    
+    this.setData({
+      cityLandmarks: landmarks,
+      currentLandmark: updatedCurrentLandmark
+    });
+    
+    // 保存到本地存储
+    const cityName = this.data.selectedCity?.name || '📍 默认';
+    const storageKey = `landmarks_${cityName}`;
+    try {
+      wx.setStorageSync(storageKey, landmarks);
+    } catch (e) {
+      console.error('保存地标状态失败:', e);
+    }
+    
+    // 显示成功提示
+    wx.showToast({
+      title: '🎉 点亮成功！',
+      icon: 'success',
+      duration: 2000
+    });
+    
+    // 检查是否全部点亮
+    const allLit = landmarks.every(l => l.lit);
+    if (allLit) {
+      // 播放完成音效
+      setTimeout(() => {
+        this.playCompleteSound();
+        wx.vibrateShort({ type: 'heavy' });
+      }, 500);
+      
+      setTimeout(() => {
+        wx.showModal({
+          title: '🏆 恭喜你！',
+          content: `你已经点亮了${cityName}的所有地标！\n继续探索更多城市吧~`,
+          showCancel: false,
+          confirmText: '太棒了'
+        });
+      }, 2000);
+    }
+  },
+  
+  // 播放点亮音效
+  playLightUpSound: function() {
+    try {
+      const innerAudioContext = wx.createInnerAudioContext();
+      // 使用本地音效文件
+      innerAudioContext.src = '/static/ding-402325.mp3';
+      innerAudioContext.volume = 0.6;
+      innerAudioContext.play();
+      
+      // 播放完成后销毁实例
+      innerAudioContext.onEnded(() => {
+        innerAudioContext.destroy();
+      });
+      
+      // 错误处理
+      innerAudioContext.onError((res) => {
+        console.log('点亮音效播放失败:', res);
+        innerAudioContext.destroy();
+      });
+    } catch (e) {
+      console.error('创建音频上下文失败:', e);
+    }
+  },
+  
+  // 播放全部完成音效
+  playCompleteSound: function() {
+    try {
+      const innerAudioContext = wx.createInnerAudioContext();
+      // 使用本地音效文件（连续播放两次表示完成）
+      innerAudioContext.src = '/static/ding-402325.mp3';
+      innerAudioContext.volume = 0.7;
+      innerAudioContext.play();
+      
+      // 第一次播放完后再播放一次
+      innerAudioContext.onEnded(() => {
+        const secondPlay = wx.createInnerAudioContext();
+        secondPlay.src = '/static/ding-402325.mp3';
+        secondPlay.volume = 0.8;
+        secondPlay.play();
+        secondPlay.onEnded(() => {
+          secondPlay.destroy();
+        });
+        secondPlay.onError(() => {
+          secondPlay.destroy();
+        });
+        innerAudioContext.destroy();
+      });
+      
+      innerAudioContext.onError((res) => {
+        console.log('完成音效播放失败:', res);
+        innerAudioContext.destroy();
+      });
+    } catch (e) {
+      console.error('创建音频上下文失败:', e);
     }
   },
   
@@ -1913,7 +2312,9 @@ Page({
     this.setData({
       showUnlockAnimation: false,
       showCityDetail: true,
-      selectedCity: this.data.newlyUnlockedCity
+      selectedCity: this.data.newlyUnlockedCity,
+      showMediaContainer: true, // 重置封面视频显示
+      lastScrollTop: 0 // 重置滚动位置
     });
   },
   

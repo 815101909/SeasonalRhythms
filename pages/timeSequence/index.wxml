@@ -147,7 +147,7 @@
     <view class="city-detail-content">
       
       <!-- 封面和视频并排显示容器 - 只在城市详情模式显示 -->
-      <view class="media-container" wx:if="{{!showCityMuseum}}">
+      <view class="media-container" wx:if="{{!showCityMuseum && showMediaContainer}}">
         <view class="city-detail-header">
           <!-- 封面图片 -->
           <image class="city-icon-large" src="{{selectedCity.iconUrl}}" mode="aspectFill" wx:if="{{selectedCity.iconUrl}}"></image>
@@ -213,11 +213,43 @@
         <view class="action-btn" bindtap="leaveFootprint"><text class="btn-icon">👣</text></view>
       </view>
       
+      <!-- 地标打卡区 - 只在城市详情模式显示 -->
+      <view class="landmarks-horizontal-container" wx:if="{{!showCityMuseum}}">
+        <view class="landmarks-journey">
+          <!-- 左侧标题区 -->
+          <view class="title-section">
+            <view class="title-emoji">📍</view>
+            <view class="title-text">地标打卡</view>
+          </view>
+          
+          <!-- 右侧地标路径 -->
+          <view class="landmarks-path">
+            <block wx:for="{{cityLandmarks}}" wx:key="id" wx:for-index="idx">
+              <!-- 地标图标 -->
+              <view 
+                class="landmark-node {{item.lit ? 'lit' : ''}} landmark-wave-{{idx}}"
+                bindtap="onLandmarkTap"
+                data-index="{{idx}}">
+                <view class="landmark-emoji">{{item.emoji}}</view>
+                <view class="landmark-glow" wx:if="{{item.lit}}"></view>
+                <view class="landmark-pulse"></view>
+                <view class="landmark-name">{{item.name}}</view>
+              </view>
+              
+              <!-- 箭头连接线（最后一个不显示） -->
+              <view class="landmark-arrow {{item.lit ? 'lit' : ''}}" wx:if="{{idx < cityLandmarks.length - 1}}">
+                <view class="arrow-line"></view>
+              </view>
+            </block>
+          </view>
+        </view>
+      </view>
+      
       <scroll-view scroll-y="{{isVIP || !showMembershipLock}}" class="city-info-scroll" enhanced="true" show-scrollbar="true" bounces="true" bindscroll="onContentScroll">
         <!-- 城市详情内容 - 只在城市详情模式显示 -->
         <block wx:if="{{!showCityMuseum}}">
           <!-- 自然地理板块 -->
-          <view class="info-section">
+          <view class="info-section {{isVIP && sectionAnimations[0] ? 'section-visible' : ''}} {{isVIP ? '' : 'no-animation'}}" data-index="0" id="section-0">
             <view class="info-content-wrapper">
               <image class="floating-image nature-image" src="{{selectedCity.natureImage}}" mode="aspectFill" wx:if="{{selectedCity.natureImage}}"></image>
               <view class="floating-image-placeholder nature-image" wx:else></view>
@@ -228,7 +260,7 @@
           </view>
           
           <!-- 气候时节板块 -->
-          <view class="info-section">
+          <view class="info-section {{isVIP && sectionAnimations[1] ? 'section-visible' : ''}} {{isVIP ? '' : 'no-animation'}}" data-index="1" id="section-1">
             <view class="info-content-wrapper">
               <image class="floating-image climate-image" src="{{selectedCity.climateImage}}" mode="aspectFill" wx:if="{{selectedCity.climateImage}}"></image>
               <view class="floating-image-placeholder climate-image" wx:else></view>
@@ -239,7 +271,7 @@
           </view>
           
           <!-- 人文气息板块 -->
-          <view class="info-section">
+          <view class="info-section {{isVIP && sectionAnimations[2] ? 'section-visible' : ''}} {{isVIP ? '' : 'no-animation'}}" data-index="2" id="section-2">
             <view class="info-content-wrapper">
               <image class="floating-image culture-image" src="{{selectedCity.cultureImage}}" mode="aspectFill" wx:if="{{selectedCity.cultureImage}}"></image>
               <view class="floating-image-placeholder culture-image" wx:else></view>
@@ -250,7 +282,7 @@
           </view>
           
           <!-- 城市脉络板块 -->
-          <view class="info-section">
+          <view class="info-section {{isVIP && sectionAnimations[3] ? 'section-visible' : ''}} {{isVIP ? '' : 'no-animation'}}" data-index="3" id="section-3">
             <view class="info-content-wrapper">
               <image class="floating-image city-history-image" src="{{selectedCity.cityStructureImage}}" mode="aspectFill" wx:if="{{selectedCity.cityStructureImage}}"></image>
               <view class="floating-image-placeholder city-history-image" wx:else></view>
@@ -261,7 +293,7 @@
           </view>
           
           <!-- 街巷宝库板块 -->
-          <view class="info-section" style="padding-bottom: 60rpx;">
+          <view class="info-section {{isVIP && sectionAnimations[4] ? 'section-visible' : ''}} {{isVIP ? '' : 'no-animation'}}" data-index="4" id="section-4" style="padding-bottom: 60rpx;">
             <view class="info-content-wrapper">
               <image class="floating-image treasure-image" src="{{selectedCity.streetTreasuresImage}}" mode="aspectFill" wx:if="{{selectedCity.streetTreasuresImage}}"></image>
               <view class="floating-image-placeholder treasure-image" wx:else></view>
@@ -490,6 +522,41 @@
       </scroll-view>
     </view>
   </view>
+  
+  <!-- 地标详情弹窗 -->
+  <view class="landmark-modal" wx:if="{{showLandmarkModal}}" catchtap="closeLandmarkModal">
+    <view class="landmark-modal-content {{currentLandmark.lit ? 'lit' : ''}}" catchtap="stopPropagation">
+      <!-- 古灯背景容器 -->
+      <view class="ancient-lantern-bg {{currentLandmark.lit ? 'lit' : ''}}">
+        <!-- 灯笼主体 -->
+        <view class="lantern-body">
+          <!-- 地标图片背景 -->
+          <view class="lantern-image" style="background-image: url('{{currentLandmark.image}}')"></view>
+          <!-- 灯笼发光层 -->
+          <view class="lantern-glow"></view>
+        </view>
+        <!-- 灯笼顶部 -->
+        <view class="lantern-top"></view>
+        <!-- 灯笼底部 -->
+        <view class="lantern-bottom"></view>
+        <!-- 灯穗 -->
+        <view class="lantern-tassel"></view>
+      </view>
+      
+      <view class="landmark-modal-info">
+        <view class="landmark-modal-emoji">{{currentLandmark.emoji}}</view>
+        <view class="landmark-modal-title">{{currentLandmark.name}}</view>
+        <view class="landmark-modal-desc">{{currentLandmark.description}}</view>
+      </view>
+      
+      <view class="landmark-light-btn {{currentLandmark.lit ? 'lit' : ''}}" catchtap="lightUpLandmark">
+        <text class="light-btn-text">{{currentLandmark.lit ? '已点亮' : '点亮'}}</text>
+      </view>
+      
+      <view class="landmark-close-btn" catchtap="closeLandmarkModal">×</view>
+    </view>
+  </view>
+  
   <!-- 固定在底部的音频播放器 -->
   <view class="fixed-audio-player show" wx:if="{{showCityDetail && selectedCity.audioUrl && isVIP}}">
     <view class="audio-content">
