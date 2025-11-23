@@ -184,12 +184,41 @@ async function generateCities(year = new Date().getFullYear(), selectedMonth = n
         const cityCard = unlockedCities[day];
         const contentBlocks = cityCard.contentBlocks || {};
 
-        // 处理内容配图
-        const geographyImages = contentBlocks.geography?.images || [];
-        const climateImages = contentBlocks.climate?.images || [];
-        const cultureImages = contentBlocks.culture?.images || [];
-        const cityStructureImages = contentBlocks.cityStructure?.images || [];
-        const streetTreasuresImages = contentBlocks.streetTreasures?.images || [];
+        const geographyImages = contentBlocks.geography?.images;
+        const climateImages = contentBlocks.climate?.images;
+        const cultureImages = contentBlocks.culture?.images;
+        const cityStructureImages = contentBlocks.cityStructure?.images;
+        const streetTreasuresImages = contentBlocks.streetTreasures?.images;
+
+        const geoImageSrc = Array.isArray(geographyImages)
+          ? geographyImages[0]
+          : (typeof geographyImages === 'string'
+            ? geographyImages
+            : (contentBlocks.geography?.image || ''));
+
+        const climateImageSrc = Array.isArray(climateImages)
+          ? climateImages[0]
+          : (typeof climateImages === 'string'
+            ? climateImages
+            : (contentBlocks.climate?.image || ''));
+
+        const cultureImageSrc = Array.isArray(cultureImages)
+          ? cultureImages[0]
+          : (typeof cultureImages === 'string'
+            ? cultureImages
+            : (contentBlocks.culture?.image || ''));
+
+        const cityStructureImageSrc = Array.isArray(cityStructureImages)
+          ? cityStructureImages[0]
+          : (typeof cityStructureImages === 'string'
+            ? cityStructureImages
+            : (contentBlocks.cityStructure?.image || ''));
+
+        const streetTreasuresImageSrc = Array.isArray(streetTreasuresImages)
+          ? streetTreasuresImages[0]
+          : (typeof streetTreasuresImages === 'string'
+            ? streetTreasuresImages
+            : (contentBlocks.streetTreasures?.image || ''));
 
         // 使用 await 等待所有图片 URL 处理完成
         const [
@@ -201,11 +230,11 @@ async function generateCities(year = new Date().getFullYear(), selectedMonth = n
           streetTreasuresImageUrl
         ] = await Promise.all([
           getTemporaryImageUrl(cityCard.basicInfo.coverImage, '城市封面'),
-          getTemporaryImageUrl(geographyImages[0], '自然地理'),
-          getTemporaryImageUrl(climateImages[0], '气候时节'),
-          getTemporaryImageUrl(cultureImages[0], '人文气息'),
-          getTemporaryImageUrl(cityStructureImages[0], '城市脉络'),
-          getTemporaryImageUrl(streetTreasuresImages[0], '街巷宝藏')
+          getTemporaryImageUrl(geoImageSrc, '自然地理'),
+          getTemporaryImageUrl(climateImageSrc, '气候时节'),
+          getTemporaryImageUrl(cultureImageSrc, '人文气息'),
+          getTemporaryImageUrl(cityStructureImageSrc, '城市脉络'),
+          getTemporaryImageUrl(streetTreasuresImageSrc, '街巷宝藏')
         ]);
 
         // 处理视频URL
@@ -508,6 +537,8 @@ function placePieceToSlot(pieceIndex, slotIndex) {
   this.setData({
     [`puzzleSlots[${slotIndex}].filled`]: true,
     [`puzzleSlots[${slotIndex}].pieceId`]: piece.id,
+    [`puzzleSlots[${slotIndex}].row`]: piece.row,
+    [`puzzleSlots[${slotIndex}].col`]: piece.col,
     [`puzzleSlots[${slotIndex}].correct`]: isCorrect,
     [`puzzlePieces[${pieceIndex}].placed`]: true,
     [`puzzlePieces[${pieceIndex}].slotId`]: slotIndex,
@@ -517,26 +548,13 @@ function placePieceToSlot(pieceIndex, slotIndex) {
   });
   
   if (isCorrect) {
-    playAudioEffect('correct');
-    wx.vibrateShort();
-    wx.showToast({
-      title: '正确！',
-      icon: 'success',
-      duration: 1000
-    });
+    
   } else {
-    playAudioEffect('wrong');
-    wx.showToast({
-      title: '位置不对，再试试',
-      icon: 'none',
-      duration: 1000
-    });
+    
   }
   
   // 检查是否完成
-  setTimeout(() => {
-    checkPuzzleComplete.call(this);
-  }, 100);
+  
 }
 
 // 检查拼图是否完成
@@ -567,21 +585,7 @@ function checkPuzzleComplete() {
     puzzleAllPlaced: allPlaced
   });
   
-  if (isComplete) {
-    console.log('[拼图调试] 九宫格拼图已完成！');
-    
-    // 显示完成提示
-    wx.showToast({
-      title: '拼图完成！',
-      icon: 'success',
-      duration: 2000
-    });
-    
-    // 延迟进入下一步
-    setTimeout(() => {
-      this.nextChallengeStep();
-    }, 2000);
-  }
+  
   
   return isComplete;
 }
@@ -730,16 +734,9 @@ function checkPuzzleCompletion() {
     });
     
     if (correct) {
-      // 拼图完成
-      playAudioEffect('complete');
       setData({
         puzzleCompleted: true
       });
-      
-      // 3秒后进入结果页
-      setTimeout(() => {
-        nextChallengeStep();
-      }, 3000);
     }
   }
 }
@@ -774,9 +771,7 @@ function removePieceFromSlot(slotIndex) {
     [`puzzlePieces[${pieceIndex}].y`]: Math.random() * 100 + 400
   });
   
-  // 播放移除音效
-  playAudioEffect('click');
-  wx.vibrateShort();
+  
 }
 
 function initMemoryGame() {
@@ -955,7 +950,8 @@ Page({
     // 背景音乐相关状态
     bgMusicContext: null,
     isBgMusicPlaying: false,
-    bgMusicUrl: 'cloud://cloud1-1gsyt78b92c539ef.636c-cloud1-1gsyt78b92c539ef-1370520707/audio/bgm/宁静的樱花日落旋律_轻松的器乐灵感源于宁静的动漫樱花场景_钢_爱给网_aigei_com.mp3', // 默认背景音乐URL
+    // bgMusicUrl: 'cloud://cloud1-1gsyt78b92c539ef.636c-cloud1-1gsyt78b92c539ef-1370520707/audio/bgm/宁静的樱花日落旋律_轻松的器乐灵感源于宁静的动漫樱花场景_钢_爱给网_aigei_com.mp3', // 默认背景音乐URL
+    bgMusicUrl: '/static/宁静的樱花日落旋律_轻松的器乐灵感源于宁静的动漫樱花场景_钢_爱给网_aigei_com.mp3',
     
     // 时间相关
     years: [],
@@ -1002,11 +998,10 @@ Page({
     
     // 打印预览相关字段
     showPrintPreview: false,  // 控制打印预览窗口显示
-    activePrintTab: 'graphic', // 当前激活的标签页：graphic/text1/text2
-    a4Pages: {  // 打印页面数据
-      richTextContent: [],    // 图文版内容
-      plainTextContent1: [],  // 文字版1内容
-      plainTextContent2: []   // 文字版2内容
+    activePrintTab: 'graphic',
+    a4Pages: {
+      richTextContent: [],
+      plainTextContent1: []
     },
     currentSwiperIndex: 0, // 添加当前轮播图索引
     hasCheckedIn: false, // 添加页面打卡状态标记
@@ -2365,15 +2360,13 @@ Page({
       // 使用a4_pages字段的数据，如果没有则使用空数组
       const a4PagesData = cityData.a4_pages || {
         richTextContent: [],
-        plainTextContent1: [],
-        plainTextContent2: []
+        plainTextContent1: []
       };
 
       // 处理图片URL，确保云存储链接被正确转换
       const processedA4Pages = {
         richTextContent: [],
-        plainTextContent1: [],
-        plainTextContent2: []
+        plainTextContent1: []
       };
 
       // 处理图文版内容
@@ -2396,15 +2389,6 @@ Page({
         }
       }
 
-      // 处理文字版2内容
-      if (a4PagesData.plainTextContent2 && a4PagesData.plainTextContent2.length > 0) {
-        for (const imageUrl of a4PagesData.plainTextContent2) {
-          const processedUrl = await getTemporaryImageUrl(imageUrl, 'image');
-          if (processedUrl) {
-            processedA4Pages.plainTextContent2.push(processedUrl);
-          }
-        }
-      }
 
       // 更新状态并显示预览
       this.setData({
@@ -3675,13 +3659,6 @@ initSimplePuzzle: function() {
     // 如果拼图完成，显示成功提示
     if (complete) {
       console.log('[拼图调试] 拼图已完成！');
-      setTimeout(() => {
-        wx.showToast({
-          title: '拼图完成！',
-          icon: 'success',
-          duration: 1500
-        });
-      }, 600);
     }
     
     // 返回拼图完成状态
@@ -3732,14 +3709,7 @@ initSimplePuzzle: function() {
     console.log('[拼图调试] 成功选中碎片:', pieceIndex, '(卡片编号:', puzzlePieces[pieceIndex].id + 1, ') 正确槽位应该是:', puzzlePieces[pieceIndex].correctSlot);
     
     // 提供触感和视觉反馈
-    wx.vibrateShort({ type: 'light' });
     
-    // 让用户知道下一步该做什么
-    wx.showToast({
-      title: '请点击空格放置',
-      icon: 'none',
-      duration: 800
-    });
     
     console.log('成功选中碎片:', pieceIndex, '(卡片编号:', puzzlePieces[pieceIndex].id + 1, ')');
   },
@@ -3787,17 +3757,8 @@ initSimplePuzzle: function() {
           puzzlePieces: puzzlePieces
         });
         
-        // 提供触感反馈
-        wx.vibrateShort();
         
         console.log('已取出碎片:', pieceIndex, '从槽位:', slotIndex);
-        
-        // 提示用户该碎片已取出
-        wx.showToast({
-          title: '已取出图块',
-          icon: 'none',
-          duration: 800
-        });
       } else {
         console.error('无效的碎片索引:', pieceIndex);
       }
@@ -3810,17 +3771,11 @@ initSimplePuzzle: function() {
       console.log('[拼图调试] 将碎片', selectedPieceIndex, '放入槽位', slotIndex, '(显示编号:', slotIndex + 1, ')');
       this.placePieceToSlot(selectedPieceIndex, slotIndex);
       
-      // 提供触感反馈
-      wx.vibrateShort();
+      
       return;
     }
     
-    // 如果没有选中碎片，轻微提示用户
-    wx.showToast({
-      title: '先点选一个图块',
-      icon: 'none',
-      duration: 600
-    });
+    
   },
   
   // 输入拼图编号直接放置
@@ -3944,25 +3899,9 @@ initSimplePuzzle: function() {
       
       console.log('[拼图调试] 数据已更新，取消选中状态');
       
-      // 提供反馈
-      wx.vibrateShort({
-        type: isCorrect ? 'medium' : 'light'
-      });
       
-      if (isCorrect) {
-        wx.showToast({
-          title: '放置正确!',
-          icon: 'success',
-          duration: 500
-        });
-      }
       
-      // 检查拼图是否完成
-      setTimeout(() => {
-        console.log('[拼图调试] 开始检查拼图完成状态');
-        this.checkPuzzleCompletion();
-      }, 100);
-      
+    
     } catch (error) {
       console.error('[拼图调试] 放置拼图出错:', error);
     }

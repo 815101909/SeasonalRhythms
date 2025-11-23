@@ -91,6 +91,8 @@ Page({
     currentSeason: {
       name: '',
       date: '',
+      currentMonth: '',
+      currentDay: '',
       description: '',
       quote: '',
       imageUrl: '' // 添加图片字段
@@ -503,6 +505,9 @@ Page({
           daysToNext = Math.ceil((nextDate - currentDate) / (1000 * 60 * 60 * 24));
         }
 
+        // 当前节气日期字符串（用于显示在节气名称旁边）
+        const solarTermDateStr = currentTerm ? `${currentTerm.month}月${currentTerm.day}日` : '';
+
         // 更新页面数据
         if (currentTerm) {
           console.log('当前节气数据:', currentTerm);
@@ -518,7 +523,9 @@ Page({
           this.setData({
             currentSeason: {
               name: currentTerm.name,
-              date: currentDateStr,
+              date: solarTermDateStr,
+              currentMonth: currentMonth,
+              currentDay: currentDay,
               description: currentTerm.description,
               quote: currentTerm.quote,
               imageUrl: processedImageUrl // 使用处理后的图片URL
@@ -534,7 +541,9 @@ Page({
           const newSeasonData = {
             currentSeason: {
               name: currentTerm.name,
-              date: currentDateStr,
+              date: solarTermDateStr,
+              currentMonth: currentMonth,
+              currentDay: currentDay,
               description: currentTerm.description,
               quote: currentTerm.quote,
               imageUrl: processedImageUrl
@@ -703,6 +712,8 @@ Page({
         currentSeason: {
           name: currentTerm.name,
           date: `${year}年${month}月${day}日`,
+          currentMonth: month,
+          currentDay: day,
           description: seasonInfo.description,
           quote: seasonInfo.quote
         },
@@ -730,7 +741,9 @@ Page({
       this.setData({
         currentSeason: {
           name: '立秋',
-          date: `${year}年${month}月${day}日`,
+          date: '8月7日', // 立秋的节气日期
+          currentMonth: month,
+          currentDay: day,
           description: '立秋是二十四节气之一，表示秋天的开始。天气由热转凉，暑气渐消。',
           quote: '一叶知秋意，孤城落日斜。'
         },
@@ -746,8 +759,7 @@ Page({
    * 本地计算节气信息（API不可用时的备选方案）
    */
   calculateLocalSeasonInfo() {
-    // 这里可以根据当前日期判断实际的节气
-    const now = new Date();
+
     const month = now.getMonth() + 1;
     const day = now.getDate();
     
@@ -860,9 +872,20 @@ Page({
     // 获取详细信息
     let seasonInfo = this.getSeasonInfo(currentTerm.name);
     
+    // 添加当前实际月份和日期，以及节气日期
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentDay = now.getDate();
+    const solarTermDateStr = `${currentTerm.month}月${currentTerm.day}日`;
+    
     // 更新数据
     this.setData({
-      currentSeason: seasonInfo,
+      currentSeason: {
+        ...seasonInfo,
+        date: solarTermDateStr,
+        currentMonth: currentMonth,
+        currentDay: currentDay
+      },
       isExactlyOnSolarTerm: isExactlyOnSolarTerm,
       nextSeasonName: nextTerm.name,
       daysToNextSeason: daysToNextSeason
@@ -875,7 +898,7 @@ Page({
   getSeasonInfo(seasonName) {
     // 格式化日期函数（用于本地计算时的日期格式化）
     const formatDate = (year, month, day) => {
-      return `${year}年-${month}月-${day}日`;
+      return `${month}月${day}日`; // 返回节气日期格式
     };
     
     const currentYear = new Date().getFullYear();
@@ -885,6 +908,8 @@ Page({
       '立春': {
         name: '立春',
         date: formatDate(currentYear, 2, 4),
+        currentMonth: 2,
+        currentDay: 4,
         description: '立春是二十四节气的第一个节气，标志着万物闭藏的冬季已过去，开始进入风和日暖、万物生长的春季。',
         quote: '律回岁晚冰霜少，春到人间草木知。',
         imageUrl: '../../images/season-lichun.jpg'
@@ -892,6 +917,8 @@ Page({
       '雨水': {
         name: '雨水',
         date: formatDate(currentYear, 2, 19),
+        currentMonth: 2,
+        currentDay: 19,
         description: '雨水节气，意味着降雨开始增多，气温回升，冰雪融化。此时雨量较小，以小雨或毛毛雨为主。',
         quote: '好雨知时节，当春乃发生。',
         imageUrl: '../../images/season-yushui.jpg'
@@ -899,6 +926,8 @@ Page({
       '清明': {
         name: '清明',
         date: formatDate(currentYear, 4, 5),
+        currentMonth: 4,
+        currentDay: 5,
         description: '清明节气，气候清爽明朗，万物皆显生机勃勃。既是节气，也是中国重要的传统节日之一。',
         quote: '清明时节雨纷纷，路上行人欲断魂。',
         imageUrl: '../../images/season-qingming.jpg'
@@ -906,6 +935,8 @@ Page({
       '小雪': {
         name: '小雪',
         date: formatDate(currentYear, 11, 22),
+        currentMonth: 11,
+        currentDay: 22,
         description: '小雪节气，天气渐冷，偶有小雪。时值深秋将尽、冬季将临之际，大地即将进入一段相对"休眠"的时期。',
         quote: '草枯鹰眼疾，雪尽马蹄轻。',
         imageUrl: '../../images/season-current.jpg'
@@ -913,6 +944,8 @@ Page({
       '大雪': {
         name: '大雪',
         date: formatDate(currentYear, 12, 7),
+        currentMonth: 12,
+        currentDay: 7,
         description: '大雪节气，意味着降雪的可能性和雪量增大。北方地区开始出现大范围降雪，气温显著下降。',
         quote: '燕山雪花大如席，片片吹落轩辕台。',
         imageUrl: '../../images/season-daxue.jpg'
@@ -923,7 +956,9 @@ Page({
     // 如果没有该节气的信息，返回默认信息
     return seasonMap[seasonName] || {
       name: seasonName,
-      date: formatDate(currentYear, 1, 1),
+      date: '1月1日', // 节气日期格式
+      currentMonth: 1,
+      currentDay: 1,
       description: '暂无该节气的详细介绍。',
       quote: '静以修身，俭以养德。',
       imageUrl: '../../images/season-default.jpg'

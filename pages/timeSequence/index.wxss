@@ -63,6 +63,8 @@
   min-width: 120rpx;
   justify-content: center;
   width: 100%;
+  /* 确保文本和图标对齐 */
+  line-height: 1;
 }
 
 .selector-text {
@@ -70,11 +72,36 @@
   font-weight: bold;
   color: #2E7D32;
   margin-right: 8rpx;
+  /* 确保垂直居中对齐 */
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
 }
 
 .dropdown-icon {
   font-size: 20rpx;
   color: #2E7D32;
+  /* 确保在各种设备上都能显示 */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* 添加一些间距 */
+  margin-left: 4rpx;
+  /* 确保最小显示尺寸 */
+  min-width: 16rpx;
+  min-height: 16rpx;
+  /* 垂直居中对齐 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 备用方案：下拉箭头图片样式 */
+.dropdown-arrow-img {
+  width: 16rpx;
+  height: 16rpx;
+  margin-left: 4rpx;
+  /* 垂直居中对齐 */
+  display: inline-flex;
+  align-items: center;
 }
 
 /* 树木信息样式 */

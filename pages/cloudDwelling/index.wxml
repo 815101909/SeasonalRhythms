@@ -108,7 +108,7 @@
             <text class="season-date">{{currentSeason.date}}</text>
           </view>
           <view class="season-countdown" wx:if="{{!isExactlyOnSolarTerm}}">
-            <text>距离{{nextSeasonName}}还有{{daysToNextSeason}}天</text>
+            <text>今天是{{currentSeason.currentMonth}}月{{currentSeason.currentDay}}日，距离{{nextSeasonName}}还有{{daysToNextSeason}}天</text>
           </view>
         </view>
         <view class="season-description">{{currentSeason.description}}</view>

@@ -67,7 +67,9 @@
       <picker bindchange="onYearChange" value="{{yearIndex}}" range="{{years}}">
         <view class="selector-trigger">
           <text class="selector-text">{{currentYear}}年</text>
-          <text class="dropdown-icon">⏷</text>
+          <text class="dropdown-icon">▼</text>
+          <!-- 备用方案：使用图片作为下拉箭头 -->
+          <!-- <image class="dropdown-arrow-img" src="/images/down-arrow.png" mode="aspectFit" wx:if="{{false}}"></image> -->
         </view>
       </picker>
     </view>
@@ -77,7 +79,9 @@
       <picker bindchange="onMonthChange" value="{{monthIndex}}" range="{{monthNames}}">
         <view class="selector-trigger">
           <text class="selector-text">{{currentMonthName}}</text>
-          <text class="dropdown-icon">⏷</text>
+          <text class="dropdown-icon">▼</text>
+          <!-- 备用方案：使用图片作为下拉箭头 -->
+          <!-- <image class="dropdown-arrow-img" src="/images/down-arrow.png" mode="aspectFit" wx:if="{{false}}"></image> -->
         </view>
       </picker>
     </view>
@@ -808,8 +812,7 @@
   
   <view class="print-pages-tabs">
     <view class="print-tab {{activePrintTab === 'graphic' ? 'active' : ''}}" bindtap="switchPrintTab" data-tab="graphic">图文版</view>
-    <view class="print-tab {{activePrintTab === 'text1' ? 'active' : ''}}" bindtap="switchPrintTab" data-tab="text1">文字版(1)</view>
-    <view class="print-tab {{activePrintTab === 'text2' ? 'active' : ''}}" bindtap="switchPrintTab" data-tab="text2">文字版(2)</view>
+    <view class="print-tab {{activePrintTab === 'text' ? 'active' : ''}}" bindtap="switchPrintTab" data-tab="text">文字版</view>
   </view>
 
   <!-- A4预览页面区域 -->
@@ -831,8 +834,8 @@
       </view>
     </view>
     
-    <!-- 文字版1 A4预览 -->
-    <view class="a4-preview" wx:if="{{activePrintTab === 'text1'}}">
+    <!-- 文字版 A4预览 -->
+    <view class="a4-preview" wx:if="{{activePrintTab === 'text'}}">
       <!-- 有图片时显示图片 -->
       <block wx:if="{{a4Pages.plainTextContent1 && a4Pages.plainTextContent1.length > 0}}">
         <swiper class="a4-swiper" indicator-dots="{{true}}" autoplay="{{false}}">
@@ -843,24 +846,7 @@
       </block>
       <!-- 无图片时显示占位 -->
       <view class="a4-placeholder" wx:else>
-        <view class="a4-info">预留文字版(1)A4打印区域</view>
-        <view class="a4-api-note">连接打印API端口</view>
-      </view>
-    </view>
-    
-    <!-- 文字版2 A4预览 -->
-    <view class="a4-preview" wx:if="{{activePrintTab === 'text2'}}">
-      <!-- 有图片时显示图片 -->
-      <block wx:if="{{a4Pages.plainTextContent2 && a4Pages.plainTextContent2.length > 0}}">
-        <swiper class="a4-swiper" indicator-dots="{{true}}" autoplay="{{false}}">
-          <swiper-item wx:for="{{a4Pages.plainTextContent2}}" wx:key="index">
-            <image src="{{item}}" mode="aspectFit" class="a4-image" data-url="{{item}}" bindtap="previewImage" data-urls="{{a4Pages.plainTextContent2}}" data-current="{{item}}"/>
-          </swiper-item>
-        </swiper>
-      </block>
-      <!-- 无图片时显示占位 -->
-      <view class="a4-placeholder" wx:else>
-        <view class="a4-info">预留文字版(2)A4打印区域</view>
+        <view class="a4-info">预留文字版A4打印区域</view>
         <view class="a4-api-note">连接打印API端口</view>
       </view>
     </view>
