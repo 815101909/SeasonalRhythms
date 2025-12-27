@@ -8,8 +8,8 @@ Page({
     currentState: 'waiting',
     
     // 阵营数据
-    towerCount: 258, // 楼台阵营人数，控制在500以内
-    rainCount: 243, // 好雨阵营人数，控制在500以内
+    towerCount: 0, // 楼台阵营人数
+    rainCount: 0, // 好雨阵营人数
     towerScore: 0,
     rainScore: 0,
     
@@ -86,11 +86,22 @@ Page({
       statusText: '加载中...'
     });
     
-    // 获取用户的阵营信息
-    let userFaction = wx.getStorageSync('userFaction') || '';
-
-    // 如果本地存储中没有阵营信息，尝试从数据库获取
-    if (!userFaction) {
+    // 智能获取用户阵营信息：优先使用有效缓存，否则从数据库获取
+    let userFaction = '';
+    
+    // 检查缓存是否有效（缓存时间小于30分钟）
+    const cachedFaction = wx.getStorageSync('userFaction');
+    const cacheTime = wx.getStorageSync('userFactionCacheTime');
+    const now = Date.now();
+    const cacheValidDuration = 30 * 60 * 1000; // 30分钟
+    
+    if (cachedFaction && cacheTime && (now - cacheTime < cacheValidDuration)) {
+      // 使用有效的缓存
+      userFaction = cachedFaction;
+      console.log('使用缓存的用户阵营:', userFaction);
+    } else {
+      // 缓存无效或不存在，从数据库获取
+      console.log('缓存无效，从数据库获取阵营信息');
       try {
         // 创建跨环境调用的Cloud实例
         var c = new wx.cloud.Cloud({ 
@@ -111,11 +122,23 @@ Page({
 
         if (result.result && result.result.success && result.result.data.faction) {
           userFaction = result.result.data.faction;
-          // 将阵营信息保存到本地存储
+          console.log('从数据库获取到用户阵营:', userFaction);
+          // 更新缓存
           wx.setStorageSync('userFaction', userFaction);
+          wx.setStorageSync('userFactionCacheTime', Date.now());
+        } else {
+          console.log('数据库中没有用户阵营信息');
+          // 清除无效缓存
+          wx.removeStorageSync('userFaction');
+          wx.removeStorageSync('userFactionCacheTime');
         }
       } catch (error) {
         console.error('获取用户阵营信息失败:', error);
+        // 如果网络错误且有缓存，使用过期缓存作为备选
+        if (cachedFaction) {
+          userFaction = cachedFaction;
+          console.log('网络错误，使用过期缓存:', userFaction);
+        }
       }
     }
     
@@ -153,22 +176,45 @@ Page({
         resourceEnv: 'cloud1-1gsyt78b92c539ef', 
       }) 
       await c2.init()
+      // 获取今天的日期（中国时区）
+      const today = new Date();
+      const chinaTime = new Date(today.getTime() + (8 * 60 * 60 * 1000));
+      const dateStr = chinaTime.toISOString().split('T')[0];
+      
       const pkStatusResult = await c2.callFunction({
         name: 'pkBattle',
         data: {
-          action: 'checkPkStatus'
+          action: 'checkUserPkParticipation',
+          data: {
+            date: dateStr
+          }
         }
       });
 
       if (pkStatusResult.result && pkStatusResult.result.success && pkStatusResult.result.data.isCompleted) {
-        wx.showModal({
-          title: '今日已参与',
-          content: '您今日已完成PK大赛，请明日再来挑战！',
-          showCancel: false,
-          success: () => {
-            wx.navigateBack();
-          }
+        // 用户已完成PK，直接显示结果页面
+        console.log('用户已完成今日PK，直接显示结果页面');
+        
+        // 设置用户数据
+        const userData = pkStatusResult.result.data;
+        const userScore = userData.score || 0;
+        const totalReward = userScore; // 每分得1颗树
+        
+        console.log('已完成PK用户数据:', userData);
+        console.log('用户分数:', userScore, '奖励:', totalReward);
+        
+        this.setData({
+          userFaction: userData.userFaction || userFaction,
+          userScore: userScore,
+          correctAnswers: userData.correctAnswers || 0,
+          answeredQuestions: userData.totalAnswers || 0,
+          userReward: totalReward, // 设置奖励
+          currentState: 'result'
         });
+        
+        // 加载排行榜数据和阵营数据
+        this.loadRealRankingData();
+        this.loadFactionData(); // 添加获取阵营数据
         return;
       }
     } catch (error) {
@@ -211,6 +257,7 @@ Page({
         }
       });
     }).then(res => {
+      console.log('joinPkSession完整响应:', res);
       if (res.result && res.result.success) {
         console.log('成功加入PK会话:', res.result.data);
 
@@ -304,17 +351,17 @@ Page({
         });
 
         // 根据PK状态更新页面状态
-        if (statusData.status === 'waiting') {
-          // PK未开始，静默返回（避免重复弹窗）
-          console.log('PK状态为waiting，静默返回');
-          wx.navigateBack();
-          return;
-        } else if (statusData.status === 'ongoing') {
+        if (statusData.status === 'ongoing') {
           // PK进行中，如果当前不在答题状态，则开始答题
           if (this.data.currentState === 'waiting' || this.data.currentState === 'loading') {
             this.setData({
               currentState: 'question'
             });
+          }
+        } else if (statusData.status === 'waiting') {
+          // 未开始，保持等待提示
+          if (this.data.currentState !== 'waiting') {
+            this.setData({ currentState: 'waiting', statusText: 'PK未开始，仅周末19:30-19:45开放' });
           }
         } else if (statusData.status === 'ended') {
           if (this.data.currentState !== 'result') {
@@ -535,33 +582,64 @@ Page({
   /**
    * 开始PK
    */
-  startPK() {
-    // 合并所有题目为一个数组
-    const allQuestions = [
-      ...this.data.questions.single,
-      ...this.data.questions.multiple,
-      ...this.data.questions.fill
-    ];
-    
-    // 初始化第一题是单选题，创建适当的selectedOptions
-    const firstQuestion = this.data.questions.single[0];
-    const selectedOption = null; // 单选题使用索引
-    const selectedOptions = {}; // 多选题使用对象
-    
+  async startPK() {
+    const single = Array.isArray(this.data.questions.single) ? this.data.questions.single : [];
+    const multiple = Array.isArray(this.data.questions.multiple) ? this.data.questions.multiple : [];
+    const fill = Array.isArray(this.data.questions.fill) ? this.data.questions.fill : [];
+    const allQuestions = [...single, ...multiple, ...fill];
+
+    // 获取用户的答题进度
+    const userProgress = await this.getUserAnswerProgress();
+    console.log('用户答题进度:', userProgress);
+
+    // 如果用户已完成所有题目，直接显示结果
+    if (userProgress >= allQuestions.length) {
+      console.log('用户已完成所有题目，显示结果');
+      this.showFinalResults();
+      return;
+    }
+
+    // 根据进度确定当前题目
+    let currentIndex = userProgress;
+    let currentType = 'single';
+    let currentQuestion = null;
+
+    if (currentIndex < single.length) {
+      currentType = 'single';
+      currentQuestion = single[currentIndex];
+    } else if (currentIndex < single.length + multiple.length) {
+      currentType = 'multiple';
+      currentQuestion = multiple[currentIndex - single.length];
+    } else {
+      currentType = 'fill';
+      currentQuestion = fill[currentIndex - single.length - multiple.length];
+    }
+
+    console.log('从题目索引开始:', {
+      currentIndex,
+      currentType,
+      currentQuestion
+    });
+
+    const selectedOption = null;
+    const selectedOptions = {};
+
     this.setData({
       currentState: 'question',
       statusText: '抢答模式：第一个抢答正确者得分！',
       showTimer: true,
-      currentQuestionType: 'single', // 从单选题开始
-      currentQuestion: firstQuestion,
-      currentQuestionIndex: 0,
+      currentQuestionType: currentType,
+      currentQuestion: currentQuestion,
+      currentQuestionIndex: currentIndex,
       allQuestions: allQuestions,
       isAnswered: false,
       firstAnswerFaction: '',
-      selectedOption: selectedOption, // 设置为null
-      selectedOptions: selectedOptions, // 设置为空对象
-      canSubmit: false,  // 重置提交状态
-      fillAnswers: []     // 重置填空答案
+      selectedOption,
+      selectedOptions,
+      canSubmit: false,
+      fillAnswers: [],
+      totalQuestions: allQuestions.length,
+      answeredQuestions: currentIndex  // 设置已答题数为当前进度
     });
     
     console.log('PK开始，初始化selectedOption:', selectedOption); // 调试日志
@@ -606,8 +684,11 @@ Page({
             icon: 'none'
           });
           
+          // 即使没有答题，也要更新索引（表示这题已经跳过）
+          this.updateAnswerIndex();
+          
           // 延迟后进入下一题
-          setTimeout(() => {
+          this.nextQuestionTimeout = setTimeout(() => {
             this.goToNextQuestion();
           }, 1500);
         }
@@ -881,17 +962,15 @@ Page({
       isCorrect
     });
     
-    // 获取题目的树苗奖励
-    const treeReward = isCorrect ? (currentQuestion.treeReward || 1) : 0;
-    
-    // 更新阵营得分
+    // 更新阵营得分（使用新的统一计分：每题1分）
+    const scoreToAdd = isCorrect ? 1 : 0;
     if (userFaction === 'tower') {
       this.setData({
-        towerScore: this.data.towerScore + treeReward
+        towerScore: this.data.towerScore + scoreToAdd
       });
     } else {
       this.setData({
-        rainScore: this.data.rainScore + treeReward
+        rainScore: this.data.rainScore + scoreToAdd
       });
     }
     
@@ -904,19 +983,8 @@ Page({
     let thisQuestionScore = 0;
     if (isCorrect) {
       correctAnswers++;
-      switch (currentQuestionType) {
-        case 'single':
-          thisQuestionScore = 1;
-          break;
-        case 'multiple':
-          thisQuestionScore = 2;
-          break;
-        case 'fill':
-          thisQuestionScore = 3;
-          break;
-        default:
-          thisQuestionScore = 0;
-      }
+      // 所有题型统一为1分
+      thisQuestionScore = 1;
       userScore = (this.data.userScore || 0) + thisQuestionScore;
 
       console.log('得分详情:', {
@@ -936,6 +1004,9 @@ Page({
 
     // 提交答案到多人PK会话
     this.submitAnswerToPkSession(isCorrect, thisQuestionScore);
+    
+    // 更新答题进度索引
+    this.updateAnswerIndex();
     
     // 显示答题结果提示
     wx.showToast({
@@ -988,8 +1059,12 @@ Page({
       console.error('上传答题云函数调用失败:', error);
     });
 
-    // 检查是否是最后一题
-    if (this.data.currentQuestionIndex >= 14) { // 第15题
+    // 检查是否是最后一题（动态计算总题数）
+    const singleCount = Array.isArray(this.data.questions.single) ? this.data.questions.single.length : 0;
+    const multipleCount = Array.isArray(this.data.questions.multiple) ? this.data.questions.multiple.length : 0;
+    const fillCount = Array.isArray(this.data.questions.fill) ? this.data.questions.fill.length : 0;
+    const total = singleCount + multipleCount + fillCount;
+    if (this.data.currentQuestionIndex >= total - 1) {
       // 记录PK完成活动
       // 创建跨环境调用的Cloud实例
       var c2 = new wx.cloud.Cloud({ 
@@ -1022,7 +1097,7 @@ Page({
     }
     
     // 如果不是最后一题，延迟后进入下一题
-    setTimeout(() => {
+    this.nextQuestionTimeout = setTimeout(() => {
       this.goToNextQuestion();
     }, 1500);
   },
@@ -1090,8 +1165,8 @@ Page({
   generateVirtualRanking() {
     // 保留原有的 generateVirtualRanking 方法作为备用
     const factions = ['tower', 'rain'];
-    const names = ['春风归人', '雨巷漫步', '白鹭青洲', '墨池飞雪', '青衫故人', '烟雨江南', '雁南飞', '竹影清风', '云水禅心', '山间明月', '烟波浩渺', '古道西风'];
-    const scores = [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4];
+    const names = ['星河折光', 'Aurorabyte', '影ノ森', 'Lunnaya Ten', '艾樱', '墨青逐月', 'Vientooooo', 'Neonharbor', '霜落千山', 'Pixelwarden', '北巷旧灯', 'Resonanzwolf'];
+    const scores = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 1, 1];
     
     return names.map((name, index) => ({
       name,
@@ -1221,8 +1296,9 @@ Page({
    */
   checkIfPkEnded() {
     const now = new Date();
-    const hour = now.getHours();
-    const minute = now.getMinutes();
+    const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+    const hour = chinaTime.getUTCHours();
+    const minute = chinaTime.getUTCMinutes();
 
     console.log('检查PK是否结束:', { hour, minute });
 
@@ -1237,10 +1313,7 @@ Page({
       this.showFinalResults();
     } else {
       // PK还未结束，继续等待
-      const endTime = new Date();
-      endTime.setHours(19, 45, 0, 0);
-      const timeLeft = endTime - now;
-      const minutesLeft = Math.ceil(timeLeft / (1000 * 60));
+      const minutesLeft = Math.max(0, (19 * 60 + 45) - (hour * 60 + minute));
 
       console.log('PK还未结束，剩余时间:', minutesLeft, '分钟');
 
@@ -1270,6 +1343,9 @@ Page({
     if (this.pkTimeChecker) {
       clearInterval(this.pkTimeChecker);
     }
+    if (this.nextQuestionTimeout) {
+      clearTimeout(this.nextQuestionTimeout);
+    }
   },
   
   /**
@@ -1277,14 +1353,13 @@ Page({
    */
   checkPkTime() {
     const now = new Date();
-    const hour = now.getHours();
-    const minute = now.getMinutes();
-    
-    // PK时间固定为19:30-19:45，仅限15分钟
-    // const isPkTime = (hour === 19 && minute >= 30 && minute < 45);
-    
-    // 始终返回true，允许PK
-    const isPkTime = true;
+    const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+    const day = chinaTime.getUTCDay();
+    const hour = chinaTime.getUTCHours();
+    const minute = chinaTime.getUTCMinutes();
+    const isWeekend = (day === 6 || day === 0);
+    const isWindow = (hour === 19 && minute >= 30 && minute < 45);
+    const isPkTime = isWeekend && isWindow;
     
     // 更新页面状态
     this.setData({
@@ -1292,47 +1367,6 @@ Page({
     });
     
     // 注释掉时间检查相关的提示
-    /*
-    // 如果不在PK时间但页面已加载，需要提示用户并返回
-    if (!isPkTime && this.data.currentState !== 'loading') {
-      // 计算到下一场PK的时间
-      let nextPkTime;
-      if (hour < 19 || (hour === 19 && minute < 30)) {
-        // 今天的PK还没开始
-        nextPkTime = new Date();
-        nextPkTime.setHours(19, 30, 0, 0);
-      } else {
-        // 今天的PK已结束，等待明天的PK
-        nextPkTime = new Date();
-        nextPkTime.setDate(nextPkTime.getDate() + 1);
-        nextPkTime.setHours(19, 30, 0, 0);
-      }
-      
-      // 格式化时间
-      const formatTime = (time) => {
-        const month = time.getMonth() + 1;
-        const date = time.getDate();
-        const hours = time.getHours();
-        const minutes = time.getMinutes();
-        return `${month}月${date}日 ${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
-      };
-      
-      // 如果正在进行PK但时间已结束，直接显示结果（不弹窗）
-      if (this.data.currentState === 'question') {
-        this.showFinalResults(); // 直接显示结果
-      } else if (this.data.currentState !== 'result') {
-        // 如果不是正在显示结果，提示用户并返回
-        wx.showModal({
-          title: '非PK时间',
-          content: `PK大赛仅在每天19:30-19:45开放，下一场PK时间：${formatTime(nextPkTime)}`,
-          showCancel: false,
-          success: (res) => {
-            wx.navigateBack();
-          }
-        });
-      }
-    }
-    */
     
     return isPkTime;
   },
@@ -1476,7 +1510,7 @@ Page({
 
     // 更新状态为结束
     this.setData({
-      currentState: 'ended',
+      currentState: 'result',
       statusText: '统计中...',
       showTimer: false // 隐藏计时器
     });
@@ -1493,7 +1527,7 @@ Page({
   /**
    * 使用本地计算的结果
    */
-  useLocalResults() {
+  async useLocalResults() {
     // 判断获胜阵营
     const winnerFaction = this.data.towerScore > this.data.rainScore ? 'tower' : 'rain';
     
@@ -1516,158 +1550,49 @@ Page({
     // 处理答案显示格式
     const processedQuestions = this.processAnswersForDisplay();
     
-    // 生成虚拟排行榜数据，真
-    const generateVirtualRanking = () => {
-      const factions = ['tower', 'rain'];
-      const names = [
-        '春风归人', '雨巷漫步', '白鹭青洲', '墨池飞雪', '青衫故人',
-        '烟雨江南', '雁南飞', '竹影清风', '云水禅心', '山间明月',
-        '华灯初上', '烟波浩渺', '古道西风', '星辰大海', '风雨同舟',
-        '花开半夏', '清风徐来', '木叶之秋', '湖光山色', '冬雪初霁',
-        '梅花三弄', '杏花微雨', '兰亭序', '诗魂墨韵', '桃花扇',
-        '渔樵问答', '闲云野鹤', '竹林七贤', '松风琴韵', '岁月如歌',
-        '溪山行旅', '林泉高致', '江畔独步', '枫桥夜泊', '雨打芭蕉',
-        '青山隐隐', '水墨丹青', '长亭外', '故园风雨', '烟雨楼台',
-        '小桥流水', '落花流水', '飞花令', '红袖添香', '绿竹青青',
-        '昭华旧事', '锦瑟年华', '流年似水', '梧桐细雨', '山水清音'
-      ];
-
-      const scores = [
-        26, 25, 24, 24, 23, 23, 22, 22, 21, 21,
-        20, 20, 19, 19, 18, 18, 17, 17, 16, 16,
-        15, 15, 14, 14, 13, 13, 12, 12, 11, 11,
-        10, 10, 9, 9, 8, 8, 7, 7, 6, 6,
-        5, 5, 4, 4, 3, 3, 2, 2, 1, 1
-      ];
-
+    // 首先尝试获取真实排行榜数据
+    try {
+      console.log('尝试获取真实排行榜数据');
+      await this.loadRealRankingData();
       
-      // 随机打乱名字数组（防止排行榜永远固定顺序）
-      const shuffledNames = [...names].sort(() => Math.random() - 0.5);
-
-      return shuffledNames.map((name, index) => ({
-        name,
-        faction: factions[index % 2], // 控制平均分配阵营（可调）
-        score: scores[index],
-        isCurrentUser: false
-      }));
-    };
-    
-    // 获取排行榜数据
-    let topPerformers = generateVirtualRanking();
-    
-    // 获取用户信息
-    const cloud = new wx.cloud.Cloud({
-      identityless: true,
-      resourceAppid: 'wx85d92d28575a70f4',
-      resourceEnv: 'cloud1-1gsyt78b92c539ef'
-    });
-    cloud.init().then(() => {
-      return cloud.callFunction({
-        name: 'xsj_auth',
-        data: {
-          action: 'getUserInfo'
-        }
+      // 计算平均正确率
+      const avgCorrectRate = this.data.answeredQuestions > 0 ? 
+        ((this.data.correctAnswers / this.data.answeredQuestions * 100) | 0) : 0;
+      
+      // 更新页面状态
+      this.setData({
+        currentState: 'result',  // 设置为结束状态显示结果页面
+        avgCorrectRate: avgCorrectRate,
+        showAnswers: true,  // 默认展开参考答案
+        userScore: userScore,  // 确保使用最新的分数
+        userReward: totalReward,
+        questions: processedQuestions  // 使用处理后的题目数据
       });
-    }).then(res => {
-      if (res.result && res.result.success) {
-        const username = res.result.data.username || '我';
-        
-        // 创建用户数据，使用最新的分数
-    const userRankData = {
-      name: username,
-      faction: this.data.userFaction,
-          score: userScore,  // 使用最新的分数
-      isCurrentUser: true
-    };
-    
-    // 将用户加入排行榜并重新排序
-    topPerformers.push(userRankData);
-    topPerformers.sort((a, b) => b.score - a.score);
-    
-    // 查找用户排名
-    let userRank = 0;
-    for (let i = 0; i < topPerformers.length; i++) {
-      if (topPerformers[i].isCurrentUser) {
-        userRank = i + 1;
-        break;
-      }
+      
+      // 更新用户的树木奖励
+      this.updateUserReward(totalReward);
+      
+    } catch (error) {
+      console.error('获取真实排行榜失败，使用虚拟数据:', error);
+      this.loadVirtualRankingData();
+      
+      // 计算平均正确率
+      const avgCorrectRate = this.data.answeredQuestions > 0 ? 
+        ((this.data.correctAnswers / this.data.answeredQuestions * 100) | 0) : 0;
+      
+      // 更新页面状态
+      this.setData({
+        currentState: 'result',  // 设置为结束状态显示结果页面
+        avgCorrectRate: avgCorrectRate,
+        showAnswers: true,  // 默认展开参考答案
+        userScore: userScore,  // 确保使用最新的分数
+        userReward: totalReward,
+        questions: processedQuestions  // 使用处理后的题目数据
+      });
+      
+      // 更新用户的树木奖励
+      this.updateUserReward(totalReward);
     }
-    
-    // 限制只显示前10名
-    topPerformers = topPerformers.slice(0, 10);
-    
-    // 计算平均正确率（使用位运算取整）
-    const avgCorrectRate = this.data.answeredQuestions > 0 ? 
-      ((this.data.correctAnswers / this.data.answeredQuestions * 100) | 0) : 0;
-    
-    // 更新结果数据
-    this.setData({
-      currentState: 'result',
-      winnerFaction: winnerFaction,
-      topPerformers: topPerformers,
-      totalAnswers: this.data.towerCount + this.data.rainCount,
-      avgCorrectRate: avgCorrectRate,
-      showAnswers: true,  // 默认展开参考答案
-          userRanking: userRank,
-          userScore: userScore,  // 确保使用最新的分数
-          userReward: totalReward,
-          questions: processedQuestions  // 使用处理后的题目数据
-        });
-        
-        // 更新用户的树木奖励
-        this.updateUserReward(totalReward);
-        
-        wx.hideLoading();
-      } else {
-        console.error('获取用户信息失败:', res);
-        // 使用默认值继续
-        this.useLocalResultsWithDefaultName('我');
-      }
-    }).catch(err => {
-      console.error('调用getUserInfo云函数失败:', err);
-      // 使用默认值继续
-      this.useLocalResultsWithDefaultName('我');
-    });
-  },
-
-  // 使用默认用户名的结果处理
-  useLocalResultsWithDefaultName(defaultName) {
-    const userRankData = {
-      name: defaultName,
-      faction: this.data.userFaction,
-      score: userScore,
-      isCurrentUser: true
-    };
-    
-    topPerformers.push(userRankData);
-    topPerformers.sort((a, b) => b.score - a.score);
-    
-    let userRank = 0;
-    for (let i = 0; i < topPerformers.length; i++) {
-      if (topPerformers[i].isCurrentUser) {
-        userRank = i + 1;
-        break;
-      }
-    }
-    
-    topPerformers = topPerformers.slice(0, 10);
-    
-    const avgCorrectRate = this.data.answeredQuestions > 0 ? 
-      ((this.data.correctAnswers / this.data.answeredQuestions * 100) | 0) : 0;
-    
-    this.setData({
-      currentState: 'result',
-      winnerFaction: winnerFaction,
-      topPerformers: topPerformers,
-      totalAnswers: this.data.towerCount + this.data.rainCount,
-      avgCorrectRate: avgCorrectRate,
-      showAnswers: true,
-      userRanking: userRank,
-      userScore: userScore,
-      userReward: totalReward
-    });
-    
-    this.updateUserReward(totalReward);
     
     wx.hideLoading();
   },
@@ -1676,41 +1601,34 @@ Page({
    * 进入下一题
    */
   goToNextQuestion() {
-    // 获取当前的问题索引和总题目数
-    let { currentQuestionIndex, allQuestions } = this.data;
-    
-    // 判断是否已完成所有题目
-    if (currentQuestionIndex >= 14) { // 0-indexed，所以14表示第15题
-      console.log('所有题目已完成，等待PK结束');
+    const singleCount = Array.isArray(this.data.questions.single) ? this.data.questions.single.length : 0;
+    const multipleCount = Array.isArray(this.data.questions.multiple) ? this.data.questions.multiple.length : 0;
+    const fillCount = Array.isArray(this.data.questions.fill) ? this.data.questions.fill.length : 0;
+    const total = singleCount + multipleCount + fillCount;
 
-      // 显示等待状态
-      this.setData({
-        currentState: 'waiting',
-        statusText: '答题完成，等待PK结束...'
-      });
-
-      // 检查PK是否已结束
-      this.checkIfPkEnded();
+    let { currentQuestionIndex } = this.data;
+    if (currentQuestionIndex >= total - 1) {
+      // 答题完成，直接显示结果
+      console.log('答题完成，显示最终结果');
+      this.showFinalResults();
       return;
     }
-    
-    // 进入下一题
+
     const nextQuestionIndex = currentQuestionIndex + 1;
-    
-    // 确定下一题的类型
     let nextQuestionType;
-    if (nextQuestionIndex < 5) {
+    if (nextQuestionIndex < singleCount) {
       nextQuestionType = 'single';
-    } else if (nextQuestionIndex < 10) {
+    } else if (nextQuestionIndex < singleCount + multipleCount) {
       nextQuestionType = 'multiple';
     } else {
       nextQuestionType = 'fill';
     }
-    
-    // 获取下一题的题目对象
-    const typeIndex = nextQuestionType === 'single' ? nextQuestionIndex : 
-                      nextQuestionType === 'multiple' ? nextQuestionIndex - 5 : 
-                      nextQuestionIndex - 10;
+
+    const typeIndex = nextQuestionType === 'single'
+      ? nextQuestionIndex
+      : nextQuestionType === 'multiple'
+        ? nextQuestionIndex - singleCount
+        : nextQuestionIndex - singleCount - multipleCount;
     
     console.log('切换题目:', {
       nextQuestionIndex,
@@ -1784,6 +1702,20 @@ Page({
       firstAnswerFaction: ''
     });
 
+    // 清除之前的计时器和可能的延迟调用，然后开始新一题的计时
+    if (this.data.timerInterval) {
+      clearInterval(this.data.timerInterval);
+      this.setData({
+        timerInterval: null
+      });
+    }
+    
+    // 清除可能存在的延迟调用
+    if (this.nextQuestionTimeout) {
+      clearTimeout(this.nextQuestionTimeout);
+      this.nextQuestionTimeout = null;
+    }
+    
     // 开始新一题的计时
     this.startTimer();
   },
@@ -1792,9 +1724,10 @@ Page({
    * 更新用户奖励
    */
   async updateUserReward(reward) {
-    // 获取今天的日期字符串
-    const today = new Date();
-    const dateStr = today.toISOString().split('T')[0];
+    // 获取今天的日期字符串（中国时区）
+    const now = new Date();
+    const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+    const dateStr = chinaTime.toISOString().split('T')[0];
 
     try {
       console.log('开始更新用户奖励，奖励数量：', reward);
@@ -1949,20 +1882,6 @@ Page({
     wx.navigateBack();
   },
   
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-    // 清除计时器
-    if (this.data.timerInterval) {
-      clearInterval(this.data.timerInterval);
-    }
-    
-    // 清除PK时间检查定时器
-    if (this.pkTimeChecker) {
-      clearInterval(this.pkTimeChecker);
-    }
-  },
   
   /**
    * 切换参考答案区域的显示/隐藏状态
@@ -1976,12 +1895,366 @@ Page({
     wx.vibrateShort({
       type: 'light'
     });
+  },
+
+  /**
+   * 刷新排行榜（从数据库获取真实数据）
+   */
+  async refreshRanking() {
+    console.log('开始刷新排行榜');
+    
+    wx.showLoading({
+      title: '刷新中...',
+      mask: true
+    });
+
+    try {
+      const cloud = new wx.cloud.Cloud({
+        identityless: true,
+        resourceAppid: 'wx85d92d28575a70f4',
+        resourceEnv: 'cloud1-1gsyt78b92c539ef'
+      });
+      
+      await cloud.init();
+      
+      // 获取今天的日期（中国时区）
+      const today = new Date();
+      const chinaTime = new Date(today.getTime() + (8 * 60 * 60 * 1000));
+      const dateStr = chinaTime.toISOString().split('T')[0];
+      
+      console.log('刷新排行榜 - 传递的日期:', dateStr);
+      
+      const result = await cloud.callFunction({
+        name: 'getRankings',
+        data: {
+          action: 'getTodayRanking',
+          date: dateStr  // 添加日期参数
+        }
+      });
+
+      console.log('排行榜数据获取结果：', result);
+
+      if (result.result && result.result.success) {
+        const rankingsData = result.result.data;
+        const rankings = rankingsData.rankings || [];
+        
+        console.log(`获取到 ${rankings.length} 条排行榜数据`);
+        
+        // 处理排行榜数据，只显示前10名，直接使用云函数返回的isCurrentUser
+        const topPerformers = rankings.slice(0, 10).map(item => ({
+          name: item.username,
+          faction: item.faction,
+          score: item.score,
+          isCurrentUser: item.isCurrentUser  // 直接使用云函数标记的结果
+        }));
+
+        // 查找当前用户的排名，使用云函数返回的isCurrentUser标识
+        const userIndex = rankings.findIndex(item => item.isCurrentUser);
+        const userRanking = userIndex >= 0 ? userIndex + 1 : 0;
+
+        console.log('处理后的排行榜数据：', {
+          topPerformers,
+          userRanking,
+          totalParticipants: rankingsData.totalParticipants
+        });
+
+        this.setData({
+          topPerformers: topPerformers,
+          userRanking: userRanking
+        });
+
+        wx.showToast({
+          title: '刷新成功',
+          icon: 'success',
+          duration: 1500
+        });
+      } else {
+        throw new Error(result.result?.message || '获取排行榜失败');
+      }
+    } catch (error) {
+      console.error('刷新排行榜失败:', error);
+      wx.showToast({
+        title: '刷新失败',
+        icon: 'error',
+        duration: 2000
+      });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
+  /**
+   * 加载真实排行榜数据
+   */
+  async loadRealRankingData() {
+    const cloud = new wx.cloud.Cloud({
+      identityless: true,
+      resourceAppid: 'wx85d92d28575a70f4',
+      resourceEnv: 'cloud1-1gsyt78b92c539ef'
+    });
+    
+    await cloud.init();
+    
+    // 不需要在前端获取openid，云函数会直接标记当前用户
+    
+    // 获取今天的日期（中国时区）
+    const today = new Date();
+    const chinaTime = new Date(today.getTime() + (8 * 60 * 60 * 1000));
+    const dateStr = chinaTime.toISOString().split('T')[0];
+    
+    console.log('前端传递的日期:', dateStr);
+    console.log('准备调用getRankings云函数...');
+    
+    const result = await cloud.callFunction({
+      name: 'getRankings',
+      data: {
+        action: 'getTodayRanking',
+        date: dateStr  // 明确传递日期参数
+      }
+    });
+    
+    console.log('getRankings云函数调用结果:', result);
+
+    if (!result.result || !result.result.success) {
+      throw new Error(result.result?.message || '获取排行榜失败');
+    }
+
+    const rankingsData = result.result.data;
+    const rankings = rankingsData.rankings || [];
+    
+    console.log(`获取到真实排行榜数据 ${rankings.length} 条`);
+    
+    // 调试：显示前几个用户的isCurrentUser状态
+    if (rankings.length > 0) {
+      console.log('排行榜前3个用户:', rankings.slice(0, 3).map(item => ({
+        username: item.username,
+        isCurrentUser: item.isCurrentUser
+      })));
+    }
+    
+    // 处理排行榜数据，只显示前10名，直接使用云函数返回的isCurrentUser
+    const topPerformers = rankings.slice(0, 10).map(item => ({
+      name: item.username,
+      faction: item.faction,
+      score: item.score,
+      isCurrentUser: item.isCurrentUser  // 直接使用云函数标记的结果
+    }));
+
+    // 查找当前用户的排名
+    const userIndex = rankings.findIndex(item => item.isCurrentUser);
+    const userRanking = userIndex >= 0 ? userIndex + 1 : 0;
+
+    this.setData({
+      topPerformers: topPerformers,
+      userRanking: userRanking,
+      currentState: 'result'
+    });
+
+    console.log('真实排行榜数据加载完成');
+  },
+
+  /**
+   * 加载阵营数据
+   */
+  async loadFactionData() {
+    try {
+      const cloud = new wx.cloud.Cloud({
+        identityless: true,
+        resourceAppid: 'wx85d92d28575a70f4',
+        resourceEnv: 'cloud1-1gsyt78b92c539ef'
+      });
+      
+      await cloud.init();
+      
+      // 获取今天的questionSetId
+      const today = new Date();
+      const chinaTime = new Date(today.getTime() + (8 * 60 * 60 * 1000));
+      const questionSetId = chinaTime.toISOString().split('T')[0].replace(/-/g, '');
+      
+      console.log('获取阵营数据，questionSetId:', questionSetId);
+      
+      // 获取PK会话的最新状态，包含真实的阵营人数
+      const result = await cloud.callFunction({
+        name: 'pkBattle',
+        data: {
+          action: 'getPkStatus',
+          data: {
+            questionSetId: questionSetId
+          }
+        }
+      });
+
+      console.log('获取阵营数据结果:', result);
+
+      if (result.result && result.result.success && result.result.data.factions) {
+        const factions = result.result.data.factions;
+        console.log('获取到真实阵营数据:', factions);
+        
+        this.setData({
+          towerCount: factions[0] ? factions[0].userCount : 0,
+          rainCount: factions[1] ? factions[1].userCount : 0,
+          towerScore: factions[0] ? factions[0].totalScore : 0,
+          rainScore: factions[1] ? factions[1].totalScore : 0
+        });
+        
+        console.log('阵营数据更新完成:', {
+          towerCount: factions[0] ? factions[0].userCount : 0,
+          rainCount: factions[1] ? factions[1].userCount : 0
+        });
+      } else {
+        console.error('获取阵营数据失败:', result.result);
+      }
+    } catch (error) {
+      console.error('获取阵营数据出错:', error);
+    }
+  },
+
+  /**
+   * 加载虚拟排行榜数据（备用方案）
+   */
+  loadVirtualRankingData() {
+    console.log('使用虚拟排行榜数据');
+    
+    const factions = ['tower', 'rain'];
+    const names = [
+      '星河折光', 'Aurorabyte', '影ノ森', 'Lunnaya Ten', '艾樱',
+      '墨青逐月', 'Vientooooo', 'Neonharbor', '霜落千山', 'Pixelwarden',
+      '北巷旧灯', 'Resonanzwolf', '하늘꽃', 'Crimson', '沉水浮灯'
+    ];
+
+    // 生成虚拟排行榜
+    const virtualRanking = names.slice(0, 9).map((name, index) => ({
+      name,
+      faction: factions[Math.floor(Math.random() * 2)],
+      score: Math.floor(Math.random() * 11) + 5, // 5-15分
+      isCurrentUser: false
+    }));
+
+    // 添加当前用户
+    virtualRanking.push({
+      name: '我',
+      faction: this.data.userFaction,
+      score: this.data.userScore,
+      isCurrentUser: true
+    });
+
+    // 按分数排序
+    virtualRanking.sort((a, b) => b.score - a.score);
+
+    // 查找用户排名
+    const userRank = virtualRanking.findIndex(item => item.isCurrentUser) + 1;
+
+    this.setData({
+      topPerformers: virtualRanking.slice(0, 10),
+      userRanking: userRank,
+      currentState: 'result'
+    });
+
+    console.log('虚拟排行榜数据加载完成');
+  },
+
+  /**
+   * 更新答题进度索引
+   */
+  async updateAnswerIndex() {
+    try {
+      const cloud = new wx.cloud.Cloud({
+        identityless: true,
+        resourceAppid: 'wx85d92d28575a70f4',
+        resourceEnv: 'cloud1-1gsyt78b92c539ef'
+      });
+      
+      await cloud.init();
+      
+      // 获取当前日期
+      const now = new Date();
+      const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+      const dateStr = chinaTime.toISOString().split('T')[0];
+      
+      // 计算新的索引值（当前题目索引 + 1）
+      const newIndex = this.data.currentQuestionIndex + 1;
+      
+      console.log('更新答题进度索引:', {
+        currentQuestionIndex: this.data.currentQuestionIndex,
+        newIndex: newIndex,
+        date: dateStr
+      });
+      
+      // 调用云函数更新索引
+      const result = await cloud.callFunction({
+        name: 'pkBattle',
+        data: {
+          action: 'updateAnswerIndex',
+          data: {
+            date: dateStr,
+            index: newIndex
+          }
+        }
+      });
+      
+      if (result.result && result.result.success) {
+        console.log('答题进度索引更新成功:', newIndex);
+      } else {
+        console.error('答题进度索引更新失败:', result.result);
+      }
+      
+    } catch (error) {
+      console.error('更新答题进度索引出错:', error);
+    }
+  },
+
+  /**
+   * 获取用户答题进度
+   */
+  async getUserAnswerProgress() {
+    try {
+      const cloud = new wx.cloud.Cloud({
+        identityless: true,
+        resourceAppid: 'wx85d92d28575a70f4',
+        resourceEnv: 'cloud1-1gsyt78b92c539ef'
+      });
+      
+      await cloud.init();
+      
+      // 获取当前日期
+      const now = new Date();
+      const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+      const dateStr = chinaTime.toISOString().split('T')[0];
+      
+      // 调用云函数获取用户进度
+      const result = await cloud.callFunction({
+        name: 'pkBattle',
+        data: {
+          action: 'checkUserPkParticipation',
+          data: {
+            date: dateStr
+          }
+        }
+      });
+      
+      if (result.result && result.result.success) {
+        const userData = result.result.data;
+        if (userData.hasParticipated) {
+          // 用户已参与，返回当前进度索引
+          const currentIndex = userData.index || 0;
+          console.log('用户当前答题进度:', currentIndex);
+          return currentIndex;
+        } else {
+          // 用户未参与，从第0题开始
+          console.log('用户未参与PK，从第0题开始');
+          return 0;
+        }
+      } else {
+        console.error('获取用户答题进度失败:', result.result);
+        return 0;
+      }
+      
+    } catch (error) {
+      console.error('获取用户答题进度出错:', error);
+      return 0;
+    }
   }
 });
-
-
-
-
 
 
 

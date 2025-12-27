@@ -138,6 +138,7 @@
   <view class="result-area" wx:if="{{currentState === 'result'}}">
     <view class="result-header">
       <view class="result-title">PK结果公布</view>
+      <view class="result-subtitle" wx:if="{{pkStatus === 'completed'}}">今日PK已完成，查看最终排行榜</view>
     </view>
     
     <view class="winner-announcement">
@@ -166,7 +167,13 @@
     </view>
     
     <view class="top-performers">
-      <view class="performers-title">今日排行榜</view>
+      <view class="performers-header">
+        <view class="performers-title">今日排行榜</view>
+        <view class="refresh-button {{isRefreshing ? 'refreshing' : ''}}" bindtap="refreshRanking">
+          <text class="refresh-icon">🔄</text>
+          <text class="refresh-text">{{isRefreshing ? '刷新中' : '刷新'}}</text>
+        </view>
+      </view>
       <view class="performer-list">
         <view class="performer-item {{item.isCurrentUser ? 'current-user' : ''}}" wx:for="{{topPerformers}}" wx:key="index" wx:if="{{index < 10}}">
           <view class="performer-rank">
@@ -270,7 +277,9 @@
       </view>
     </view>
     
-    <button class="return-home" bindtap="returnToHome">返回首页</button>
+    <button class="return-home" bindtap="returnToHome">
+      {{pkStatus === 'completed' ? '返回首页' : '返回首页'}}
+    </button>
   </view>
 </view> 
 

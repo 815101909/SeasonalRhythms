@@ -7,16 +7,29 @@ cloud.init({
 
 const db = cloud.database()
 
-// 获取今日的questionSetId
+// 获取今日的questionSetId（中国时区）
 function getTodayQuestionSetId() {
-  const today = new Date();
-  return today.toISOString().split('T')[0].replace(/-/g, '');
+  const now = new Date();
+  const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+  return chinaTime.toISOString().split('T')[0].replace(/-/g, '');
 }
 
 // 云函数入口函数
 exports.main = async (event, context) => {
   try {
     const questionSetId = getTodayQuestionSetId();
+    const now = new Date();
+    const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+    const day = chinaTime.getUTCDay();
+
+    const isWeekend = (day === 6 || day === 0);
+
+    if (!isWeekend) {
+      return {
+        success: false,
+        error: 'PK仅在中国时区的周六日开放'
+      };
+    }
     
     // 查找今日的PK会话
     const sessionQuery = await db.collection('pk_sessions')

@@ -7,24 +7,27 @@ cloud.init({
 
 const db = cloud.database()
 
-// 获取今天6点的时间戳
-function getTodaySixAM() {
-  const now = new Date()
-  const today6am = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6, 0, 0, 0)
-  return today6am.getTime()
+// 获取当前时间戳（中国时区 UTC+8）
+function getCurrentTimestamp() {
+  // 直接使用当前时间戳，因为Date.now()本身就是UTC时间戳
+  // 在比较时应该确保数据库中的unlockDate也是正确的时间戳
+  return Date.now()
 }
 
 // 云函数入口函数
 exports.main = async (event, context) => {
   try {
-    const today6am = getTodaySixAM()
+    const currentTimestamp = getCurrentTimestamp()
     
-    // 查找需要解锁的漫游记录（unlockDate小于今天6点的）
+    // 查找需要解锁的漫游记录（unlockDate小于等于当前时间的）
     const result = await db.collection('cityCard')
-      .where({
-        'basicInfo.status': false,
-        'basicInfo.unlockDate': db.command.lt(today6am)  // 使用lt而不是lte
-      })
+      .where(db.command.and([
+        db.command.or([
+          { 'basicInfo.status': false },
+          { 'basicInfo.status': db.command.exists(false) }  // 字段不存在或为undefined
+        ]),
+        { 'unlockDate': db.command.lte(currentTimestamp) }  // 解锁时间小于等于当前时间
+      ]))
       .update({
         data: {
           'basicInfo.status': true,
@@ -33,6 +36,7 @@ exports.main = async (event, context) => {
       })
 
     console.log('解锁漫游记结果:', result)
+    console.log('成功更新的记录数量:', result.stats.updated)
 
     return {
       success: true,

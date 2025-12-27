@@ -17,8 +17,17 @@ exports.main = async (event, context) => {
     const currentMonth = now.getMonth() + 1
     const currentDay = now.getDate()
 
-    // 查询所有节气数据
-    const { data: solarTerms } = await db.collection('solar_terms').get()
+    const years = [currentYear - 1, currentYear, currentYear + 1]
+    const { data: raw } = await db.collection('solar_terms')
+      .where({ year: _.in(years) })
+      .orderBy('year', 'asc')
+      .get()
+
+    const solarTerms = (raw || []).sort((a, b) => {
+      if ((a.year || 0) !== (b.year || 0)) return (a.year || 0) - (b.year || 0)
+      if ((a.month || 0) !== (b.month || 0)) return (a.month || 0) - (b.month || 0)
+      return (a.day || 0) - (b.day || 0)
+    })
 
     // 返回节气数据
     return {
@@ -38,4 +47,4 @@ exports.main = async (event, context) => {
       error: error.message
     }
   }
-} 
+}

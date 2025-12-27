@@ -63,11 +63,63 @@ function getSeasonStyle(month) {
   }
 }
 
+// 图片缓存对象和过期时间
+const tempUrlCache = {};
+const CACHE_EXPIRATION_TIME = 3 * 60 * 60 * 1000; // 缓存有效期3小时
+
+// 后台刷新图片缓存
+async function refreshImageInBackground(imageUrl, type) {
+  try {
+    console.log(`后台刷新${type}图片缓存`);
+    
+    // 获取新的临时URL（不使用缓存）
+    const newUrl = await getTemporaryImageUrlDirect(imageUrl, type);
+    
+    // 检查是否有变化
+    const oldUrl = tempUrlCache[imageUrl]?.url;
+    if (newUrl && newUrl !== oldUrl) {
+      console.log(`${type}图片已更新，刷新缓存`);
+      tempUrlCache[imageUrl] = {
+        url: newUrl,
+        timestamp: Date.now()
+      };
+      
+      // 可以在这里触发页面更新事件
+      // 例如：wx.triggerEvent('imageUpdated', { imageUrl, newUrl });
+    } else {
+      console.log(`${type}图片无变化，更新时间戳`);
+      if (tempUrlCache[imageUrl]) {
+        tempUrlCache[imageUrl].timestamp = Date.now();
+      }
+    }
+  } catch (error) {
+    console.error(`后台刷新${type}图片失败:`, error);
+  }
+}
+
 // 临时链接处理函数
 async function getTemporaryImageUrl(imageUrl, type) {
   if (!imageUrl) {
     console.log(`${type}图片链接为空，使用临时图片`);
     return 'https://via.placeholder.com/800x600.png?text=' + type;
+  }
+  
+  // 检查缓存
+  const cached = tempUrlCache[imageUrl];
+  const now = Date.now();
+  
+  if (cached && (now - cached.timestamp < CACHE_EXPIRATION_TIME)) {
+    console.log(`${type}图片使用缓存`);
+    
+    // 如果缓存超过30分钟，在后台检查更新
+    if (now - cached.timestamp > 30 * 60 * 1000) {
+      console.log(`${type}图片后台检查更新`);
+      setTimeout(() => {
+        refreshImageInBackground(imageUrl, type);
+      }, 100);
+    }
+    
+    return cached.url;
   }
   
   try {
@@ -90,7 +142,14 @@ async function getTemporaryImageUrl(imageUrl, type) {
         });
         
         if (result.fileList && result.fileList[0] && result.fileList[0].tempFileURL) {
-          return result.fileList[0].tempFileURL;
+          const tempUrl = result.fileList[0].tempFileURL;
+          // 缓存临时URL
+          tempUrlCache[imageUrl] = {
+            url: tempUrl,
+            timestamp: Date.now()
+          };
+          console.log(`${type}图片获取成功并缓存`);
+          return tempUrl;
         } else {
           console.error(`${type}图片云存储链接转换结果异常:`, result);
           return 'https://via.placeholder.com/800x600.png?text=Error_' + type;
@@ -101,9 +160,14 @@ async function getTemporaryImageUrl(imageUrl, type) {
       }
     }
     
-    // 如果是HTTP链接，直接返回
+    // 如果是HTTP链接，直接返回并缓存
     if (imageUrl.startsWith('http')) {
       console.log(`${type}图片为HTTP链接:`, imageUrl);
+      // 缓存HTTP链接
+      tempUrlCache[imageUrl] = {
+        url: imageUrl,
+        timestamp: Date.now()
+      };
       return imageUrl;
     }
     
@@ -113,6 +177,47 @@ async function getTemporaryImageUrl(imageUrl, type) {
   } catch (error) {
     console.error(`处理${type}图片链接出错:`, error);
     return 'https://via.placeholder.com/800x600.png?text=Error_' + type;
+  }
+}
+
+// 直接获取临时URL（不使用缓存，用于后台检查更新）
+async function getTemporaryImageUrlDirect(imageUrl, type) {
+  if (!imageUrl) {
+    return '';
+  }
+  
+  try {
+    // 如果是云存储链接，转换为临时HTTP链接
+    if (imageUrl.startsWith('cloud://')) {
+      try {
+        // 创建跨环境调用的Cloud实例
+        var c = new wx.cloud.Cloud({ 
+          identityless: true, 
+          resourceAppid: 'wx85d92d28575a70f4', 
+          resourceEnv: 'cloud1-1gsyt78b92c539ef', 
+        }) 
+        await c.init();
+        const result = await c.getTempFileURL({
+          fileList: [imageUrl]
+        });
+        
+        if (result.fileList && result.fileList[0] && result.fileList[0].tempFileURL) {
+          return result.fileList[0].tempFileURL;
+        }
+      } catch (err) {
+        console.error(`直接获取${type}图片失败:`, err);
+      }
+    }
+    
+    // 如果是HTTP链接，直接返回
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
+    }
+    
+    return '';
+  } catch (error) {
+    console.error(`直接处理${type}图片链接出错:`, error);
+    return '';
   }
 }
 
@@ -132,17 +237,12 @@ async function generateCities(year = new Date().getFullYear(), selectedMonth = n
     const currentMonth = currentDate.getMonth() + 1;
     const currentDay = currentDate.getDate();
 
-    // 调用云函数获取已解锁的城市卡片数据 - 使用跨环境调用
-    // 创建跨环境调用的Cloud实例
     var c = new wx.cloud.Cloud({ 
-      // 必填，表示是未登录模式 
       identityless: true, 
-      // 资源方 AppID 
       resourceAppid: 'wx85d92d28575a70f4', 
-      // 资源方环境 ID 
       resourceEnv: 'cloud1-1gsyt78b92c539ef', 
     }) 
-    await c.init() 
+    await c.init()
     const { result } = await c.callFunction({
       name: 'roaming',
       data: {
@@ -156,10 +256,33 @@ async function generateCities(year = new Date().getFullYear(), selectedMonth = n
     const unlockedCities = {};
     if (result && result.success && result.data) {
       result.data.forEach(cityCard => {
-        const unlockDate = new Date(cityCard.basicInfo.unlockDate);
+        const unlockDate = new Date(cityCard.unlockDate);
         const day = unlockDate.getDate();
         unlockedCities[day] = cityCard;
       });
+    }
+
+    const coverIds = [];
+    if (result && result.success && result.data) {
+      result.data.forEach(cityCard => {
+        const cover = cityCard.basicInfo?.coverImage;
+        if (cover && cover.startsWith('cloud://')) {
+          coverIds.push(cover);
+        }
+      });
+    }
+    let coverMap = {};
+    if (coverIds.length > 0) {
+      try {
+        const tempRes = await c.getTempFileURL({ fileList: coverIds });
+        if (tempRes.fileList && tempRes.fileList.length > 0) {
+          tempRes.fileList.forEach(f => {
+            if (f.fileID && f.tempFileURL) {
+              coverMap[f.fileID] = f.tempFileURL;
+            }
+          });
+        }
+      } catch (e) {}
     }
 
     // 生成城市数据
@@ -183,63 +306,29 @@ async function generateCities(year = new Date().getFullYear(), selectedMonth = n
         // 有数据的城市
         const cityCard = unlockedCities[day];
         const contentBlocks = cityCard.contentBlocks || {};
-
         const geographyImages = contentBlocks.geography?.images;
         const climateImages = contentBlocks.climate?.images;
         const cultureImages = contentBlocks.culture?.images;
         const cityStructureImages = contentBlocks.cityStructure?.images;
         const streetTreasuresImages = contentBlocks.streetTreasures?.images;
 
-        const geoImageSrc = Array.isArray(geographyImages)
-          ? geographyImages[0]
-          : (typeof geographyImages === 'string'
-            ? geographyImages
-            : (contentBlocks.geography?.image || ''));
+        const geoImageSrc = Array.isArray(geographyImages) ? geographyImages[0] : (typeof geographyImages === 'string' ? geographyImages : (contentBlocks.geography?.image || ''));
+        const climateImageSrc = Array.isArray(climateImages) ? climateImages[0] : (typeof climateImages === 'string' ? climateImages : (contentBlocks.climate?.image || ''));
+        const cultureImageSrc = Array.isArray(cultureImages) ? cultureImages[0] : (typeof cultureImages === 'string' ? cultureImages : (contentBlocks.culture?.image || ''));
+        const cityStructureImageSrc = Array.isArray(cityStructureImages) ? cityStructureImages[0] : (typeof cityStructureImages === 'string' ? cityStructureImages : (contentBlocks.cityStructure?.image || ''));
+        const streetTreasuresImageSrc = Array.isArray(streetTreasuresImages) ? streetTreasuresImages[0] : (typeof streetTreasuresImages === 'string' ? streetTreasuresImages : (contentBlocks.streetTreasures?.image || ''));
 
-        const climateImageSrc = Array.isArray(climateImages)
-          ? climateImages[0]
-          : (typeof climateImages === 'string'
-            ? climateImages
-            : (contentBlocks.climate?.image || ''));
+        let iconImageUrl = '';
+        const cover = cityCard.basicInfo?.coverImage;
+        if (cover) {
+          if (cover.startsWith('cloud://')) {
+            iconImageUrl = coverMap[cover] || '';
+          } else if (cover.startsWith('http')) {
+            iconImageUrl = cover;
+          }
+        }
+        const videoRaw = cityCard.basicInfo.videoUrl;
 
-        const cultureImageSrc = Array.isArray(cultureImages)
-          ? cultureImages[0]
-          : (typeof cultureImages === 'string'
-            ? cultureImages
-            : (contentBlocks.culture?.image || ''));
-
-        const cityStructureImageSrc = Array.isArray(cityStructureImages)
-          ? cityStructureImages[0]
-          : (typeof cityStructureImages === 'string'
-            ? cityStructureImages
-            : (contentBlocks.cityStructure?.image || ''));
-
-        const streetTreasuresImageSrc = Array.isArray(streetTreasuresImages)
-          ? streetTreasuresImages[0]
-          : (typeof streetTreasuresImages === 'string'
-            ? streetTreasuresImages
-            : (contentBlocks.streetTreasures?.image || ''));
-
-        // 使用 await 等待所有图片 URL 处理完成
-        const [
-          iconImageUrl,
-          natureImageUrl,
-          climateImageUrl,
-          cultureImageUrl,
-          cityStructureImageUrl,
-          streetTreasuresImageUrl
-        ] = await Promise.all([
-          getTemporaryImageUrl(cityCard.basicInfo.coverImage, '城市封面'),
-          getTemporaryImageUrl(geoImageSrc, '自然地理'),
-          getTemporaryImageUrl(climateImageSrc, '气候时节'),
-          getTemporaryImageUrl(cultureImageSrc, '人文气息'),
-          getTemporaryImageUrl(cityStructureImageSrc, '城市脉络'),
-          getTemporaryImageUrl(streetTreasuresImageSrc, '街巷宝藏')
-        ]);
-
-        // 处理视频URL
-        const videoUrl = await getTemporaryImageUrl(cityCard.basicInfo.videoUrl, 'video');
-        
         allCities.push({
           id: cityCard._id,
           name: cityCard.basicInfo.cityName,
@@ -248,8 +337,10 @@ async function generateCities(year = new Date().getFullYear(), selectedMonth = n
           unlocked: cityCard.basicInfo.status,
           unlockDate: `${selectedMonth}月${day}日`,
           unlockYear: year,
+          month: selectedMonth,
+          day: day,
           iconUrl: iconImageUrl,
-          videoUrl: videoUrl,
+          videoRaw: videoRaw,
           seasonBgColor: seasonStyle.bgColor,
           seasonEmoji: seasonStyle.emoji,
           season: seasonStyle.season,
@@ -260,14 +351,12 @@ async function generateCities(year = new Date().getFullYear(), selectedMonth = n
           culture: contentBlocks.culture?.content,
           cityStructure: contentBlocks.cityStructure?.content,
           streetTreasures: contentBlocks.streetTreasures?.content,
-          // 内容配图
-          natureImage: natureImageUrl,
-          climateImage: climateImageUrl,
-          cultureImage: cultureImageUrl,
-          cityStructureImage: cityStructureImageUrl,
-          streetTreasuresImage: streetTreasuresImageUrl,
-          // 音频
-          audioUrl: await getTemporaryImageUrl(cityCard.audio, 'audio'),
+          natureImageRaw: geoImageSrc,
+          climateImageRaw: climateImageSrc,
+          cultureImageRaw: cultureImageSrc,
+          cityStructureImageRaw: cityStructureImageSrc,
+          streetTreasuresImageRaw: streetTreasuresImageSrc,
+          audioUrl: cityCard.audio,
           audioTitle: '城市音频导览',
           // 地标数据
           landmark: cityCard.landmark || []
@@ -277,6 +366,8 @@ async function generateCities(year = new Date().getFullYear(), selectedMonth = n
         allCities.push({
           id: `${year}-${selectedMonth}-${day}`,
           unlocked: false,
+          month: selectedMonth,
+          day: day,
           daysToUnlock: daysToUnlock > 0 ? daysToUnlock : 0,
           seasonBgColor: seasonStyle.bgColor,
           seasonEmoji: seasonStyle.emoji,
@@ -931,7 +1022,13 @@ Page({
     isLoading: true,
     loadingProgress: 0, // 确保是数字类型
     showCityDetail: false,
-    showCityMuseum: false,
+      bookPages: [
+        { flipped: false, zIndex: 4 },
+        { flipped: false, zIndex: 3 },
+        { flipped: false, zIndex: 2 },
+        { flipped: false, zIndex: 1 }
+      ],
+      showCityMuseum: false,
     showChallenge: false,
     showResult: false,
     selectedCity: null,
@@ -1022,6 +1119,8 @@ Page({
     // 封面和视频显示控制
     showMediaContainer: true, // 是否显示封面和视频
     lastScrollTop: 0, // 上次滚动位置
+    currentFontSize: 32,
+    fontSizeStyle: `--content-font-size: 32rpx;`,
   },
 
   /**
@@ -1031,6 +1130,10 @@ Page({
 
     try {
       console.log('页面加载开始');
+      wx.setInnerAudioOption({
+        mixWithOther: true,
+        obeyMuteSwitch: false
+      });
       
       // 获取当前日期信息
       const currentDate = new Date();
@@ -1111,8 +1214,7 @@ Page({
         monthNames.push(`${i}月`);
       }
       
-      // 先初始化轮播图片
-      await this.initScenicImages();
+      this.initScenicImages();
       
       // 设置初始数据
       this.setData({
@@ -1191,11 +1293,13 @@ Page({
     // 更新上次滚动位置
     this.setData({ lastScrollTop: scrollTop });
     
-    // 仅VIP用户触发板块动画检测
+    // 注释掉VIP用户的板块动画检测
+    /*
     if (this.data.isVIP) {
       this.checkSectionVisibility(scrollTop);
       return;
     }
+    */
     
     // 非VIP用户检查滚动限制
     if (scrollTop > this.data.maxScrollForNonMember) {
@@ -1360,6 +1464,17 @@ Page({
   
   // 检查用户会员状态
   async checkUserMemberStatus() {
+    // 先检查用户是否已登录
+    const userInfo = wx.getStorageSync('userInfo');
+    if (!userInfo || !userInfo.openid) {
+      console.log('用户未登录，显示会员锁');
+      this.setData({
+        isVIP: false,
+        showMembershipLock: true
+      });
+      return;
+    }
+
     try {
       const cloud = new wx.cloud.Cloud({
         identityless: true,
@@ -1377,11 +1492,13 @@ Page({
 
       if (res.result && res.result.success) {
         const { isVIP } = res.result;
+        console.log('会员状态检查结果:', isVIP);
         this.setData({
           isVIP: isVIP,
           showMembershipLock: !isVIP // 只有非VIP用户才显示会员锁
         });
       } else {
+        console.log('会员状态检查失败，显示会员锁');
         this.setData({
           isVIP: false,
           showMembershipLock: true // 非VIP用户进入页面时立即显示会员锁
@@ -1451,13 +1568,14 @@ Page({
     const targetCity = allCities.find(city => city.id == cityId);
     
     if (targetCity) {
-      // 找到城市，显示详情
       this.setData({
         showCityDetail: true,
         selectedCity: targetCity,
-        showCityMuseum: false, // 确保显示城市详情而非博物馆
-        showMediaContainer: true, // 重置封面视频显示
-        lastScrollTop: 0 // 重置滚动位置
+        showCityMuseum: false,
+        showMediaContainer: true,
+        lastScrollTop: 0
+      }, () => {
+        this.refreshActionsRect();
       });
     } else {
       // 未找到城市，显示提示
@@ -1759,8 +1877,11 @@ Page({
         // 初始化音频上下文
         await this.initAudioContext();
         this.toggleBgMusic(); // 自动播放背景音乐
-        
-        // 仅VIP用户触发板块动画
+        await this.resolveCityDetailImages();
+        this.refreshActionsRect();
+      
+        // 注释掉VIP用户的板块动画触发
+        /*
         if (this.data.isVIP) {
           // 延迟触发第一个板块的动画（页面打开后立即显示）
           setTimeout(() => {
@@ -1771,6 +1892,7 @@ Page({
             });
           }, 100);
         }
+        */
       });
     } else {
       wx.showToast({
@@ -1779,13 +1901,38 @@ Page({
       });
     }
   },
+
+  resolveCityDetailImages: async function() {
+    const sc = this.data.selectedCity || {};
+    const updates = {};
+    if (sc.natureImageRaw) {
+      updates.natureImage = await getTemporaryImageUrl(sc.natureImageRaw, '自然地理');
+    }
+    if (sc.climateImageRaw) {
+      updates.climateImage = await getTemporaryImageUrl(sc.climateImageRaw, '气候时节');
+    }
+    if (sc.cultureImageRaw) {
+      updates.cultureImage = await getTemporaryImageUrl(sc.cultureImageRaw, '人文气息');
+    }
+    if (sc.cityStructureImageRaw) {
+      updates.cityStructureImage = await getTemporaryImageUrl(sc.cityStructureImageRaw, '城市脉络');
+    }
+    if (sc.streetTreasuresImageRaw) {
+      updates.streetTreasuresImage = await getTemporaryImageUrl(sc.streetTreasuresImageRaw, '街巷宝藏');
+    }
+    if (sc.videoRaw) {
+      updates.videoUrl = await getTemporaryImageUrl(sc.videoRaw, 'video');
+    }
+    if (Object.keys(updates).length > 0) {
+      this.setData({ selectedCity: { ...this.data.selectedCity, ...updates } });
+    }
+  },
   
   // 关闭城市详情
   onCloseModal: function() {
     this.setData({
       showCityDetail: false
     });
-    // 停止背景音乐
     if (this.data.bgMusicContext) {
       this.data.bgMusicContext.stop();
       this.data.bgMusicContext.destroy();
@@ -1793,6 +1940,84 @@ Page({
         bgMusicContext: null,
         isBgMusicPlaying: false
       });
+    }
+  },
+
+  disabledBackTap: function() {
+    if (this.data.bgMusicContext) {
+      this.data.bgMusicContext.stop();
+      this.data.bgMusicContext.destroy();
+      this.setData({
+        bgMusicContext: null,
+        isBgMusicPlaying: false
+      });
+    }
+    if (this.data.showPrintPreview) {
+      this.setData({ showPrintPreview: false });
+      return;
+    }
+    if (this.data.showLandmarkModal) {
+      this.setData({ showLandmarkModal: false });
+      return;
+    }
+    if (this.data.showCityMuseum) {
+      this.setData({ showCityMuseum: false });
+      return;
+    }
+    this.onCloseModal();
+  },
+
+  refreshActionsRect: function() {
+    wx.createSelectorQuery()
+      .select('.unified-actions')
+      .boundingClientRect((rect) => {
+        if (rect) {
+          this.__actionsRect = { top: rect.top, bottom: rect.bottom };
+        } else {
+          this.__actionsRect = null;
+        }
+      })
+      .exec();
+  },
+
+  onEdgeTouchStart: function(e) {
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+    const r = this.__actionsRect;
+    const inActions = r && t.pageY >= r.top && t.pageY <= r.bottom;
+    this.__edgeSwipe = { x: t.pageX, y: t.pageY, ts: Date.now(), dx: 0, dy: 0, inActions: !!inActions, points: [{ x: t.pageX, y: t.pageY, ts: Date.now() }] };
+  },
+  onEdgeTouchMove: function(e) {
+    const t = e.touches && e.touches[0];
+    if (!t || !this.__edgeSwipe) return;
+    this.__edgeSwipe.dx = t.pageX - this.__edgeSwipe.x;
+    this.__edgeSwipe.dy = Math.abs(t.pageY - this.__edgeSwipe.y);
+    const now = Date.now();
+    if (this.__edgeSwipe.points && this.__edgeSwipe.points.length < 10) {
+      this.__edgeSwipe.points.push({ x: t.pageX, y: t.pageY, ts: now });
+    }
+  },
+  onEdgeTouchEnd: function() {
+    const g = this.__edgeSwipe;
+    this.__edgeSwipe = null;
+    if (!g) return;
+    if (g.inActions) {
+      const isTap = Math.abs(g.dx) < 10 && g.dy < 20 && Date.now() - g.ts < 500;
+      if (isTap) {
+        this.disabledBackTap();
+      }
+      return;
+    }
+    if (!this.data.showCityDetail) return;
+    if (this.data.showLandmarkModal || this.data.showPrintPreview) return;
+    const dt = Math.max(1, Date.now() - g.ts);
+    const vx = g.dx / dt; // px/ms
+    const ratio = Math.abs(g.dy) / Math.max(1, Math.abs(g.dx));
+    const isHorizontal = (Math.abs(g.dx) >= 50 && (Math.abs(g.dy) < 80 || ratio < 0.7));
+    const isQuick = vx > 0.5 && g.dx > 30;
+    const isStrong = g.dx > 100 && ratio < 0.9;
+    if (isQuick || isHorizontal || isStrong) {
+      this.onCloseModal();
     }
   },
   
@@ -2308,13 +2533,25 @@ Page({
       showUnlockAnimation: false,
       showCityDetail: true,
       selectedCity: this.data.newlyUnlockedCity,
-      showMediaContainer: true, // 重置封面视频显示
-      lastScrollTop: 0 // 重置滚动位置
+      showMediaContainer: true,
+      lastScrollTop: 0
+    }, () => {
+      this.refreshActionsRect();
     });
   },
   
   // 打印城市信息
   onPrintCity: async function() {
+    // 检查会员权限
+    if (!this.data.isVIP) {
+      wx.showToast({
+        title: '打印功能需要开通会员',
+        icon: 'none',
+        duration: 2000
+      });
+      return;
+    }
+
     const { selectedCity } = this.data;
     
     if (!selectedCity) {
@@ -2515,7 +2752,8 @@ Page({
     // 创建音频实例
     const audioContext = wx.createInnerAudioContext();
     audioContext.src = audioUrl;
-    audioContext.autoplay = true;
+    audioContext.autoplay = false;
+    audioContext.obeyMuteSwitch = false;
     
     // 设置音频事件
     audioContext.onPlay(() => {
@@ -2571,12 +2809,12 @@ Page({
 
   // 字体调大功能
   increaseFontSize: function() {
-    // 获取当前字体大小设置，如果没有则默认为28rpx（即info-content的默认大小）
-    const currentSize = wx.getStorageSync('city_text_font_size') || 28;
+    // 获取当前字体大小设置
+    const currentSize = this.data.currentFontSize;
     // 字体最大不超过36rpx
-    const newSize = Math.min(currentSize + 2, 36);
-    wx.setStorageSync('city_text_font_size', newSize);
+    const newSize = Math.min(currentSize + 2, 40);
     this.updateFontSize(newSize);
+    this.setData({ currentFontSize: newSize });
     wx.showToast({
       title: '字体已放大',
       icon: 'none',
@@ -2586,12 +2824,12 @@ Page({
 
   // 字体调小功能
   decreaseFontSize: function() {
-    // 获取当前字体大小设置，如果没有则默认为28rpx
-    const currentSize = wx.getStorageSync('city_text_font_size') || 28;
+    // 获取当前字体大小设置
+    const currentSize = this.data.currentFontSize;
     // 字体最小不低于22rpx
-    const newSize = Math.max(currentSize - 2, 22);
-    wx.setStorageSync('city_text_font_size', newSize);
+    const newSize = Math.max(currentSize - 2, 24);
     this.updateFontSize(newSize);
+    this.setData({ currentFontSize: newSize });
     wx.showToast({
       title: '字体已缩小',
       icon: 'none',
@@ -2621,7 +2859,7 @@ Page({
     } else {
       // 开始播放背景音乐
       try {
-        const bgMusicContext = wx.createInnerAudioContext();
+        const bgMusicContext = this.data.bgMusicContext || wx.createInnerAudioContext();
         const bgMusicUrl = this.data.bgMusicUrl;
         if (bgMusicUrl.startsWith('cloud://')) {
           // 跨环境创建 Cloud 实例
@@ -2660,8 +2898,9 @@ Page({
           bgMusicContext.src = bgMusicUrl;
           bgMusicContext.play();
         }
-        bgMusicContext.loop = true; // 循环播放
-        bgMusicContext.volume = 0.1; // 设置音量为10%
+        bgMusicContext.loop = true;
+        bgMusicContext.volume = 0.1;
+        bgMusicContext.obeyMuteSwitch = false;
         
         bgMusicContext.onPlay(() => {
           console.log('背景音乐开始播放');
@@ -2687,9 +2926,7 @@ Page({
           console.log('背景音乐播放结束');
         });
         
-        this.setData({
-          bgMusicContext: bgMusicContext
-        });
+        this.setData({ bgMusicContext });
         
         bgMusicContext.play();
         
@@ -2738,7 +2975,7 @@ Page({
     
     if (cityFootprintExists) {
       wx.showToast({
-        title: '已打过卡',
+        title: '您已来过～',
         icon: 'success',
         duration: 1500,
         mask: true
@@ -2747,7 +2984,6 @@ Page({
     }
 
     const now = new Date();
-    const timestamp = now.toISOString();
     const formattedDate = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
     
     try {
@@ -2769,7 +3005,6 @@ Page({
           data: {
             cityId: city.id,
             cityName: city.name,
-            timestamp: timestamp,
             date: formattedDate
           }
         }
@@ -2783,7 +3018,6 @@ Page({
       footprints.push({
         cityId: city.id,
         cityName: city.name,
-        timestamp: timestamp,
         date: formattedDate
       });
       
@@ -2797,7 +3031,7 @@ Page({
 
       // 显示成功提示
       wx.showToast({
-        title: '打卡成功',
+        title: '走过路过',
         icon: 'success',
         duration: 1500
       });
@@ -4017,61 +4251,60 @@ initSimplePuzzle: function() {
    * 加载城市数据
    */
   loadCitiesData: async function() {
-    console.log('开始加载城市数据');
-    
     try {
-      // 显示加载进度
-      this.setData({
-        isLoading: true,
-        loadingProgress: 20
-      });
-
-      // 总是重新生成当前月份的城市数据，确保更新
+      const startTs = Date.now();
+      this.setData({ isLoading: true, loadingProgress: 20 });
+      const cacheKey = `ts_cities_${this.data.currentYear}_${this.data.currentMonth}`;
+      const cached = wx.getStorageSync(cacheKey);
+      if (cached && cached.data && (Date.now() - cached.timestamp < CACHE_EXPIRATION_TIME)) {
+        const cities = cached.data;
+        const totalPages = Math.ceil(cities.length / this.data.citiesPerPage);
+        const todayDay = new Date().getDate();
+        const targetIndex = Array.isArray(cities) ? cities.findIndex(item => item && item.day === todayDay) : -1;
+        const defaultPage = targetIndex !== -1 ? Math.floor(targetIndex / this.data.citiesPerPage) + 1 : 1;
+        this.setData({
+          allCities: cities,
+          totalPages: Math.max(1, totalPages),
+          currentPage: defaultPage,
+          unlockedCitiesCount: cities.filter(city => city.unlocked).length,
+          loadingProgress: 60
+        });
+        this.updateDisplayedCities();
+      }
       const cities = await generateCities(this.data.currentYear, this.data.currentMonth);
-      console.log('生成的城市数量:', cities.length);
-      console.log('当前月份:', this.data.currentMonth);
-      
-      this.setData({
-        loadingProgress: 60
-      });
-      
-      // 计算分页信息
       const totalPages = Math.ceil(cities.length / this.data.citiesPerPage);
-      console.log('总页数:', totalPages);
-      
-      // 更新数据
+      const todayDay = new Date().getDate();
+      const targetIndex = cities.findIndex(item => item && item.day === todayDay);
+      const defaultPage = targetIndex !== -1 ? Math.floor(targetIndex / this.data.citiesPerPage) + 1 : 1;
       this.setData({
         allCities: cities,
         totalPages: Math.max(1, totalPages),
-        currentPage: 1,
+        currentPage: defaultPage,
         unlockedCitiesCount: cities.filter(city => city.unlocked).length,
         loadingProgress: 80
       });
-      
-      // 更新显示的城市
       this.updateDisplayedCities();
-      
-      // 完成加载
-      this.setData({
-        isLoading: false,
-        loadingProgress: 100
-      });
-      
-      console.log('城市数据加载完成');
+      wx.setStorageSync(cacheKey, { timestamp: Date.now(), data: cities });
+      const minDuration = 800;
+      const elapsed = Date.now() - startTs;
+      const wait = Math.max(0, minDuration - elapsed);
+      setTimeout(() => {
+        this.setData({ isLoading: false, loadingProgress: 100 });
+      }, wait);
     } catch (error) {
       console.error('加载城市数据出错:', error);
-      // 出错时显示提示
       wx.showToast({
         title: '加载城市数据失败，请重试',
         icon: 'none',
         duration: 3000
       });
-    
-      // 重置加载状态
-      this.setData({
-        isLoading: false,
-        loadingProgress: 0
-      });
+      const minDuration = 800;
+      setTimeout(() => {
+        this.setData({
+          isLoading: false,
+          loadingProgress: 0
+        });
+      }, minDuration);
     }
   },
 
@@ -4154,17 +4387,51 @@ initSimplePuzzle: function() {
   // 视频播放事件处理
   onVideoPlay: function() {
     console.log('视频开始播放');
+    if (this.data.bgMusicContext && this.data.isBgMusicPlaying) {
+      try {
+        this.data.bgMusicContext.pause();
+        this.setData({ pausedBgByVideo: true, isBgMusicPlaying: false });
+      } catch (e) {}
+    }
+    if (this.data.audioContext && this.data.isPlaying) {
+      try {
+        this.data.audioContext.pause();
+        this.setData({ pausedAudioByVideo: true, isPlaying: false });
+      } catch (e) {}
+    }
   },
 
   onVideoPause: function() {
     console.log('视频暂停');
+    if (this.data.bgMusicContext && this.data.pausedBgByVideo) {
+      try {
+        this.data.bgMusicContext.play();
+        this.setData({ pausedBgByVideo: false, isBgMusicPlaying: true });
+      } catch (e) {}
+    }
+    if (this.data.audioContext && this.data.pausedAudioByVideo) {
+      try {
+        this.data.audioContext.play();
+        this.setData({ pausedAudioByVideo: false, isPlaying: true });
+      } catch (e) {}
+    }
   },
 
   onVideoEnded: function() {
     console.log('视频播放结束');
-    this.setData({
-      isVideoFullscreen: false
-    });
+    if (this.data.bgMusicContext && this.data.pausedBgByVideo) {
+      try {
+        this.data.bgMusicContext.play();
+        this.setData({ pausedBgByVideo: false, isBgMusicPlaying: true });
+      } catch (e) {}
+    }
+    if (this.data.audioContext && this.data.pausedAudioByVideo) {
+      try {
+        this.data.audioContext.play();
+        this.setData({ pausedAudioByVideo: false, isPlaying: true });
+      } catch (e) {}
+    }
+    this.setData({ isVideoFullscreen: false });
   },
 
   onVideoTimeUpdate: function(e) {
@@ -4225,6 +4492,8 @@ initSimplePuzzle: function() {
       
       // 创建音频上下文
       const audioContext = wx.createInnerAudioContext();
+      audioContext.autoplay = false;
+      audioContext.obeyMuteSwitch = false;
       
       // 处理音频源 - 使用统一的getTemporaryImageUrl函数
       const audioSrc = await getTemporaryImageUrl(this.data.selectedCity.audioUrl, 'audio');

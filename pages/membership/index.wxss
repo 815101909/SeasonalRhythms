@@ -299,3 +299,47 @@
   font-weight: bold;
   box-shadow: 0 8rpx 16rpx rgba(76, 175, 80, 0.3);
 }
+
+/* 激活码兑换区域样式 */
+.activation-area {
+  margin-top: 40rpx;
+  background-color: #fff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.activation-input-group {
+  display: flex;
+  align-items: center;
+  margin-top: 20rpx;
+}
+
+.activation-input {
+  flex: 1;
+  height: 80rpx;
+  background-color: #f5f5f5;
+  border-radius: 10rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  margin-right: 20rpx;
+  color: #333;
+}
+
+.activation-btn {
+  width: 160rpx;
+  height: 80rpx;
+  background-color: #ff9800;
+  color: white;
+  border-radius: 10rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 28rpx;
+  font-weight: bold;
+  box-shadow: 0 4rpx 8rpx rgba(255, 152, 0, 0.3);
+}
+.activation-btn:active {
+  background-color: #f57c00;
+  transform: translateY(2rpx);
+}

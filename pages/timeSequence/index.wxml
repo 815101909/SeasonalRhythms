@@ -148,6 +148,7 @@
 
   <!-- 城市详情页面 -->
   <view class="city-detail-page" wx:if="{{showCityDetail}}" style="{{fontSizeStyle}}">
+    <view class="edge-swipe-area" catchtouchstart="onEdgeTouchStart" catchtouchmove="onEdgeTouchMove" catchtouchend="onEdgeTouchEnd"></view>
     <view class="city-detail-content">
       
       <!-- 封面和视频并排显示容器 - 只在城市详情模式显示 -->
@@ -172,6 +173,9 @@
                  src="{{selectedCity.videoUrl}}" 
                  class="city-video" 
                  object-fit="cover"
+                 autoplay="{{false}}"
+                 muted="{{true}}"
+                 show-mute-btn="{{true}}"
                  show-play-btn="{{true}}"
             show-center-play-btn="{{true}}"
                  controls="{{true}}"
@@ -181,7 +185,12 @@
             direction="90"
             initial-time="{{0}}"
             poster="{{selectedCity.iconUrl}}"
-            bindfulscreenchange="onVideoFullscreenChange"
+            bindfullscreenchange="onVideoFullscreenChange"
+            bindplay="onVideoPlay"
+            bindpause="onVideoPause"
+            bindended="onVideoEnded"
+            bindtimeupdate="onVideoTimeUpdate"
+            bindwaiting="onVideoWaiting"
             binderror="onVideoError">
           </video>
           
@@ -208,11 +217,11 @@
       
       <!-- 操作按钮区，移至滚动区域上方 -->
       <view class="unified-actions">
-        <view class="action-btn" bindtap="onCloseModal"><text class="btn-icon">❮</text></view>
+        <view class="action-btn" bindtap="disabledBackTap"><text class="btn-icon">❮</text></view>
         <view class="action-btn" bindtap="increaseFontSize"><text class="btn-icon">A+</text></view>
         <view class="action-btn" bindtap="decreaseFontSize"><text class="btn-icon">A-</text></view>
         <view class="action-btn {{isBgMusicPlaying ? 'playing' : ''}}" bindtap="toggleBgMusic"><text class="btn-icon">🎵</text></view>
-        <view class="action-btn" bindtap="onPrintCity"><text class="btn-icon">🖨️</text></view>
+        <view class="action-btn {{!isVIP ? 'vip-required' : ''}}" bindtap="onPrintCity"><text class="btn-icon">🖨️</text></view>
         <!--<view class="action-btn {{isPlaying ? 'playing' : ''}}" bindtap="toggleAudio" wx:if="{{selectedCity.audioUrl}}"><text class="btn-icon">🔊</text></view>-->
         <view class="action-btn" bindtap="leaveFootprint"><text class="btn-icon">👣</text></view>
       </view>
@@ -548,7 +557,6 @@
       </view>
       
       <view class="landmark-modal-info">
-        <view class="landmark-modal-emoji">{{currentLandmark.emoji}}</view>
         <view class="landmark-modal-title">{{currentLandmark.name}}</view>
         <view class="landmark-modal-desc">{{currentLandmark.description}}</view>
       </view>
@@ -565,11 +573,12 @@
   <view class="fixed-audio-player show" wx:if="{{showCityDetail && selectedCity.audioUrl && isVIP}}">
     <view class="audio-content">
       <view class="audio-info">
-        <text class="audio-title">{{selectedCity.name}} - 城市音频导览</text>
+        <text class="audio-title">{{selectedCity.name}} - 音频导览</text>
       </view>
       <view class="audio-controls">
         <view class="play-btn {{isPlaying ? 'playing' : ''}}" bindtap="toggleAudio">
-          <text class="btn-icon">{{isPlaying ? '⏸' : '▶'}}</text>
+          <view wx:if="{{!isPlaying}}" class="icon-play" aria-label="播放"></view>
+          <view wx:else class="icon-pause" aria-label="暂停"></view>
         </view>
         <view class="speed-btn" bindtap="toggleSpeedSelector">
           <text class="btn-icon">{{audioPlaybackRate}}x</text>

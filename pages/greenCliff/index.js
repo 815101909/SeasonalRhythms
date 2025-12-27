@@ -2,7 +2,7 @@
 
 // 统一的图片、音频、视频URL处理函数
 const tempUrlCache = {}; // 缓存对象
-const CACHE_EXPIRATION_TIME = 24 * 60 * 60 * 1000; // 缓存有效期24小时
+const CACHE_EXPIRATION_TIME = 3 * 60 * 60 * 1000; // 缓存有效期3小时
 
 async function getTemporaryImageUrl(imageUrl, type) {
   if (!imageUrl) {

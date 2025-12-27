@@ -190,8 +190,8 @@
 
 /* 图片占位符样式 - 预留给API */
 .city-icon-placeholder {
-  width: 120rpx;
-  height: 90rpx;
+  width: 200rpx;
+  height: 150rpx;
   border-radius: 8rpx;
   background-color: #f0f0f0;
   border: 2rpx dashed #FFC107;
@@ -209,8 +209,8 @@
 
 /* 城市图片样式 - 接口预留 */
 .city-image {
-  width: 120rpx;
-  height: 90rpx;
+  width: 160rpx;
+  height: 110rpx;
   border-radius: 8rpx;
   object-fit: cover;
   box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.1);
@@ -329,7 +329,7 @@
   z-index: 100;
   overflow: hidden;
   /* CSS变量，用于动态控制字体大小 */
-  --content-font-size: 28rpx;
+  --content-font-size: 30rpx;
   font-family: "Source Han Serif", "Noto Serif SC", "思源宋体", serif;
 }
 
@@ -559,13 +559,12 @@
   padding: 50rpx 30rpx 40rpx;
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
   min-height: 100rpx;
-  transition: transform 0.3s ease;
+  transition: none;
   font-family: "Source Han Serif", "Noto Serif SC", "思源宋体", serif;
   
-  /* 初始状态：隐藏 */
-  opacity: 0;
-  transform: translateY(60rpx);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  /* 初始状态：直接显示（移除滚动显现特效） */
+  opacity: 1;
+  transform: none;
 }
 
 /* 板块可见时的状态（仅VIP用户） */
@@ -841,7 +840,7 @@
 .info-section:nth-child(1) .floating-image-placeholder {
   float: left;
   margin: 0 20rpx 15rpx 0; /* 上、右、下、左的外边距 */
-  height: calc(1.8em * 3 + 5rpx); /* 高度覆盖三行文字高度 */
+  height: calc(1.8em * 4 + 5rpx); /* 高度覆盖四行文字高度 */
 }
 
 /* 第三个文本框的图片位置调整为左侧 */
@@ -849,7 +848,7 @@
 .info-section:nth-child(3) .floating-image-placeholder {
   float: left;
   margin: 0 20rpx 15rpx 0; /* 上、右、下、左的外边距 */
-  height: calc(1.8em * 3 + 5rpx); /* 高度覆盖三行文字高度 */
+  height: calc(1.8em * 4 + 8rpx); /* 高度覆盖四行文字高度 */
 }
 
 /* 第四个文本框内容调整 */
@@ -930,14 +929,14 @@
   line-height: 1.8;
   color: #333;
   text-align: justify;
-  text-indent: 0; /* 取消首行缩进 */
+  text-indent: 2em;
   position: relative;
   z-index: 2;
   font-family: "Source Han Serif", "Noto Serif SC", "思源宋体", serif;
   
-  /* 文字初始状态 */
-  opacity: 0;
-  transform: translateY(20rpx);
+  /* 文字初始状态 - 直接显示 */
+  opacity: 1;
+  transform: none;
 }
 
 /* 板块可见时文字动画 */
@@ -1030,14 +1029,14 @@
 .info-section:nth-child(5) .floating-image-placeholder {
   float: left;
   margin: 0 20rpx 15rpx 0; /* 上、右、下、左的外边距 */
-  height: calc(1.8em * 3 + 5rpx); /* 高度覆盖三行文字高度 */
+  height: calc(1.8em * 4 + 8rpx); /* 高度覆盖四行文字高度 */
 }
 
 /* 浮动图片样式 */
 .floating-image {
   float: right;
-  width: 35%; /* 调整图片宽度为文本宽度的35% */
-  height: calc(1.8em * 3 + 5rpx); /* 高度覆盖三行文字高度 */
+  width: 55%; /* 调整图片宽度为文本宽度的55% */
+  height: calc(1.8em * 4 + 8rpx); /* 高度覆盖四行文字高度 */
   margin: 0 0 15rpx 20rpx; /* 上、右、下、左的外边距 */
   border-radius: 12rpx;
   object-fit: cover;
@@ -1047,9 +1046,9 @@
   position: relative;
   transition: all 0.3s ease-in-out;
   
-  /* 图片初始状态 */
-  opacity: 0;
-  transform: scale(0.8) rotate(-3deg);
+  /* 图片初始状态 - 直接显示 */
+  opacity: 1;
+  transform: none;
 }
 
 /* 板块可见时图片动画 */
@@ -1076,8 +1075,8 @@
 /* 占位图样式 */
 .floating-image-placeholder {
   float: right;
-  width: 35%;
-  height: calc(1.8em * 3 + 5rpx); /* 高度覆盖三行文字高度 */
+  width: 55%;
+  height: calc(1.8em * 4 + 8rpx); /* 高度覆盖四行文字高度 */
   margin: 0 0 15rpx 20rpx;
   border-radius: 12rpx;
   background-color: #f5f5f5;
@@ -1405,6 +1404,27 @@
 
 /* 每个按钮不同的颜色 */
 .unified-actions .action-btn:nth-child(1) { background-color: #ffecb3; }
+
+.edge-swipe-area {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 140rpx;
+  z-index: 120;
+  background: linear-gradient(to right, rgba(255,255,255,0.15), rgba(255,255,255,0));
+}
+
+.edge-swipe-area::before {
+  content: "❮";
+  position: absolute;
+  top: 50%;
+  left: 18rpx;
+  transform: translateY(-50%);
+  font-size: 34rpx;
+  color: #2E7D32;
+  opacity: 0.7;
+}
 .unified-actions .action-btn:nth-child(2) { background-color: #e1f5fe; }
 .unified-actions .action-btn:nth-child(3) { background-color: #e8f5e9; }
 .unified-actions .action-btn:nth-child(4) { background-color: #fce4ec; }
@@ -3545,7 +3565,7 @@
 }
 
 .audio-title {
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: #333;
   white-space: nowrap;
   overflow: hidden;
@@ -3579,34 +3599,39 @@
   position: relative;
 }
 
-.play-btn .btn-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  line-height: 1;
-  margin: 0;
-  padding: 0;
+.play-btn .icon-play {
+  width: 0;
+  height: 0;
+  border-top: 16rpx solid transparent;
+  border-bottom: 16rpx solid transparent;
+  border-left: 26rpx solid #181616ff;
+  margin-left: 4rpx;
 }
 
 /* 播放三角形图标样式 */
-.play-btn:not(.playing) .btn-icon {
-  font-size: 32rpx;
-  margin-left: 6rpx; /* 稍微向右偏移以视觉居中 */
+.play-btn.playing .icon-pause {
+  width: 26rpx;
+  height: 32rpx;
+  position: relative;
 }
+.play-btn.playing .icon-pause::before,
+.play-btn.playing .icon-pause::after {
+  content: '';
+  position: absolute;
+  width: 8rpx;
+  height: 100%;
+  background: #fff;
+  border-radius: 2rpx;
+}
+.play-btn.playing .icon-pause::before { left: 0; }
+.play-btn.playing .icon-pause::after { right: 0; }
 
 /* 暂停图标样式 */
-.play-btn.playing .btn-icon {
-  font-size: 32rpx;
-  margin-left: 2rpx; 
-  transform: none;
-  margin-bottom: 10rpx; 
-}
-
 .play-btn.playing {
   background: #FF9800;
 }
+
+/* 保留原有播放状态背景色定义（已上移） */
 
 .close-btn {
   width: 40rpx;
@@ -3723,15 +3748,16 @@
 /* 会员锁定遮罩层样式 */
 .membership-lock-overlay {
   position: absolute;
-  bottom: 0;
+  bottom: 0; /* 延伸到底部 */
   left: 0;
   right: 0;
-  height: 400rpx;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.95));
+  height: 520rpx; /* 增加高度以覆盖到导航栏区域 */
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.95) 75%, rgba(255, 255, 255, 0.3)); /* 底部渐变为更透明 */
   backdrop-filter: blur(10rpx);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-bottom: 50rpx; /* 内容区域向上偏移，避开导航栏 */
   z-index: 100;
   border-radius: 20rpx 20rpx 0 0;
   box-shadow: 0 -10rpx 30rpx rgba(0, 0, 0, 0.1);
@@ -4299,30 +4325,15 @@
 .landmark-modal-info {
   position: relative;
   z-index: 10;
-  padding: 80rpx 50rpx 120rpx;
+  padding: 120rpx 50rpx 120rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
+  min-height: 400rpx;
 }
 
-/* 弹窗emoji */
-.landmark-modal-emoji {
-  font-size: 120rpx;
-  margin-bottom: 30rpx;
-  animation: modal-emoji-bounce 0.6s ease-out;
-  filter: drop-shadow(0 8rpx 16rpx rgba(0, 0, 0, 0.3));
-  text-shadow: 0 0 20rpx rgba(255, 255, 255, 0.8);
-}
-
-@keyframes modal-emoji-bounce {
-  0%, 100% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-20rpx) scale(1.1);
-  }
-}
 
 /* 标题 */
 .landmark-modal-title {
@@ -4338,12 +4349,12 @@
 /* 描述 */
 .landmark-modal-desc {
   font-size: 28rpx;
-  color: #4a3728;
+  color: #ffffff;
   line-height: 1.8;
   padding: 0 20rpx;
   font-family: "Source Han Serif", "Noto Serif SC", "思源宋体", serif;
-  text-shadow: 0 1rpx 4rpx rgba(255, 255, 255, 0.8),
-               0 0 15rpx rgba(255, 255, 255, 0.5);
+  text-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.8),
+               0 0 15rpx rgba(0, 0, 0, 0.5);
 }
 
 /* 点亮按钮 */

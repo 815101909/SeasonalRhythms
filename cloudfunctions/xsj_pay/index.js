@@ -31,6 +31,8 @@ exports.main = async (event, context) => {
         return await exports.checkMemberStatus(event, context);
       case 'activateMember':
         return await exports.activateMember(event, context);
+      case 'redeemCode':
+        return await exports.redeemCode(event, context);
       case 'updateMemberOrder':
         return await exports.updateMemberOrder(event, context);
       default:
@@ -74,6 +76,21 @@ exports.main = async (event, context) => {
     // 商户自行生成商户订单号
     const outTradeNo = `MEMBER_${Date.now()}_${Math.round(Math.random() * 10000)}`;
 
+    // 获取用户的推荐人字符串
+    let referrer = null;
+    try {
+      const userResult = await db.collection('xsj_users').where({
+        openid: wxContext.FROM_OPENID || wxContext.OPENID
+      }).get();
+      
+      if (userResult.data.length > 0) {
+        referrer = userResult.data[0].referrer || null;
+        console.log('支付订单 - 用户推荐人:', referrer);
+      }
+    } catch (error) {
+      console.error('获取用户推荐人信息失败:', error);
+    }
+
     // 存储订单信息到数据库
     const orderData = {
       userId: wxContext.FROM_OPENID || wxContext.OPENID,
@@ -82,6 +99,7 @@ exports.main = async (event, context) => {
       planName: planName || '',
       amount: amount.total / 100, // 转换为元
       status: 'pending', // pending, success, failed
+      referrer: referrer, // 推荐人字符串
       createTime: db.serverDate(),
       updateTime: db.serverDate()
     };
@@ -94,7 +112,7 @@ exports.main = async (event, context) => {
     const orderParams = {
       appid: config.appid,
       mchid: config.mchid,
-      description: description || '晓视界会员服务',
+      description: description || '小舟摇风溪会员服务',
       out_trade_no: outTradeNo,
       notify_url: config.notify_url,
       amount: {
@@ -282,10 +300,17 @@ exports.activateMember = async (event, context) => {
 exports.checkMemberStatus = async (event, context) => {
   const wxContext = cloud.getWXContext();
   const _ = db.command;
+  const openid = wxContext.FROM_OPENID || wxContext.OPENID;
 
   try {
+    // 检查用户是否已登录
+    if (!openid) {
+      console.log('checkMemberStatus: 用户未登录，返回非会员状态');
+      return { success: false, error: '用户未登录', isVIP: false };
+    }
+
     const memberInfo = await db.collection('xsj_users').where({
-      openid: wxContext.FROM_OPENID || wxContext.OPENID,
+      openid: openid,
     }).field({
       isVIP: true,
       memberExpireTime: true
@@ -342,6 +367,92 @@ exports.updateMemberOrder = async (event, context) => {
   } catch (error) {
     console.error('更新会员订单失败:', error);
     return { success: false, errmsg: error.message || '更新订单失败' };
+  }
+};
+
+// 新增一个云函数用于兑换激活码
+exports.redeemCode = async (event, context) => {
+  const wxContext = cloud.getWXContext();
+  const openId = wxContext.FROM_OPENID || wxContext.OPENID;
+  const { code } = event;
+  const _ = db.command;
+
+  if (!code) {
+    return { success: false, errmsg: '请输入激活码' };
+  }
+
+  try {
+    // 1. 查询激活码
+    const codeRes = await db.collection('earth_codes').where({
+      code: code,
+      status: 'unused'
+    }).get();
+
+    if (codeRes.data.length === 0) {
+      return { success: false, errmsg: '无效的激活码或已被使用' };
+    }
+
+    const codeInfo = codeRes.data[0];
+    const days = codeInfo.days || 0;
+
+    // 2. 标记激活码为已使用 (使用事务或原子操作更安全，这里简化处理)
+    // 注意：云开发事务需要特定环境，这里先用原子更新检查
+    // 为了防止并发，再次检查状态并更新
+    const updateCodeRes = await db.collection('earth_codes').where({
+      _id: codeInfo._id,
+      status: 'unused'
+    }).update({
+      data: {
+        status: 'used',
+        usedBy: openId,
+        usedTime: db.serverDate()
+      }
+    });
+
+    if (updateCodeRes.stats.updated === 0) {
+      return { success: false, errmsg: '激活码已被抢先使用' };
+    }
+
+    // 3. 更新用户会员信息
+    console.log('查询用户信息, openid:', openId);
+    const userRes = await db.collection('xsj_users').where({
+      openid: openId
+    }).get();
+
+    let memberExpireTime = Date.now();
+    if (userRes.data.length > 0 && userRes.data[0].isVIP && userRes.data[0].memberExpireTime) {
+      // 如果已经是会员，从当前会员过期时间开始计算
+      memberExpireTime = userRes.data[0].memberExpireTime;
+    }
+    
+    // 创建一个Date对象用于计算
+    const calculatedMemberDate = new Date(memberExpireTime);
+    // 增加天数
+    calculatedMemberDate.setDate(calculatedMemberDate.getDate() + days);
+    memberExpireTime = calculatedMemberDate.getTime();
+
+    console.log(`激活码兑换成功，增加 ${days} 天，新的过期时间:`, new Date(memberExpireTime));
+
+    const updateResult = await db.collection('xsj_users').where({
+      openid: openId
+    }).update({
+      data: {
+        isVIP: true,
+        memberExpireTime: memberExpireTime,
+        updateTime: db.serverDate()
+      },
+    });
+
+    return { 
+      success: true, 
+      memberExpireTime: memberExpireTime,
+      days: days,
+      msg: `成功激活 ${days} 天会员`
+    };
+
+  } catch (error) {
+    console.error('兑换激活码失败:', error);
+    return { success: false, errmsg: error.message || '兑换激活码失败' };
   }
 };
 

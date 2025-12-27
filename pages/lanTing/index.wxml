@@ -90,7 +90,7 @@
       <view class="winner-header">昨日获胜阵营</view>
       <view class="winner-content">
         <view class="winner-faction">{{winnerFaction}}</view>
-        <view class="winner-reward">奖励：2颗🌳/人</view>
+        <view class="winner-reward">奖励：{{winnerReward}}颗🌳/人</view>
       </view>
     </view>
     
@@ -104,7 +104,7 @@
             <view class="winner-name">{{item.name}}</view>
             <view class="winner-faction-tag">{{item.faction === 'tower' ? '楼台烟雨中' : '好雨知时节'}}</view>
           </view>
-          <view class="winner-trees">{{item.score}}颗🌳</view>
+          <view class="winner-trees">{{item.score}}🌳</view>
         </view>
       </view>
     </view>

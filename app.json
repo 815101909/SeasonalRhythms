@@ -1,8 +1,8 @@
 {
   "pages": [
+    "pages/timeSequence/index",
     "pages/greenCliff/index",
     "pages/cloudDwelling/index",
-    "pages/timeSequence/index",
     "pages/lanTing/index",
     "pages/pkBattle/index",
     "pages/articleDetail/index",

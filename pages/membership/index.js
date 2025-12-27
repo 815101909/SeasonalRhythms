@@ -10,6 +10,81 @@ Page({
     },
     selectedPlan: 0,  // 默认选中的会员方案
     isVIP: false, // 用户会员状态
+    activationCode: '', // 激活码
+  },
+
+  /**
+   * 监听激活码输入
+   */
+  onActivationCodeInput(e) {
+    this.setData({
+      activationCode: e.detail.value
+    });
+  },
+
+  /**
+   * 兑换激活码
+   */
+  async redeemActivationCode() {
+    const code = this.data.activationCode.trim();
+    if (!code) {
+      wx.showToast({
+        title: '请输入激活码',
+        icon: 'none'
+      });
+      return;
+    }
+
+    wx.showLoading({
+      title: '正在兑换...',
+      mask: true
+    });
+
+    try {
+      const c = await this.getCloudInstance();
+      const res = await c.callFunction({
+        name: 'xsj_pay',
+        data: {
+          action: 'redeemCode',
+          code: code
+        }
+      });
+
+      console.log('兑换结果:', res);
+      
+      if (res.result && res.result.success) {
+        this.setData({
+          activationCode: '' // 清空输入框
+        });
+        
+        wx.hideLoading();
+        
+        wx.showModal({
+          title: '兑换成功',
+          content: res.result.msg || '激活码兑换成功，会员权益已生效',
+          showCancel: false,
+          success: (modalRes) => {
+            if (modalRes.confirm) {
+              // 刷新会员状态，传入参数不显示loading
+              this.checkUserMemberStatus(false);
+            }
+          }
+        });
+        
+      } else {
+        wx.showToast({
+          title: res.result.errmsg || '兑换失败',
+          icon: 'none'
+        });
+      }
+    } catch (err) {
+      console.error('兑换激活码异常:', err);
+      wx.hideLoading();
+      wx.showToast({
+        title: '兑换异常，请稍后重试',
+        icon: 'none'
+      });
+    }
   },
 
   // 获取云函数实例
@@ -365,11 +440,13 @@ Page({
   },
 
   // 检查会员状态
-  async checkUserMemberStatus() {
-    wx.showLoading({
-      title: '加载中',
-      mask: true
-    });
+  async checkUserMemberStatus(showLoading = true) {
+    if (showLoading) {
+      wx.showLoading({
+        title: '加载中',
+        mask: true
+      });
+    }
     try {
       // 创建跨环境调用的Cloud实例
       var c = new wx.cloud.Cloud({ 
@@ -408,7 +485,9 @@ Page({
         memberExpireTime: ''
       });
     } finally {
-      wx.hideLoading();
+      if (showLoading) {
+        wx.hideLoading();
+      }
     }
   },
 

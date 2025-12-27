@@ -22,7 +22,7 @@
           <block wx:else>
             <view class="username not-logged">未登录</view>
             <!-- 一键登录按钮 -->
-            <button class="login-button-inline" bindtap="handleLogin">
+            <button class="login-button-inline" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber">
               一键登录
             </button>
             <!-- 未登录状态下树木展示在登录按钮右侧 -->
@@ -292,9 +292,9 @@
       <view class="tree-rules-dialog-content">
         <view class="tree-rules-text">
           <view class="rule-item">去阅读和挑战可以积累小树数量哦！</view>
-          <view class="rule-item">消耗500颗可以换3天会员</view>
-          <view class="rule-item">消耗1000颗可以换7天会员</view>
-          <view class="rule-item">消耗2000颗可以换15天会员</view>
+          <view class="rule-item">消耗500颗可以换1天会员</view>
+          <view class="rule-item">消耗1000颗可以换3天会员</view>
+          <view class="rule-item">消耗2000颗可以换7天会员</view>
         </view>
       </view>
     </view>
@@ -314,9 +314,9 @@
         </view>
         
         <view class="exchange-options">
-          <view class="exchange-option" bindtap="exchangeMembership" data-days="3" data-cost="500">
+          <view class="exchange-option" bindtap="exchangeMembership" data-days="1" data-cost="500">
             <view class="option-info">
-              <view class="option-title">3天会员</view>
+              <view class="option-title">1天会员</view>
               <view class="option-cost">消耗 500 🌳</view>
             </view>
             <view class="option-status {{treeCount >= 500 ? 'available' : 'unavailable'}}">
@@ -324,9 +324,9 @@
             </view>
           </view>
           
-          <view class="exchange-option" bindtap="exchangeMembership" data-days="7" data-cost="1000">
+          <view class="exchange-option" bindtap="exchangeMembership" data-days="3" data-cost="1000">
             <view class="option-info">
-              <view class="option-title">7天会员</view>
+              <view class="option-title">3天会员</view>
               <view class="option-cost">消耗 1000 🌳</view>
             </view>
             <view class="option-status {{treeCount >= 1000 ? 'available' : 'unavailable'}}">
@@ -334,9 +334,9 @@
             </view>
           </view>
           
-          <view class="exchange-option" bindtap="exchangeMembership" data-days="15" data-cost="2000">
+          <view class="exchange-option" bindtap="exchangeMembership" data-days="7" data-cost="2000">
             <view class="option-info">
-              <view class="option-title">15天会员</view>
+              <view class="option-title">7天会员</view>
               <view class="option-cost">消耗 2000 🌳</view>
             </view>
             <view class="option-status {{treeCount >= 2000 ? 'available' : 'unavailable'}}">
@@ -351,4 +351,5 @@
       </view>
     </view>
   </view>
+  <canvas canvas-id="compressCanvas" style="position: fixed; top: -9999px; left: -9999px; width: 750px; height: 1334px;"></canvas>
 </view>

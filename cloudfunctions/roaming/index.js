@@ -86,13 +86,13 @@ async function getAllCityCards(year = new Date().getFullYear(), month = new Date
     const allData = await cityCardsCollection.get();
     console.log('数据库中的所有数据:', allData.data.map(item => ({
       cityName: item.basicInfo.cityName,
-      unlockDate: item.basicInfo.unlockDate,
-      unlockDateStr: new Date(item.basicInfo.unlockDate).toISOString()
+      unlockDate: item.unlockDate,
+      unlockDateStr: new Date(item.unlockDate).toISOString()
     })));
 
     const result = await cityCardsCollection
       .where({
-        'basicInfo.unlockDate': _.gte(startDate).and(_.lte(endDate))
+        'unlockDate': _.gte(startDate).and(_.lte(endDate))
       })
       .get()
 

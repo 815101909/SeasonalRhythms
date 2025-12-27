@@ -63,7 +63,7 @@
         "id": "string",          // 城市ID
         "title": "杭州",          // 城市标题/名称
         "englishName": "Hangzhou", // 英文名称
-        "date": "2023-05-01",    // 发布日期，格式：YYYY-MM-DD
+        "unlockDate": "2023-05-01", // 发布日期（注意：数据库中字段名为unlockDate，位于顶层），格式：YYYY-MM-DD
         "coverUrl": "string",    // 封面图片URL
         "thumbnailUrl": "string", // 缩略图URL（自动从封面生成，无需单独上传）
         "unlocked": true,        // 是否已解锁

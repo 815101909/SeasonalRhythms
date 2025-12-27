@@ -348,6 +348,17 @@
   border-radius: 2rpx;
 }
 
+.result-subtitle {
+  font-size: 26rpx;
+  color: #666;
+  text-align: center;
+  margin-top: 10rpx;
+  background-color: rgba(46, 125, 50, 0.1);
+  padding: 8rpx 20rpx;
+  border-radius: 20rpx;
+  display: inline-block;
+}
+
 .winner-announcement {
   text-align: center;
   margin: 40rpx 0 50rpx;
@@ -384,12 +395,58 @@
   margin: 40rpx 0;
 }
 
+.performers-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+  padding: 0 10rpx;
+}
+
 .performers-title {
   font-size: 34rpx;
   font-weight: bold;
   color: #333;
-  margin-bottom: 20rpx;
-  text-align: center;
+}
+
+.refresh-button {
+  display: flex;
+  align-items: center;
+  padding: 8rpx 16rpx;
+  background-color: rgba(46, 125, 50, 0.1);
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(46, 125, 50, 0.2);
+  transition: all 0.2s ease;
+}
+
+.refresh-button:active {
+  background-color: rgba(46, 125, 50, 0.2);
+  transform: scale(0.95);
+}
+
+.refresh-icon {
+  font-size: 28rpx;
+  margin-right: 8rpx;
+  animation: none;
+}
+
+.refresh-button.refreshing .refresh-icon {
+  animation: rotate 1s linear infinite;
+}
+
+.refresh-text {
+  font-size: 24rpx;
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .performer-list {
@@ -404,10 +461,18 @@
   align-items: center;
   padding: 20rpx 15rpx;
   border-bottom: 1rpx solid rgba(46, 125, 50, 0.08);
+  transition: all 0.2s ease;
 }
 
 .performer-item:last-child {
   border-bottom: none;
+}
+
+.performer-item.current-user {
+  background-color: rgba(46, 125, 50, 0.1);
+  border-radius: 8rpx;
+  border: 1rpx solid rgba(46, 125, 50, 0.2);
+  margin: 5rpx 0;
 }
 
 .performer-rank {

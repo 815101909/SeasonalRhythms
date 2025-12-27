@@ -1,8 +1,18 @@
+// 图片缓存对象和过期时间
+const tempUrlCache = {};
+const CACHE_EXPIRATION_TIME = 3 * 60 * 60 * 1000; // 缓存有效期3小时
+
 // 统一的图片、音频、视频URL处理函数
 async function getTemporaryImageUrl(imageUrl, type) {
   if (!imageUrl) {
     console.log(`${type}图片链接为空，使用默认图片`);
     return '../../images/placeholder-a4.svg';
+  }
+  
+  // 检查缓存
+  if (tempUrlCache[imageUrl] && (Date.now() - tempUrlCache[imageUrl].timestamp < CACHE_EXPIRATION_TIME)) {
+    console.log(`${type}图片使用缓存`);
+    return tempUrlCache[imageUrl].url;
   }
   
   try {
@@ -25,7 +35,14 @@ async function getTemporaryImageUrl(imageUrl, type) {
         });
         
         if (result.fileList && result.fileList[0] && result.fileList[0].tempFileURL) {
-          return result.fileList[0].tempFileURL;
+          const tempUrl = result.fileList[0].tempFileURL;
+          // 缓存临时URL
+          tempUrlCache[imageUrl] = {
+            url: tempUrl,
+            timestamp: Date.now()
+          };
+          console.log(`${type}图片获取成功并缓存`);
+          return tempUrl;
         } else {
           console.error(`${type}图片云存储链接转换结果异常:`, result);
           return '../../images/placeholder-a4.svg';
@@ -36,9 +53,14 @@ async function getTemporaryImageUrl(imageUrl, type) {
       }
     }
     
-    // 如果是HTTP链接，直接返回
+    // 如果是HTTP链接，直接返回并缓存
     if (imageUrl.startsWith('http')) {
       console.log(`${type}图片为HTTP链接:`, imageUrl);
+      // 缓存HTTP链接
+      tempUrlCache[imageUrl] = {
+        url: imageUrl,
+        timestamp: Date.now()
+      };
       return imageUrl;
     }
     
@@ -110,7 +132,7 @@ Page({
       version: 'v1.0.0',
       description: '小舟摇风溪是一款基于二十四节气的地理时节探索小程序，致力于在传承和推广中国传统节气文化的同时，带领大家足不出户"看"世界！',
       copyright: '© 2025 小舟摇学习团队',
-      email: 'xiao_shi_jie@126.com'
+      email: 'xiaoxiaovision@foxmail.com'
     }
   },
 
@@ -118,6 +140,26 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    // 处理推荐码参数
+    if (options.scene) {
+      try {
+        // 解析scene参数（若参数有编码需先解码）
+        const scene = decodeURIComponent(options.scene);
+        console.log("推荐参数：", scene);
+        
+        // 将推荐码存储到全局数据中，供登录时使用
+        const app = getApp();
+        app.globalData.referrerCode = scene;
+        
+        // 也可以存储到本地，防止应用重启丢失
+        wx.setStorageSync('referrerCode', scene);
+        
+        console.log("推荐码已保存：", scene);
+      } catch (error) {
+        console.error("解析推荐码参数失败：", error);
+      }
+    }
+    
     // 初始化随机头像背景颜色
     this.setData({
       randomAvatarBg: generateRandomAvatarBg()
@@ -330,6 +372,10 @@ Page({
         mask: true
       });
 
+      // 获取推荐码（从全局数据或本地存储）
+      const app = getApp();
+      let referrerCode = app.globalData.referrerCode || wx.getStorageSync('referrerCode');
+      
       // 调用云函数进行登录
       const cloud = new wx.cloud.Cloud({
         identityless: true,
@@ -337,14 +383,24 @@ Page({
         resourceEnv: 'cloud1-1gsyt78b92c539ef'
       });
       await cloud.init();
+      
+      // 准备登录数据，包含推荐码
+      const loginData = {
+        action: 'login',
+        data: {
+          userInfo: userProfile.userInfo
+        }
+      };
+      
+      // 如果有推荐码，添加到登录数据中
+      if (referrerCode) {
+        loginData.data.referrer = referrerCode;
+        console.log('登录时传递推荐码：', referrerCode);
+      }
+      
       const loginResult = await cloud.callFunction({
         name: 'xsj_auth',
-        data: {
-          action: 'login',
-          data: {
-            userInfo: userProfile.userInfo
-          }
-        }
+        data: loginData
       });
 
       if (loginResult.result.success) {
@@ -369,13 +425,28 @@ Page({
           treeCount: userData.treeCount || 0
         });
 
+        // 登录成功后清除推荐码（避免重复使用）
+        if (referrerCode) {
+          app.globalData.referrerCode = null;
+          wx.removeStorageSync('referrerCode');
+          console.log('推荐码已清除');
+        }
+        
         // 显示欢迎消息
         wx.hideLoading();
         if (userData.is_new_user) {
-          wx.showToast({
-            title: '欢迎加入小舟摇风溪',
-            icon: 'success'
-          });
+          // 如果是新用户且有推荐码，显示特殊欢迎信息
+          if (referrerCode) {
+            wx.showToast({
+              title: '通过推荐加入成功！',
+              icon: 'success'
+            });
+          } else {
+            wx.showToast({
+              title: '欢迎加入小舟摇风溪',
+              icon: 'success'
+            });
+          }
         } else {
           wx.showToast({
             title: '登录成功',
@@ -443,8 +514,9 @@ Page({
 
   /**
    * 获取当前节气信息
+   * @param {boolean} silentUpdate 是否为静默更新（不显示加载状态）
    */
-  async getCurrentSolarTerm() {
+  async getCurrentSolarTerm(silentUpdate = false) {
     try {
       // 调用云函数获取节气数据
       const cloud = new wx.cloud.Cloud({
@@ -467,12 +539,11 @@ Page({
         let currentTerm = null;
         let nextTerm = null;
         
-        // 遍历节气数据找到当前节气和下一个节气
+        const currentDate = new Date(currentYear, currentMonth - 1, currentDay).getTime();
         for (let i = 0; i < solarTerms.length; i++) {
           const term = solarTerms[i];
-          
-          // 如果节气在当前日期之前或就是今天
-          if (term.month < currentMonth || (term.month === currentMonth && term.day <= currentDay)) {
+          const termDate = new Date((term.year || currentYear), term.month - 1, term.day).getTime();
+          if (termDate <= currentDate) {
             currentTerm = term;
             nextTerm = solarTerms[i + 1];
           } else {
@@ -480,7 +551,6 @@ Page({
           }
         }
 
-        // 如果没找到当前节气，说明是在第一个节气之前，使用最后一个节气
         if (!currentTerm && solarTerms.length > 0) {
           currentTerm = solarTerms[solarTerms.length - 1];
           nextTerm = solarTerms[0];
@@ -491,18 +561,11 @@ Page({
           nextTerm = solarTerms[0];
         }
 
-        // 计算到下一个节气的天数
         let daysToNext = 0;
         if (nextTerm) {
-          const nextDate = new Date(currentYear, nextTerm.month - 1, nextTerm.day);
-          const currentDate = new Date(currentYear, currentMonth - 1, currentDay);
-          
-          // 如果下一个节气的日期比当前日期小，说明是明年的节气
-          if (nextDate < currentDate) {
-            nextDate.setFullYear(nextDate.getFullYear() + 1);
-          }
-          
-          daysToNext = Math.ceil((nextDate - currentDate) / (1000 * 60 * 60 * 24));
+          const nextDate = new Date((nextTerm.year || currentYear), nextTerm.month - 1, nextTerm.day).getTime();
+          const curDate = new Date(currentYear, currentMonth - 1, currentDay).getTime();
+          daysToNext = Math.ceil((nextDate - curDate) / (1000 * 60 * 60 * 24));
         }
 
         // 当前节气日期字符串（用于显示在节气名称旁边）
@@ -520,24 +583,9 @@ Page({
           
           console.log('处理后的图片URL:', processedImageUrl);
           
-          this.setData({
-            currentSeason: {
-              name: currentTerm.name,
-              date: solarTermDateStr,
-              currentMonth: currentMonth,
-              currentDay: currentDay,
-              description: currentTerm.description,
-              quote: currentTerm.quote,
-              imageUrl: processedImageUrl // 使用处理后的图片URL
-            },
-            nextSeasonName: nextTerm ? nextTerm.name : '',
-            daysToNextSeason: daysToNext
-          });
-          
-          console.log('设置的currentSeason数据:', this.data.currentSeason);
+          console.log('处理节气数据完成');
 
-          // 比较新旧数据，如果不同则更新并缓存
-          const oldSeasonData = this.data.currentSeason;
+          // 构建新的节气数据
           const newSeasonData = {
             currentSeason: {
               name: currentTerm.name,
@@ -552,15 +600,26 @@ Page({
             daysToNextSeason: daysToNext
           };
 
-          if (JSON.stringify(oldSeasonData) !== JSON.stringify(newSeasonData.currentSeason) ||
-              this.data.nextSeasonName !== newSeasonData.nextSeasonName ||
-              this.data.daysToNextSeason !== newSeasonData.daysToNextSeason) {
-            console.log('节气数据有变化，更新页面并刷新缓存');
+          // 检查数据是否有变化
+          const cachedData = wx.getStorageSync('cachedSeasonData');
+          const hasChanged = !cachedData || 
+            JSON.stringify(cachedData.currentSeason) !== JSON.stringify(newSeasonData.currentSeason) ||
+            cachedData.nextSeasonName !== newSeasonData.nextSeasonName ||
+            cachedData.daysToNextSeason !== newSeasonData.daysToNextSeason;
+
+          if (hasChanged || !silentUpdate) {
+            console.log('更新节气数据到界面');
             this.setData(newSeasonData);
-            wx.setStorageSync('cachedSeasonData', newSeasonData);
-            wx.setStorageSync('cacheTimestamp', Date.now());
+          }
+          
+          // 总是更新缓存和时间戳
+          wx.setStorageSync('cachedSeasonData', newSeasonData);
+          wx.setStorageSync('cacheTimestamp', Date.now());
+          
+          if (hasChanged) {
+            console.log('节气数据有变化，已更新缓存');
           } else {
-            console.log('节气数据无变化，无需更新');
+            console.log('节气数据无变化，已刷新缓存时间戳');
           }
         }
       } else {
@@ -576,20 +635,28 @@ Page({
    */
   updateCurrentSeason() {
     const cachedSeasonData = wx.getStorageSync('cachedSeasonData');
+    const cacheTimestamp = wx.getStorageSync('cacheTimestamp') || 0;
+    const now = Date.now();
+    const cacheExpiry = 3 * 60 * 60 * 1000; // 3小时缓存过期时间
     
-    // 如果有缓存数据，先显示缓存数据
-    if (cachedSeasonData) {
-      console.log('先显示本地缓存的节气数据');
+    // 检查缓存是否有效且未过期
+    if (cachedSeasonData && (now - cacheTimestamp) < cacheExpiry) {
+      console.log('使用有效的本地缓存节气数据');
       this.setData({
         currentSeason: cachedSeasonData.currentSeason,
         nextSeasonName: cachedSeasonData.nextSeasonName,
         daysToNextSeason: cachedSeasonData.daysToNextSeason
       });
+      
+      // 缓存有效，不需要立即更新，但可以在后台静默更新
+      setTimeout(() => {
+        this.getCurrentSolarTerm(true); // 传入静默更新标志
+      }, 1000);
+    } else {
+      // 缓存无效或过期，立即从数据库获取数据
+      console.log('缓存无效或过期，从数据库获取最新节气数据');
+      this.getCurrentSolarTerm(false);
     }
-    
-    // 无论是否有缓存，都从数据库获取最新数据
-    console.log('从数据库获取最新节气数据');
-    this.getCurrentSolarTerm();
   },
 
   /**
@@ -1023,7 +1090,6 @@ Page({
             }
           });
         } else if (res.tapIndex === 1) {
-          // 选择图片作为头像
           wx.chooseMedia({
             count: 1,
             mediaType: ['image'],
@@ -1031,40 +1097,155 @@ Page({
             camera: 'back',
             success: async (res) => {
               const tempFilePath = res.tempFiles[0].tempFilePath;
-              
               try {
-                // 上传图片到云存储 - 使用跨环境调用
-                // 创建跨环境调用的Cloud实例
-                var c = new wx.cloud.Cloud({ 
-                  // 必填，表示是未登录模式 
-                  identityless: true, 
-                  // 资源方 AppID 
-                  resourceAppid: 'wx85d92d28575a70f4', 
-                  // 资源方环境 ID 
-                  resourceEnv: 'cloud1-1gsyt78b92c539ef', 
-                }) 
+                var c = new wx.cloud.Cloud({
+                  identityless: true,
+                  resourceAppid: 'wx85d92d28575a70f4',
+                  resourceEnv: 'cloud1-1gsyt78b92c539ef',
+                })
                 await c.init();
-                const uploadResult = await c.uploadFile({
-                  cloudPath: `avatars/${Date.now()}.${tempFilePath.split('.').pop()}`,
-                  filePath: tempFilePath
-                });
-                
-                // 调用云函数更新用户信息
-                await this.updateUserInfo({
-                  avatarUrl: uploadResult.fileID
-              });
+                await this.checkAndUploadAvatar(tempFilePath, c);
               } catch (err) {
                 console.error('更新头像失败:', err);
-              wx.showToast({
+                wx.showToast({
                   title: '更新失败',
                   icon: 'error'
-              });
+                });
               }
             }
           });
         }
       }
     });
+  },
+
+  // 压缩图片以符合内容检测要求（1MB以下，750x1334以下）
+  async compressImageForCheck(imagePath) {
+    return new Promise((resolve) => {
+      wx.compressImage({
+        src: imagePath,
+        quality: 60,
+        success: (res) => {
+          wx.getImageInfo({
+            src: res.tempFilePath,
+            success: (imgInfo) => {
+              const { width, height } = imgInfo;
+              const maxWidth = 750;
+              const maxHeight = 1334;
+              if (width > maxWidth || height > maxHeight) {
+                this.resizeImageWithCanvas(res.tempFilePath, maxWidth, maxHeight)
+                  .then(resolve)
+                  .catch(() => resolve(res.tempFilePath));
+              } else {
+                resolve(res.tempFilePath);
+              }
+            },
+            fail: () => {
+              resolve(res.tempFilePath);
+            }
+          });
+        },
+        fail: () => {
+          this.resizeImageWithCanvas(imagePath, 750, 1334)
+            .then(resolve)
+            .catch(() => resolve(imagePath));
+        }
+      });
+    });
+  },
+
+  // 使用canvas调整图片尺寸
+  async resizeImageWithCanvas(imagePath, maxWidth, maxHeight) {
+    return new Promise((resolve, reject) => {
+      wx.getImageInfo({
+        src: imagePath,
+        success: (imgInfo) => {
+          const { width, height } = imgInfo;
+          let targetWidth = width;
+          let targetHeight = height;
+          if (width > maxWidth || height > maxHeight) {
+            const widthRatio = maxWidth / width;
+            const heightRatio = maxHeight / height;
+            const ratio = Math.min(widthRatio, heightRatio);
+            targetWidth = Math.floor(width * ratio);
+            targetHeight = Math.floor(height * ratio);
+          }
+          const ctx = wx.createCanvasContext('compressCanvas', this);
+          ctx.drawImage(imagePath, 0, 0, targetWidth, targetHeight);
+          ctx.draw(false, () => {
+            wx.canvasToTempFilePath({
+              canvasId: 'compressCanvas',
+              width: targetWidth,
+              height: targetHeight,
+              destWidth: targetWidth,
+              destHeight: targetHeight,
+              quality: 0.8,
+              fileType: 'jpg',
+              success: (res) => {
+                resolve(res.tempFilePath);
+              },
+              fail: reject
+            }, this);
+          });
+        },
+        fail: reject
+      });
+    });
+  },
+
+  // 头像内容安全检测并上传
+  async checkAndUploadAvatar(tempFilePath, cloudInstance) {
+    wx.showLoading({ title: '处理头像中...' });
+    try {
+      const compressedPath = await this.compressImageForCheck(tempFilePath);
+      wx.showLoading({ title: '上传检测中...' });
+      const tmp = await cloudInstance.uploadFile({
+        cloudPath: `temp_check/${Date.now()}_avatar.jpg`,
+        filePath: compressedPath
+      });
+      if (!tmp.fileID) {
+        throw new Error('临时上传失败');
+      }
+      const tempUrlRes = await cloudInstance.getTempFileURL({
+        fileList: [tmp.fileID]
+      });
+      const tempUrl = tempUrlRes.fileList && tempUrlRes.fileList[0] && tempUrlRes.fileList[0].tempFileURL;
+      if (!tempUrl) {
+        throw new Error('获取临时链接失败');
+      }
+      wx.showLoading({ title: '内容检测中...' });
+      const check = await cloudInstance.callFunction({
+        name: 'imageCheck',
+        data: {
+          action: 'checkImage',
+          imageUrl: tempUrl,
+          contentType: 'image/jpeg'
+        }
+      });
+      await cloudInstance.deleteFile({ fileList: [tmp.fileID] });
+      if (!check.result || !check.result.success) {
+        if (check.result && check.result.data && check.result.data.status === 'risky') {
+          throw new Error('图片内容不符合规范');
+        }
+        throw new Error(check.result && check.result.message ? check.result.message : '内容检测失败');
+      }
+      wx.showLoading({ title: '上传头像中...' });
+      const ext = tempFilePath.split('.').pop();
+      const final = await cloudInstance.uploadFile({
+        cloudPath: `avatars/${Date.now()}.${ext}`,
+        filePath: tempFilePath
+      });
+      if (!final.fileID) {
+        throw new Error('上传失败');
+      }
+      await this.updateUserInfo({ avatarUrl: final.fileID });
+      wx.hideLoading();
+      wx.showToast({ title: '更新成功', icon: 'success' });
+    } catch (e) {
+      wx.hideLoading();
+      wx.showToast({ title: e.message || '更新失败', icon: 'error' });
+      throw e;
+    }
   },
 
   /**
@@ -1608,46 +1789,175 @@ Page({
   /**
    * 获取微信手机号并登录
    */
-  getPhoneNumber: function(e) {
+  async getPhoneNumber(e) {
+    console.log('getPhoneNumber result details:', e.detail); // 打印完整回调信息
+    
+    // 检查是否有配额不足错误
+    if (e.detail.errno === 1400001) {
+      wx.showModal({
+        title: '手机号获取失败',
+        content: '该小程序手机号快速验证额度已用完，请联系管理员充值。',
+        showCancel: false
+      });
+      return;
+    }
+    
     if (e.detail.errMsg === 'getPhoneNumber:ok') {
       // 用户同意授权手机号
-      // 正常情况下，这里要将 e.detail.code 发送到服务端，换取手机号
-      // 出于演示目的，这里直接模拟成功获取手机号
-
       wx.showLoading({
         title: '登录中...',
         mask: true
       });
 
-      // 模拟网络请求延迟
-      setTimeout(() => {
-        // 创建用户信息
-        const userInfo = {
-          username: '晓时用户',
-          avatarUrl: '',
-          phoneNumber: '已授权' // 实际应用中这里会是真实手机号
+      try {
+        const app = getApp();
+        let referrerCode = app.globalData.referrerCode || wx.getStorageSync('referrerCode');
+        
+        // 跨环境调用初始化
+        const cloud = new wx.cloud.Cloud({
+          resourceAppid: 'wx85d92d28575a70f4', // 资源方 AppID
+          resourceEnv: 'cloud1-1gsyt78b92c539ef' // 资源方环境 ID
+        });
+        await cloud.init();
+        
+        // 准备登录数据
+        const loginData = {
+          action: 'login',
+          data: {}
         };
         
-        // 保存到本地
-        wx.setStorageSync('userInfo', userInfo);
+        // 优先传递code，作为主要方案 (新标准)
+        if (e.detail.code) {
+          loginData.data.phoneCode = e.detail.code;
+        } else {
+           console.warn('没有获取到code，可能无法使用code换取手机号');
+        }
         
-        // 更新页面数据
-        this.setData({
-          isLoggedIn: true,
-          username: userInfo.username
+        // 同时也传递cloudID作为备选 (注意：跨环境调用时CloudID可能无法自动解包)
+        if (e.detail.cloudID) {
+          loginData.data.phoneData = wx.cloud.CloudID(e.detail.cloudID);
+        }
+        
+        // 如果有推荐码，添加到登录数据中
+        if (referrerCode) {
+          loginData.data.referrer = referrerCode;
+          console.log('登录时传递推荐码：', referrerCode);
+        }
+        
+        const loginResult = await cloud.callFunction({
+          name: 'xsj_auth',
+          data: loginData
         });
-        
+
+        if (loginResult.result.success) {
+          const userData = loginResult.result.data;
+          
+          // 检查是否成功获取到手机号
+          if (!userData.phoneNumber) {
+            console.warn('登录成功但未获取到手机号，调试信息:', JSON.stringify(userData.phoneDebugInfo, null, 2));
+            wx.hideLoading();
+            
+            let debugMsg = '无法获取手机号';
+            if (userData.phoneDebugInfo) {
+              if (userData.phoneDebugInfo.errors && userData.phoneDebugInfo.errors.length > 0) {
+                 debugMsg += '\n错误: ' + userData.phoneDebugInfo.errors.join('; ');
+              }
+              if (userData.phoneDebugInfo.codeExchangeResult) {
+                 const errCode = userData.phoneDebugInfo.codeExchangeResult.errCode;
+                 const errMsg = userData.phoneDebugInfo.codeExchangeResult.errMsg;
+                 debugMsg += `\nCode换取: ${errCode} - ${errMsg}`;
+                 
+                 // 常见错误提示
+                 if (errCode === 40029) debugMsg += ' (code无效)';
+                 if (errCode === 40013) debugMsg += ' (appid不匹配)';
+                 if (errCode === 48001) debugMsg += ' (无权限，请确认是否为非个人主体小程序)';
+                 if (errCode === -1) debugMsg += ' (系统繁忙)';
+              }
+            }
+            
+            wx.showModal({
+              title: '手机号获取失败',
+              content: debugMsg + '\n请尝试重新点击登录，或联系客服。',
+              showCancel: false
+            });
+            // 虽然没获取到手机号，但用户数据可能已经创建/更新，是否继续登录流程取决于业务需求
+            // 这里我们允许继续，但在界面上可能需要提示用户
+          }
+          
+          // 保存用户信息到本地
+          wx.setStorageSync('userInfo', userData);
+          
+          // 处理头像URL的跨域问题
+          const processedAvatarUrl = userData.avatarUrl ? await getTemporaryImageUrl(userData.avatarUrl, '用户头像') : '';
+          
+          // 更新页面显示
+          this.setData({
+            isLoggedIn: true,
+            username: userData.username || '小舟用户',
+            userId: userData.userId || '', // 添加用户编号
+            avatarUrl: processedAvatarUrl,
+            isVIP: userData.isVIP || false,
+            memberExpireTime: this.formatMemberExpireTime(userData.memberExpireTime),
+            lantingTrees: userData.lantingTrees || 0,
+            timeSequenceTrees: userData.timeSequenceTrees || 0,
+            consumedTrees: userData.consumedTrees || 0,
+            treeCount: userData.treeCount || 0
+          });
+
+          // 登录成功后清除推荐码（避免重复使用）
+          if (referrerCode) {
+            app.globalData.referrerCode = null;
+            wx.removeStorageSync('referrerCode');
+            console.log('推荐码已清除');
+          }
+          
+          // 显示欢迎消息
+          if (!userData.phoneNumber) {
+             // 如果没获取到手机号，不隐藏loading因为上面弹窗了，这里不需要额外操作，或者确保loading隐藏
+             if (wx.hideLoading) wx.hideLoading(); 
+          } else {
+             wx.hideLoading();
+          }
+          
+          if (userData.is_new_user) {
+            // 如果是新用户且有推荐码，显示特殊欢迎信息
+            if (referrerCode) {
+              wx.showToast({
+                title: '通过推荐加入成功！',
+                icon: 'success'
+              });
+            } else {
+              wx.showToast({
+                title: '欢迎加入小舟摇风溪',
+                icon: 'success'
+              });
+            }
+          } else {
+            wx.showToast({
+              title: '登录成功',
+              icon: 'success'
+            });
+          }
+        } else {
+          wx.hideLoading();
+          const errorMsg = loginResult.result.error || '未知错误';
+          console.error('登录失败详情:', loginResult);
+          throw new Error('登录失败: ' + errorMsg);
+        }
+      } catch (err) {
         wx.hideLoading();
-        
-        wx.showToast({
-          title: '登录成功',
-          icon: 'success'
+        console.error('登录失败:', err);
+        wx.showModal({
+          title: '登录失败',
+          content: err.message || '请稍后重试',
+          showCancel: false
         });
-      }, 1000);
+      }
     } else {
       // 用户拒绝授权手机号
+      console.log('用户拒绝授权手机号:', e.detail.errMsg);
       wx.showToast({
-        title: '登录失败',
+        title: '登录已取消',
         icon: 'none'
       });
     }
@@ -1667,6 +1977,9 @@ Page({
                     wx.removeStorageSync('lantingTrees');
                     wx.removeStorageSync('treeCount');
                     wx.removeStorageSync('consumedTrees');
+                    // 清除阵营缓存
+                    wx.removeStorageSync('userFaction');
+                    wx.removeStorageSync('userFactionCacheTime');
                     // 重置全局数据
                     getApp().globalData.userInfo = null;
                     getApp().globalData.isLoggedIn = false;

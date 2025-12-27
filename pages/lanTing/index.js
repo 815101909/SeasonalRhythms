@@ -1,3 +1,42 @@
+// 阵营缓存工具函数
+const FactionCache = {
+  // 缓存有效期：30分钟
+  CACHE_DURATION: 30 * 60 * 1000,
+  
+  // 获取缓存的阵营信息
+  getCachedFaction() {
+    const faction = wx.getStorageSync('userFaction');
+    const cacheTime = wx.getStorageSync('userFactionCacheTime');
+    const now = Date.now();
+    
+    if (faction && cacheTime && (now - cacheTime < this.CACHE_DURATION)) {
+      return faction;
+    }
+    return null;
+  },
+  
+  // 设置阵营缓存
+  setCachedFaction(faction) {
+    if (faction) {
+      wx.setStorageSync('userFaction', faction);
+      wx.setStorageSync('userFactionCacheTime', Date.now());
+    }
+  },
+  
+  // 清除阵营缓存
+  clearCache() {
+    wx.removeStorageSync('userFaction');
+    wx.removeStorageSync('userFactionCacheTime');
+  },
+  
+  // 检查缓存是否有效
+  isCacheValid() {
+    const cacheTime = wx.getStorageSync('userFactionCacheTime');
+    const now = Date.now();
+    return cacheTime && (now - cacheTime < this.CACHE_DURATION);
+  }
+};
+
 Page({
   /**
    * 页面的初始数据
@@ -33,8 +72,8 @@ Page({
       tower: 'pics/楼台烟雨中.jpg',
       rain: 'pics/好雨知时节.jpg'
     },
-    towerMemberCount: 1256,  // 楼台烟雨中成员数
-    rainMemberCount: 1378,   // 好雨知时节成员数
+    towerMemberCount: 0,
+    rainMemberCount: 0,
     leaderboardUsers: [],    // 排行榜用户
     trainingFaction: '',     // 当前训练的阵营
     answeredQuestions: 0,    // 已回答题目数量
@@ -81,6 +120,7 @@ Page({
     dailyWinner: null,
     topThree: [],
     winnerFaction: '',   // 获胜阵营
+    winnerReward: 2,
     topThree: [],        // 前三名
     
     // 解释弹窗相关
@@ -188,10 +228,27 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow: function () {
+    // 同步阵营信息
+    this.syncFactionInfo();
     // 获取用户信息和树苗数量
     this.loadUserData();
     // 启动倒计时
     this.startCountdown();
+    // 更新阵营人数
+    this.fetchFactionCounts();
+  },
+
+  /**
+   * 同步阵营信息
+   */
+  syncFactionInfo: function() {
+    const localFaction = wx.getStorageSync('userFaction');
+    if (localFaction && localFaction !== this.data.userFaction) {
+      this.setData({
+        userFaction: localFaction
+      });
+      console.log('同步阵营信息:', localFaction);
+    }
   },
 
   /**
@@ -290,52 +347,17 @@ Page({
           lantingTrees: userData.lantingTrees || 0
         };
 
-        // 获取PK参与表中的最新阵营信息
-        try {
-          // 创建跨环境调用的Cloud实例
-          var c2 = new wx.cloud.Cloud({ 
-            // 必填，表示是未登录模式 
-            identityless: true, 
-            // 资源方 AppID 
-            resourceAppid: 'wx85d92d28575a70f4', 
-            // 资源方环境 ID 
-            resourceEnv: 'cloud1-1gsyt78b92c539ef', 
-          }) 
-          await c2.init() 
-          const factionResult = await c2.callFunction({
-            name: 'pkBattle',
-            data: {
-              action: 'getUserFaction'
-            }
-          });
-
-          console.log('loadUserData - PK表查询结果:', factionResult);
-
-          if (factionResult.result && factionResult.result.success && factionResult.result.data.userFaction) {
-            const pkFaction = factionResult.result.data.userFaction;
-            console.log('loadUserData - PK表阵营:', pkFaction);
-            console.log('loadUserData - 使用PK表最新阵营信息:', pkFaction);
-            updateData.userFaction = pkFaction;
-            // 同时更新本地存储
-            wx.setStorageSync('userFaction', pkFaction);
-          } else {
-            // 如果PK表中没有阵营信息，使用用户表的阵营信息
-            if (userData.faction) {
-              console.log('loadUserData - PK表无阵营，使用用户表阵营:', userData.faction);
-              updateData.userFaction = userData.faction;
-              wx.setStorageSync('userFaction', userData.faction);
-            } else {
-              console.log('loadUserData - 两个表都没有阵营信息');
-            }
-          }
-        } catch (factionError) {
-          console.error('loadUserData - 获取PK阵营失败:', factionError);
-          // 如果获取PK阵营失败，使用用户表的阵营信息
-          if (userData.faction) {
-            console.log('loadUserData - PK查询失败，使用用户表阵营:', userData.faction);
-            updateData.userFaction = userData.faction;
-            wx.setStorageSync('userFaction', userData.faction);
-          }
+        // 从用户表读取阵营信息并缓存
+        if (userData.faction) {
+          console.log('loadUserData - 用户表阵营:', userData.faction);
+          updateData.userFaction = userData.faction;
+          // 使用工具函数缓存阵营信息
+          FactionCache.setCachedFaction(userData.faction);
+        } else {
+          console.log('loadUserData - 用户表中没有阵营信息');
+          updateData.userFaction = '';
+          // 清除可能存在的过期缓存
+          FactionCache.clearCache();
         }
 
         this.setData(updateData);
@@ -511,9 +533,6 @@ Page({
       cancelText: '再想想',
       success: (res) => {
         if (res.confirm) {
-          // 保存用户阵营选择到本地存储
-          wx.setStorageSync('userFaction', faction);
-
           // 保存用户阵营到 xsj_users 集合 - 使用跨环境调用
           var c = new wx.cloud.Cloud({
             identityless: true,
@@ -558,6 +577,9 @@ Page({
                 this.setData({
                   userFaction: faction
                 });
+
+                // 缓存新选择的阵营信息
+                FactionCache.setCachedFaction(faction);
 
                 wx.showToast({
                   title: `成功加入${faction === 'tower' ? '楼台烟雨中' : '好雨知时节'}`,
@@ -629,8 +651,40 @@ Page({
       return;
     }
 
-    // 检查用户是否已选择阵营
-    if (!this.data.userFaction) {
+    // 检查用户是否已选择阵营 - 先检查本地存储，再检查页面数据
+    let userFaction = wx.getStorageSync('userFaction') || this.data.userFaction;
+    
+    if (!userFaction) {
+      // 如果都没有，尝试从服务器获取最新的阵营信息
+      try {
+        const c = new wx.cloud.Cloud({ 
+          identityless: true, 
+          resourceAppid: 'wx85d92d28575a70f4', 
+          resourceEnv: 'cloud1-1gsyt78b92c539ef', 
+        });
+        await c.init();
+        const result = await c.callFunction({
+          name: 'pkBattle',
+          data: {
+            action: 'getUserFaction'
+          }
+        });
+
+        if (result.result && result.result.success && result.result.data.userFaction) {
+          userFaction = result.result.data.userFaction;
+          // 同步到本地存储和页面数据
+          wx.setStorageSync('userFaction', userFaction);
+          this.setData({
+            userFaction: userFaction
+          });
+        }
+      } catch (error) {
+        console.error('获取阵营信息失败:', error);
+      }
+    }
+    
+    // 如果仍然没有阵营信息，提示用户选择
+    if (!userFaction) {
       wx.showModal({
         title: '选择阵营',
         content: '参与PK大赛需要先选择加入一个阵营',
@@ -646,6 +700,13 @@ Page({
         }
       });
       return;
+    }
+    
+    // 确保页面数据是最新的
+    if (this.data.userFaction !== userFaction) {
+      this.setData({
+        userFaction: userFaction
+      });
     }
 
     // 显示加载提示
@@ -679,53 +740,41 @@ Page({
 
       if (statusCheck.result && statusCheck.result.success) {
         const { status } = statusCheck.result.data;
-
         console.log('读取到的PK状态:', status);
-
-        if (!statusCheck.result.data || status === 'waiting') {
+        if (status === 'waiting') {
           wx.hideLoading();
-          // PK未开始，直接提示
           wx.showModal({
             title: 'PK未开始',
-            content: 'PK大赛还未开始，请稍后再试！',
+            content: '仅周末19:30-19:45开放，请稍后再试',
             showCancel: false
           });
           return;
         } else if (status === 'ended') {
           wx.hideLoading();
-          // PK已结束，直接提示
           wx.showModal({
             title: 'PK已结束',
-            content: 'PK大赛已经结束，请明日再来挑战！',
+            content: '今日PK已结束，请明日再来挑战',
             showCancel: false
           });
           return;
         }
-        // status === 'ongoing' 时允许继续进入
-        console.log('PK状态允许进入:', status);
       } else {
-        // 如果获取状态失败，也显示未开始提示
         wx.hideLoading();
         wx.showModal({
-          title: 'PK未开始',
-          content: 'PK大赛还未开始，请稍后再试！',
+          title: '状态未知',
+          content: '请稍后再试或刷新页面',
           showCancel: false
         });
         return;
       }
 
-      // 获取当天日期
-      const today = new Date();
-      const dateStr = today.toISOString().split('T')[0];
+      // 获取当天日期（中国时区）
+      const now = new Date();
+      const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+      const dateStr = chinaTime.toISOString().split('T')[0];
 
       // 检查用户是否已完成今日PK
-      const cloud = new wx.cloud.Cloud({
-        identityless: true,
-        resourceAppid: 'wx85d92d28575a70f4',
-        resourceEnv: 'cloud1-1gsyt78b92c539ef'
-      });
-      await cloud.init();
-      const checkResult = await cloud.callFunction({
+      const checkResult = await c.callFunction({
         name: 'pkBattle',
         data: {
           action: 'checkUserPkParticipation',
@@ -740,15 +789,26 @@ Page({
       console.log('PK参与状态检查结果:', checkResult.result);
 
       if (checkResult.result && checkResult.result.success) {
-        const { hasParticipated, isCompleted } = checkResult.result.data;
+        const resultData = checkResult.result.data;
+        const { hasParticipated, isCompleted, status, pkStatus } = resultData;
 
+        console.log('PK状态详情:', { hasParticipated, isCompleted, status, pkStatus });
+        
         if (isCompleted) {
-          // 用户已完成今日PK，不能重复参与
+          // 用户已完成今日PK，询问是否查看结果
           wx.showModal({
             title: '今日已完成',
-            content: '您今日已完成PK大赛，请明日再来挑战！',
-            confirmText: '知道了',
-            showCancel: false
+            content: '您今日已完成PK大赛，是否查看排行榜和成绩？',
+            confirmText: '查看结果',
+            cancelText: '返回',
+            success: (res) => {
+              if (res.confirm) {
+                // 用户选择查看结果，跳转到PK页面，传递已完成标识
+                wx.navigateTo({
+                  url: '/pages/pkBattle/index?completed=true'
+                });
+              }
+            }
           });
           return;
         }
@@ -2154,7 +2214,8 @@ Page({
       if (pkResult.result && pkResult.result.success) {
         const pkData = pkResult.result.data;
         this.setData({
-          winnerFaction: pkData.winnerFaction === 'tower' ? '楼台烟雨中' : '好雨知时节'
+          winnerFaction: pkData.winnerFaction === 'tower' ? '楼台烟雨中' : '好雨知时节',
+          winnerReward: (pkData.rewardPerUser || pkData.winnerReward || 2)
         });
       }
 
@@ -2170,72 +2231,40 @@ Page({
 
       if (result && result.success && result.data) {
         const { topThree } = result.data;
-        
-        // 检查数据是否存在
         if (!topThree || !Array.isArray(topThree)) {
           console.error('排行榜数据格式错误:', result.data);
           return;
         }
-
-        // 使用当前小时作为随机种子
-        const now = new Date();
-        const currentHour = now.getHours();
-        
-        // 简单的伪随机数生成函数
-        const seededRandom = (seed, index) => {
-          const x = Math.sin(seed + index) * 10000;
-          return Math.abs(x - Math.floor(x));
-        };
-
-        // 模拟用户数据
-        const mockUsers = [
-          { name: '墨香书生', faction: 'tower' },
-          { name: '竹影清风', faction: 'rain' },
-          { name: '江南故人', faction: 'tower' },
-          { name: '山水逸客', faction: 'rain' },
-          { name: '云端漫步', faction: 'tower' },
-          { name: '明月清风', faction: 'rain' },
-          { name: '诗画江南', faction: 'tower' },
-          { name: '一叶知秋', faction: 'rain' },
-          { name: '梅雨江南', faction: 'tower' },
-          { name: '烟雨楼台', faction: 'rain' }
-        ];
-
-        // 为模拟用户生成基于时间的固定分数
-        const mockData = mockUsers.map((user, index) => ({
-          ...user,
-          // 使用小时数和用户索引生成固定的随机分数
-          score: Math.floor(seededRandom(currentHour, index) * 11) + 10 // 10-20之间的分数
-        }));
-
-        // 确保真实数据中的用户名字段统一
-        const normalizedTopThree = topThree.map(user => ({
-          ...user,
-          name: user.name || user.username || '匿名用户'
-        }));
-
-        // 合并真实数据和模拟数据
-        const combinedTopThree = [...normalizedTopThree];
-        mockData.forEach(mock => {
-          if (!combinedTopThree.some(user => user.name === mock.name)) {
-            combinedTopThree.push(mock);
-          }
-        });
-
-        // 按分数排序并只保留前三名
-        const finalTopThree = combinedTopThree.sort((a, b) => b.score - a.score).slice(0, 3);
-
-        // 只更新用户排行榜数据
         this.setData({
-          topThree: finalTopThree
+          topThree: topThree.map(u => ({ name: u.name || u.username || '匿名用户', score: u.score || 0, faction: u.faction || 'rain' }))
         });
       }
     } catch (error) {
       console.error('获取排行榜数据失败:', error);
     }
   }
+  ,
+  async fetchFactionCounts() {
+    try {
+      const questionSetId = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      var c = new wx.cloud.Cloud({ identityless: true, resourceAppid: 'wx85d92d28575a70f4', resourceEnv: 'cloud1-1gsyt78b92c539ef' });
+      await c.init();
+      const statusRes = await c.callFunction({
+        name: 'pkBattle',
+        data: { action: 'getPkStatus', data: { questionSetId } }
+      });
+      if (statusRes.result && statusRes.result.success && statusRes.result.data && Array.isArray(statusRes.result.data.factions)) {
+        const factions = statusRes.result.data.factions;
+        this.setData({
+          towerMemberCount: factions[0] ? (factions[0].userCount || 0) : 0,
+          rainMemberCount: factions[1] ? (factions[1].userCount || 0) : 0
+        });
+      }
+    } catch (e) {
+      console.error('获取阵营人数失败:', e);
+    }
+  }
 });
-
 
 
 

@@ -63,6 +63,7 @@ exports.main = async (event, context) => {
         questionSetId: questionSetId,
         date: new Date().toISOString().split('T')[0],
         winnerFaction: winnerFaction,
+        rewardPerUser: 2,
         winnerScore: winnerScore,
         towerScore: factions[0].totalScore,
         rainScore: factions[1].totalScore,
@@ -78,10 +79,12 @@ exports.main = async (event, context) => {
       .get();
 
     const winnerUsers = winnerUsersRes.data; // 获取数组
+    
+    console.log(`获胜阵营 ${winnerFaction} 共有 ${winnerUsers.length} 个用户需要发放奖励`);
 
     // 批量更新获胜用户的兰亭树数量
     const _ = db.command;
-    await db.collection('xsj_users')
+    const updateResult = await db.collection('xsj_users')
       .where({
         faction: winnerFaction
       })
@@ -91,6 +94,8 @@ exports.main = async (event, context) => {
           treeCount: _.inc(2)
         }
       });
+    
+    console.log(`兰亭树奖励更新结果: 成功更新 ${updateResult.stats.updated} 个用户`);
 
     // 批量添加活动记录，每20条一批
     const batchSize = 20; // 云开发最多一次写入20条
@@ -113,7 +118,10 @@ exports.main = async (event, context) => {
 
       // 批量执行添加操作
       await Promise.all(activityPromises);
+      console.log(`第 ${Math.floor(i/batchSize) + 1} 批活动记录添加完成，本批 ${batch.length} 条记录`);
     }
+    
+    console.log(`所有活动记录添加完成，共处理 ${winnerUsers.length} 个用户`);
 
     return {
       success: true,
@@ -132,4 +140,4 @@ exports.main = async (event, context) => {
       error: error.message
     };
   }
-} 
+}

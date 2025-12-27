@@ -7,10 +7,12 @@ cloud.init({
 
 const db = cloud.database()
 
-// 获取今日的questionSetId
+// 获取今日的questionSetId（中国时区）
 function getTodayQuestionSetId() {
-  const today = new Date();
-  return today.toISOString().split('T')[0].replace(/-/g, '');
+  const now = new Date();
+  // 转换为中国时区（UTC+8）
+  const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+  return chinaTime.toISOString().split('T')[0].replace(/-/g, '');
 }
 
 /**
@@ -75,26 +77,27 @@ async function getPkRanking(event, context) {
 
     pkRecords.forEach(record => {
       const user = userMap[record.openid];
-      if (user) {
-        if (user.faction === 'tower') {
-          towerScore += record.score || 0;
-        } else {
-          rainScore += record.score || 0;
-        }
+      // 优先使用record中的userFaction，如果没有则使用user.faction
+      const faction = record.userFaction || (user && user.faction);
+      
+      if (faction === 'tower') {
+        towerScore += record.score || 0;
+      } else if (faction === 'rain') {
+        rainScore += record.score || 0;
       }
     });
 
-    // 4. 获取前三名数据
+    // 4. 直接获取前三名真实数据，包括虚拟用户数据
     const topThree = pkRecords.slice(0, 3).map(record => {
       const user = userMap[record.openid] || {};
       return {
-        name: user.username || '匿名用户',
+        name: record.username || user.username || '匿名用户',  // 优先使用record中的username
         score: record.score || 0,
-        faction: user.faction || 'rain'
+        faction: record.userFaction || user.faction || 'rain'  // 优先使用record中的userFaction
       };
     });
 
-    console.log('处理后的前三名数据:', topThree);
+    console.log('昨日前三名真实数据:', topThree);
 
     return {
       success: true,
@@ -222,8 +225,11 @@ exports.main = async (event, context) => {
       case 'saveUserFaction':
         return await saveUserFaction(data, context);
 
+      // 更新答题进度索引
+      case 'updateAnswerIndex':
+        return await updateAnswerIndex(data, context);
+
       case 'getQuestions':
-        // 获取PK题目或训练题目
         const { date, category, isTraining } = data;
         let questions;
         
@@ -275,15 +281,14 @@ exports.main = async (event, context) => {
           };
         }
         
-        // PK赛模式
-        if (!date) {
-          return {
-            success: false,
-            error: 'PK赛模式需要提供date参数'
+        const questionSetId = getTodayQuestionSetId();
+        const existingSession = await db.collection('pk_sessions').where({ questionSetId }).get();
+        if (existingSession.data && existingSession.data.length > 0) {
+          const s = existingSession.data[0];
+          if (s.questions && s.questions.single && s.questions.multiple && s.questions.fill) {
+            return { success: true, data: s.questions };
           }
         }
-
-        console.log('开始获取PK题目，日期:', date);
 
         try {
           // 先获取今天的题目
@@ -379,43 +384,50 @@ exports.main = async (event, context) => {
             "3": seasonData.filter(q => q.type === "3")
           };
 
-          // 检查题目数量是否满足要求
           const requiredCounts = {
             city: { "1": 3, "2": 3, "3": 3 },
             season: { "1": 2, "2": 2, "3": 2 }
           };
 
-          for (const type of ["1", "2", "3"]) {
-            if (cityQuestionsByType[type].length < requiredCounts.city[type]) {
-              console.error(`城市题目类型 ${type} 数量不足，需要 ${requiredCounts.city[type]} 题，实际只有 ${cityQuestionsByType[type].length} 题`);
-              return {
-                success: false,
-                error: `城市题目数量不足，请联系管理员补充题目`
-              };
+          const seedBase = parseInt(questionSetId, 10) || Date.now();
+          function seededRandom(seed) { let t = seed; return function() { t = (t * 9301 + 49297) % 233280; return t / 233280; }; }
+          function seededSelect(arr, count, seed) { if (!Array.isArray(arr)) return []; if (arr.length <= count) return arr; const rnd = seededRandom(seed); const used = new Set(); const res = []; while (res.length < count && used.size < arr.length) { const idx = Math.floor(rnd() * arr.length); if (!used.has(idx)) { used.add(idx); res.push(arr[idx]); } } return res; }
+          function pickWithFill(cityPool, seasonPool, wantCity, wantSeason, total, seed) {
+            const cityTake = Math.min(wantCity, Array.isArray(cityPool) ? cityPool.length : 0);
+            const seasonTake = Math.min(wantSeason, Array.isArray(seasonPool) ? seasonPool.length : 0);
+            const first = seededSelect(cityPool, cityTake, seed + 11);
+            const excludeIds = new Set(first.map(i => i._id));
+            const seasonFiltered = (seasonPool || []).filter(q => !excludeIds.has(q._id));
+            const second = seededSelect(seasonFiltered, seasonTake, seed + 12);
+            let selected = [...first, ...second];
+            let remaining = total - selected.length;
+            if (remaining > 0) {
+              const cityRemainPool = (cityPool || []).filter(q => !excludeIds.has(q._id) && !selected.some(s => s._id === q._id));
+              const seasonRemainPool = (seasonPool || []).filter(q => !excludeIds.has(q._id) && !selected.some(s => s._id === q._id));
+              const cityDeficit = wantCity > cityTake;
+              const seasonDeficit = wantSeason > seasonTake;
+              if (cityDeficit && seasonRemainPool.length) {
+                const fillA = seededSelect(seasonRemainPool, Math.min(remaining, seasonRemainPool.length), seed + 13);
+                selected = [...selected, ...fillA];
+                remaining = total - selected.length;
+              }
+              if (remaining > 0 && seasonDeficit && cityRemainPool.length) {
+                const fillB = seededSelect(cityRemainPool, Math.min(remaining, cityRemainPool.length), seed + 14);
+                selected = [...selected, ...fillB];
+                remaining = total - selected.length;
+              }
+              if (remaining > 0) {
+                const unionRemain = [...seasonRemainPool, ...cityRemainPool].filter(q => !selected.some(s => s._id === q._id));
+                const fillC = seededSelect(unionRemain, Math.min(remaining, unionRemain.length), seed + 15);
+                selected = [...selected, ...fillC];
+              }
             }
-            if (seasonQuestionsByType[type].length < requiredCounts.season[type]) {
-              console.error(`时节题目类型 ${type} 数量不足，需要 ${requiredCounts.season[type]} 题，实际只有 ${seasonQuestionsByType[type].length} 题`);
-              return {
-                success: false,
-                error: `时节题目数量不足，请联系管理员补充题目`
-              };
-            }
+            return selected;
           }
-
-          // 随机选择题目
           const pkQuestions = {
-            single: [
-              ...randomSelect(cityQuestionsByType["1"], 3),
-              ...randomSelect(seasonQuestionsByType["1"], 2)
-            ],
-            multiple: [
-              ...randomSelect(cityQuestionsByType["2"], 3),
-              ...randomSelect(seasonQuestionsByType["2"], 2)
-            ],
-            fill: [
-              ...randomSelect(cityQuestionsByType["3"], 3),
-              ...randomSelect(seasonQuestionsByType["3"], 2)
-            ]
+            single: pickWithFill(cityQuestionsByType["1"], seasonQuestionsByType["1"], 3, 2, 5, seedBase + 1),
+            multiple: pickWithFill(cityQuestionsByType["2"], seasonQuestionsByType["2"], 3, 2, 5, seedBase + 3),
+            fill: pickWithFill(cityQuestionsByType["3"], seasonQuestionsByType["3"], 3, 2, 5, seedBase + 5)
           };
 
           console.log('生成的PK题目:', {
@@ -424,10 +436,14 @@ exports.main = async (event, context) => {
             fill: pkQuestions.fill.length
           });
 
-          return {
-            success: true,
-            data: pkQuestions
-          };
+          const sessionQuery = await db.collection('pk_sessions').where({ questionSetId }).get();
+          if (sessionQuery.data && sessionQuery.data.length > 0) {
+            const sid = sessionQuery.data[0]._id;
+            await db.collection('pk_sessions').doc(sid).update({ data: { questions: pkQuestions } });
+          } else {
+            await db.collection('pk_sessions').add({ data: { questionSetId, status: 'waiting', currentQuestionIndex: 0, factions: [ { name: 'tower', userCount: 0, correctCount: 0, totalScore: 0 }, { name: 'rain', userCount: 0, correctCount: 0, totalScore: 0 } ], questions: pkQuestions, createdAt: db.serverDate() } });
+          }
+          return { success: true, data: pkQuestions };
         } catch (error) {
           console.error('获取PK题目时出错:', error);
           return {
@@ -679,14 +695,35 @@ async function joinPkSession(data) {
       .where({ openid: openid })
       .get();
 
+    let faction;
     if (!userInfo.data.length || !userInfo.data[0].faction) {
-      return {
-        success: false,
-        error: '用户未选择阵营'
-      };
+      const passedFaction = (data && data.userFaction) || 'rain';
+      if (passedFaction !== 'tower' && passedFaction !== 'rain') {
+        return {
+          success: false,
+          error: '用户未选择阵营'
+        };
+      }
+      await db.collection('xsj_users')
+        .where({ openid: openid })
+        .update({
+          data: { faction: passedFaction, update_time: db.serverDate() }
+        });
+      faction = passedFaction;
+    } else {
+      faction = userInfo.data[0].faction;
     }
 
-    const faction = userInfo.data[0].faction;
+    // 获取用户信息
+    let username = '匿名用户';
+    try {
+      const userResult = await db.collection('xsj_users').where({ openid: openid }).get();
+      if (userResult.data.length > 0 && userResult.data[0].username) {
+        username = userResult.data[0].username;
+      }
+    } catch (error) {
+      console.log('获取用户名失败，使用默认名称:', error);
+    }
 
     // 创建新的参与记录
     const participationResult = await db.collection('pk_participation').add({
@@ -694,12 +731,19 @@ async function joinPkSession(data) {
         openid: openid,
         questionSetId: questionSetId,
         userFaction: faction,
-        date: new Date().toISOString().split('T')[0],
+        username: username,  // 添加用户名字段
+        date: (() => {
+          const now = new Date();
+          // 转换为中国时区（UTC+8）
+          const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+          return chinaTime.toISOString().split('T')[0];
+        })(),
         isCompleted: false,
         createdAt: db.serverDate(),
         score: 0,
         correctAnswers: 0,
-        totalAnswers: 0
+        totalAnswers: 0,
+        index: 0  // 添加索引字段，初始值为0
       }
     });
 
@@ -875,6 +919,22 @@ async function submitPkAnswer(data) {
       })
       .get();
 
+    // 累计个人参与记录分数与答题数 new
+    const wxContext = cloud.getWXContext();
+    const openid = wxContext.FROM_OPENID || wxContext.OPENID;
+    const inc = db.command.inc;
+    const partUpdate = {
+      totalAnswers: inc(1),
+      updatedAt: db.serverDate()
+    };
+    if (isCorrect) {
+      partUpdate.correctAnswers = inc(1);
+      partUpdate.score = inc(score);
+    }
+    await db.collection('pk_participation')
+      .where({ openid, questionSetId })
+      .update({ data: partUpdate });
+
     console.log('更新后的会话数据:', sessionAfter.data[0]);
 
     return {
@@ -900,21 +960,26 @@ async function updatePkStatus(data) {
 
   try {
     const now = new Date();
-    const hour = now.getHours();
-    const minute = now.getMinutes();
+    const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+    const day = chinaTime.getUTCDay();
+    const hour = chinaTime.getUTCHours();
+    const minute = chinaTime.getUTCMinutes();
 
-    console.log('当前时间检查:', { hour, minute, questionSetId });
+    console.log('当前时间检查:', { hour, minute, day, questionSetId });
 
-    // 检查是否在PK时间内 (19:30-19:45)
-    // 为了测试，可以手动设置状态
-    const isPkTime = true; // 设置为true测试ongoing状态，false测试waiting状态
+    const isWeekend = (day === 6 || day === 0);
+    const start = { h: 19, m: 30 };
+    const end = { h: 19, m: 45 };
+    const beforeStart = (hour < start.h) || (hour === start.h && minute < start.m);
+    const afterEnd = (hour > end.h) || (hour === end.h && minute >= end.m);
+    const withinWindow = !beforeStart && !afterEnd;
+    const isPkTime = isWeekend && withinWindow;
+
     let newStatus = 'waiting';
-
     if (isPkTime) {
-      newStatus = 'ongoing'; // 设置为进行中状态
-      console.log('PK进行中');
-    } else {
-      console.log('PK未开始');
+      newStatus = 'ongoing';
+    } else if (isWeekend && afterEnd) {
+      newStatus = 'ended';
     }
 
     console.log('更新PK状态为:', newStatus);
@@ -938,7 +1003,7 @@ async function updatePkStatus(data) {
       data: {
         status: newStatus,
         isPkTime: isPkTime,
-        currentTime: { hour, minute },
+        currentTime: { hour, minute, day },
         updateResult: updateResult
       }
     };
@@ -1135,7 +1200,8 @@ async function checkUserPkParticipation(data) {
           userFaction: participation.userFaction,
           score: participation.score || 0,
           correctAnswers: participation.correctAnswers || 0,
-          totalAnswers: participation.totalAnswers || 0
+          totalAnswers: participation.totalAnswers || 0,
+          index: participation.index || 0
         }
       };
     } else {
@@ -1201,7 +1267,12 @@ async function createDailyPkSession() {
         }
       ],
       createdAt: db.serverDate(),
-      date: new Date().toISOString().split('T')[0]
+      date: (() => {
+        const now = new Date();
+        // 转换为中国时区（UTC+8）
+        const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+        return chinaTime.toISOString().split('T')[0];
+      })()
     };
 
     const createResult = await db.collection('pk_sessions').add({
@@ -1221,6 +1292,65 @@ async function createDailyPkSession() {
     return {
       success: false,
       error: error.message
+    };
+  }
+}
+
+// 更新答题进度索引
+async function updateAnswerIndex(data, context) {
+  const wxContext = cloud.getWXContext();
+  const openid = wxContext.FROM_OPENID || wxContext.OPENID;
+  const { date, index } = data;
+
+  console.log('updateAnswerIndex 被调用，openid:', openid, 'date:', date, 'index:', index);
+
+  try {
+    // 查找用户的PK参与记录
+    const result = await db.collection('pk_participation')
+      .where({
+        openid: openid,
+        date: date
+      })
+      .get();
+
+    if (result.data.length === 0) {
+      console.error('未找到用户的PK参与记录');
+      return {
+        success: false,
+        message: '未找到用户的PK参与记录'
+      };
+    }
+
+    // 更新索引字段
+    const updateResult = await db.collection('pk_participation')
+      .where({
+        openid: openid,
+        date: date
+      })
+      .update({
+        data: {
+          index: index,
+          updatedAt: db.serverDate()
+        }
+      });
+
+    console.log('答题进度索引更新结果:', updateResult);
+
+    return {
+      success: true,
+      data: {
+        index: index,
+        updated: updateResult.stats.updated
+      },
+      message: `答题进度索引更新成功: ${index}`
+    };
+
+  } catch (error) {
+    console.error('更新答题进度索引失败:', error);
+    return {
+      success: false,
+      error: error.message,
+      message: '更新答题进度索引失败'
     };
   }
 }
