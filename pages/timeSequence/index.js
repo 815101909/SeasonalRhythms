@@ -1857,7 +1857,10 @@ Page({
         sectionAnimations: [false, false, false, false, false], // 重置动画状态
         cityLandmarks: landmarks, // 设置地标数据
         showMediaContainer: true, // 重置封面视频显示
-        lastScrollTop: 0 // 重置滚动位置
+        lastScrollTop: 0, // 重置滚动位置
+        currentCityTab: 'nature', // 重置 Tab 为自然地理
+        visitedTabs: ['nature'], // 重置已访问 Tab 列表
+        explorationProgress: 20 // 重置探险进度
       }, async () => {
         // 初始化音频上下文
         await this.initAudioContext();
