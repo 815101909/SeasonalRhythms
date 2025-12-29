@@ -271,6 +271,14 @@
           </view>
         </scroll-view>
 
+        <!-- 探险进度条 -->
+        <view class="exploration-progress-container" wx:if="{{!showCityMuseum}}">
+          <view class="exploration-progress-text">探险进度: {{explorationProgress}}%</view>
+          <view class="exploration-progress-bar-bg">
+            <view class="exploration-progress-bar-fill" style="width: {{explorationProgress}}%"></view>
+          </view>
+        </view>
+
         <!-- 城市详情内容 - 只在城市详情模式显示 -->
         <block wx:if="{{!showCityMuseum}}">
           <!-- 自然地理板块 -->

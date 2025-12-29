@@ -1131,6 +1131,8 @@ Page({
       { id: 'structure', name: '城市脉络', icon: 'fas fa-city', color: '#ffd166' },
       { id: 'treasures', name: '街巷宝库', icon: 'fas fa-gem', color: '#073b4c' }
     ],
+    visitedTabs: ['nature'],
+    explorationProgress: 20,
   },
 
   /**
@@ -1330,6 +1332,20 @@ Page({
   switchCityTab: function(e) {
     const tabId = e.currentTarget.dataset.id;
     if (tabId && tabId !== this.data.currentCityTab) {
+      // 更新已访问的 Tab 列表和进度
+      let visitedTabs = this.data.visitedTabs || ['nature'];
+      let explorationProgress = this.data.explorationProgress;
+      
+      if (visitedTabs.indexOf(tabId) === -1) {
+        visitedTabs.push(tabId);
+        explorationProgress = Math.round((visitedTabs.length / this.data.cityTabs.length) * 100);
+        
+        this.setData({
+          visitedTabs: visitedTabs,
+          explorationProgress: explorationProgress
+        });
+      }
+
       this.setData({
         currentCityTab: tabId
       });
