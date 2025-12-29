@@ -65,12 +65,11 @@ function getSeasonStyle(month) {
 
 // 图片缓存对象和过期时间
 const tempUrlCache = {};
-const CACHE_EXPIRATION_TIME = 3 * 60 * 60 * 1000; // 缓存有效期3小时
+const CACHE_EXPIRATION_TIME = 2 * 60 * 60 * 1000; // 缓存有效期2小时
 
 // 后台刷新图片缓存
 async function refreshImageInBackground(imageUrl, type) {
   try {
-    console.log(`后台刷新${type}图片缓存`);
     
     // 获取新的临时URL（不使用缓存）
     const newUrl = await getTemporaryImageUrlDirect(imageUrl, type);
@@ -78,16 +77,11 @@ async function refreshImageInBackground(imageUrl, type) {
     // 检查是否有变化
     const oldUrl = tempUrlCache[imageUrl]?.url;
     if (newUrl && newUrl !== oldUrl) {
-      console.log(`${type}图片已更新，刷新缓存`);
       tempUrlCache[imageUrl] = {
         url: newUrl,
         timestamp: Date.now()
       };
-      
-      // 可以在这里触发页面更新事件
-      // 例如：wx.triggerEvent('imageUpdated', { imageUrl, newUrl });
     } else {
-      console.log(`${type}图片无变化，更新时间戳`);
       if (tempUrlCache[imageUrl]) {
         tempUrlCache[imageUrl].timestamp = Date.now();
       }
@@ -100,7 +94,6 @@ async function refreshImageInBackground(imageUrl, type) {
 // 临时链接处理函数
 async function getTemporaryImageUrl(imageUrl, type) {
   if (!imageUrl) {
-    console.log(`${type}图片链接为空，使用临时图片`);
     return 'https://via.placeholder.com/800x600.png?text=' + type;
   }
   
@@ -109,11 +102,9 @@ async function getTemporaryImageUrl(imageUrl, type) {
   const now = Date.now();
   
   if (cached && (now - cached.timestamp < CACHE_EXPIRATION_TIME)) {
-    console.log(`${type}图片使用缓存`);
     
     // 如果缓存超过30分钟，在后台检查更新
     if (now - cached.timestamp > 30 * 60 * 1000) {
-      console.log(`${type}图片后台检查更新`);
       setTimeout(() => {
         refreshImageInBackground(imageUrl, type);
       }, 100);
@@ -148,7 +139,6 @@ async function getTemporaryImageUrl(imageUrl, type) {
             url: tempUrl,
             timestamp: Date.now()
           };
-          console.log(`${type}图片获取成功并缓存`);
           return tempUrl;
         } else {
           console.error(`${type}图片云存储链接转换结果异常:`, result);
@@ -162,7 +152,6 @@ async function getTemporaryImageUrl(imageUrl, type) {
     
     // 如果是HTTP链接，直接返回并缓存
     if (imageUrl.startsWith('http')) {
-      console.log(`${type}图片为HTTP链接:`, imageUrl);
       // 缓存HTTP链接
       tempUrlCache[imageUrl] = {
         url: imageUrl,
@@ -172,7 +161,6 @@ async function getTemporaryImageUrl(imageUrl, type) {
     }
     
     // 其他情况，返回临时图片
-    console.log(`${type}图片格式未知，使用临时图片。原始链接:`, imageUrl);
     return 'https://via.placeholder.com/800x600.png?text=' + type;
   } catch (error) {
     console.error(`处理${type}图片链接出错:`, error);
@@ -311,12 +299,14 @@ async function generateCities(year = new Date().getFullYear(), selectedMonth = n
         const cultureImages = contentBlocks.culture?.images;
         const cityStructureImages = contentBlocks.cityStructure?.images;
         const streetTreasuresImages = contentBlocks.streetTreasures?.images;
+        const treasureImages = contentBlocks.treasure?.images;
 
         const geoImageSrc = Array.isArray(geographyImages) ? geographyImages[0] : (typeof geographyImages === 'string' ? geographyImages : (contentBlocks.geography?.image || ''));
         const climateImageSrc = Array.isArray(climateImages) ? climateImages[0] : (typeof climateImages === 'string' ? climateImages : (contentBlocks.climate?.image || ''));
         const cultureImageSrc = Array.isArray(cultureImages) ? cultureImages[0] : (typeof cultureImages === 'string' ? cultureImages : (contentBlocks.culture?.image || ''));
         const cityStructureImageSrc = Array.isArray(cityStructureImages) ? cityStructureImages[0] : (typeof cityStructureImages === 'string' ? cityStructureImages : (contentBlocks.cityStructure?.image || ''));
         const streetTreasuresImageSrc = Array.isArray(streetTreasuresImages) ? streetTreasuresImages[0] : (typeof streetTreasuresImages === 'string' ? streetTreasuresImages : (contentBlocks.streetTreasures?.image || ''));
+        const treasureImageSrc = Array.isArray(treasureImages) ? treasureImages[0] : (typeof treasureImages === 'string' ? treasureImages : (contentBlocks.treasure?.image || ''));
 
         let iconImageUrl = '';
         const cover = cityCard.basicInfo?.coverImage;
@@ -356,10 +346,24 @@ async function generateCities(year = new Date().getFullYear(), selectedMonth = n
           cultureImageRaw: cultureImageSrc,
           cityStructureImageRaw: cityStructureImageSrc,
           streetTreasuresImageRaw: streetTreasuresImageSrc,
+          // 各板块音频原始字段
+          natureAudioRaw: contentBlocks.geography?.audio || '',
+          climateAudioRaw: contentBlocks.climate?.audio || '',
+          cultureAudioRaw: contentBlocks.culture?.audio || '',
+          cityStructureAudioRaw: contentBlocks.cityStructure?.audio || '',
+          streetTreasuresAudioRaw: contentBlocks.streetTreasures?.audio || '',
           audioUrl: cityCard.audio,
           audioTitle: '城市音频导览',
           // 地标数据
-          landmark: cityCard.landmark || []
+          landmark: cityCard.landmark || [],
+          // 新增：寻宝与勋章（支持后端上传）。优先使用后端的 treasure 字段；其次使用 contentBlocks.treasure；不再回退到街巷宝库避免对接错误
+          treasure: cityCard.treasure ? cityCard.treasure : (
+            (contentBlocks.treasure?.content || treasureImageSrc) ? {
+              image: treasureImageSrc || '',
+              description: contentBlocks.treasure?.content || ''
+            } : null
+          ),
+          medal: cityCard.medal || null
         });
       } else if (!isPastDate) {
         // 未来的日期，显示未解锁状态
@@ -930,6 +934,14 @@ function generateJan1stCity(year = 2023) {
     challenge: {
       type: ['quiz', 'memory'][Math.floor(Math.random() * 2)], // 挑战类型，移除了拼图挑战
       description: `完成这个挑战来解锁${cityName}的所有信息！` // 挑战描述
+    },
+    treasure: {
+      image: "https://img1.baidu.com/it/u=1559239682,3523425316&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=333", // 示例特产图片（哈尔滨红肠）
+      description: "哈尔滨红肠，原产于俄罗斯，是哈尔滨最负盛名的特产之一。它颜色火红，味道醇厚，带有独特的烟熏风味，吃起来蒜香浓郁，肥而不腻。无论是直接食用还是搭配面包、啤酒，都是绝佳的美味。"
+    },
+    medal: {
+      image: "https://img2.baidu.com/it/u=3332306783,186326084&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500", // 示例勋章图片
+      description: "恭喜你解锁了【冰城探险家】勋章！这枚勋章象征着你已经领略了哈尔滨的冰雪魅力，探索了这座东方小巴黎的独特风情。继续前行，收集更多城市勋章吧！"
     }
   };
 }
@@ -984,6 +996,14 @@ function generateTestCity(id, name, bgColor, emoji, location) {
     challenge: {
       type: ['quiz', 'puzzle', 'memory'][Math.floor(Math.random() * 3)], // 挑战类型，包括拼图挑战
       description: `完成这个挑战来解锁${name}的所有信息！` // 挑战描述
+    },
+    treasure: {
+      image: `https://picsum.photos/id/${id * 10 + 1}/300/300`, // 随机特产图片
+      description: `${name}的特色宝藏，拥有独特的历史和文化价值，是当地人民智慧的结晶。无论是工艺品还是美食，都承载着这座城市的记忆。`
+    },
+    medal: {
+      image: `https://picsum.photos/id/${id * 10 + 2}/300/300`, // 随机勋章图片
+      description: `恭喜你获得${name}纪念勋章！这代表了你在${name}的探索成就，继续加油，点亮更多城市吧！`
     }
   };
 }
@@ -1040,6 +1060,7 @@ Page({
     audioContext: null,
     isPlaying: false,
     showAudioPlayer: false,
+    currentPlayingSection: null,
     audioPlaybackRate: 1.0, // 播放速度
     showSpeedSelector: false, // 是否显示速度选择器
     speedOptions: [0.75, 0.8, 0.9, 1.0, 1.1, 1.25], // 可选播放速度
@@ -1116,6 +1137,10 @@ Page({
     showLandmarkModal: false, // 是否显示地标弹窗
     currentLandmark: null, // 当前查看的地标
     
+    // 寻宝发现与纪念勋章
+    showTreasureModal: false,
+    showMedalModal: false,
+    
     // 封面和视频显示控制
     showMediaContainer: true, // 是否显示封面和视频
     lastScrollTop: 0, // 上次滚动位置
@@ -1125,11 +1150,11 @@ Page({
     // 城市详情 Tab 相关
     currentCityTab: 'nature',
     cityTabs: [
-      { id: 'nature', name: '自然地理', icon: 'fas fa-mountain', color: '#06d6a0' },
-      { id: 'climate', name: '气候时节', icon: 'fas fa-cloud-sun', color: '#118ab2' },
-      { id: 'culture', name: '人文气息', icon: 'fas fa-music', color: '#ef476f' },
-      { id: 'structure', name: '城市脉络', icon: 'fas fa-city', color: '#ffd166' },
-      { id: 'treasures', name: '街巷宝库', icon: 'fas fa-gem', color: '#073b4c' }
+      { id: 'nature', name: '自然探险', icon: 'fas fa-mountain', color: '#78b6e4' },
+      { id: 'climate', name: '时节密码', icon: 'fas fa-cloud-sun', color: '#ffcc80' },
+      { id: 'culture', name: '文化气息', icon: 'fas fa-music', color: '#f48fb1' },
+      { id: 'structure', name: '时光机器', icon: 'fas fa-city', color: '#ff7875' },
+      { id: 'treasures', name: '街巷故事', icon: 'fas fa-gem', color: '#81c784' }
     ],
     visitedTabs: ['nature'],
     explorationProgress: 20,
@@ -1283,35 +1308,63 @@ Page({
    },
    
    // 处理内容滚动事件
-   onContentScroll(e) {
+  onContentScroll(e) {
     const { scrollTop } = e.detail;
-    const lastScrollTop = this.data.lastScrollTop;
+    // 使用实例变量存储，避免setData开销
+    const lastScrollTop = this.lastScrollTop || 0;
+    const delta = scrollTop - lastScrollTop;
     
-    // 判断滚动方向并控制封面和视频显示
-    // 向上滑动（scrollTop > lastScrollTop）且超过50rpx时隐藏
-    // 向下滑动（scrollTop < lastScrollTop）且小于30rpx时显示
-    if (scrollTop > 50 && scrollTop > lastScrollTop) {
-      // 上拉，隐藏
-      if (this.data.showMediaContainer) {
-        this.setData({ showMediaContainer: false });
-      }
-    } else if (scrollTop < 30) {
-      // 下拉到顶部附近，显示
+    this.lastScrollTop = scrollTop;
+
+    // 增加防抖阈值，忽略微小的滚动波动
+    if (Math.abs(delta) < 5) {
+      return;
+    }
+
+    // 策略优化：
+    // 1. 顶部安全区：扩大到 150rpx，防止在顶部操作时反复跳变
+    // 且强制重置累积器，确保回到顶部后总是显示的
+    if (scrollTop < 150) {
       if (!this.data.showMediaContainer) {
         this.setData({ showMediaContainer: true });
       }
+      this.scrollDist = 0; // 重置累积滚动距离
+      this.lastScrollDir = 0; // 重置方向
+    } 
+    // 2. 非顶部区域：使用迟滞循环 (Hysteresis Loop)
+    else {
+      // 获取当前滚动方向 (1: 向下, -1: 向上)
+      const currentDir = delta > 0 ? 1 : -1;
+      
+      // 如果方向改变，重置累积器
+      if (currentDir !== this.lastScrollDir) {
+        this.scrollDist = 0;
+        this.lastScrollDir = currentDir;
+      }
+      
+      // 累积滚动距离
+      this.scrollDist = (this.scrollDist || 0) + delta;
+      
+      // 只有当连续向同一方向滚动超过一定阈值时才触发状态改变
+      // 向下滚动超过 100rpx -> 隐藏
+      if (this.scrollDist > 100) {
+        if (this.data.showMediaContainer) {
+          this.setData({ showMediaContainer: false });
+        }
+        // 触发后限制累积器，防止数值过大
+        this.scrollDist = 100;
+      } 
+      // 向上滚动超过 60rpx -> 显示 (回看时稍微灵敏一点)
+      else if (this.scrollDist < -60) {
+        if (!this.data.showMediaContainer) {
+          this.setData({ showMediaContainer: true });
+        }
+        this.scrollDist = -60;
+      }
     }
     
-    // 更新上次滚动位置
-    this.setData({ lastScrollTop: scrollTop });
-    
-    // 注释掉VIP用户的板块动画检测
-    /*
-    if (this.data.isVIP) {
-      this.checkSectionVisibility(scrollTop);
-      return;
-    }
-    */
+    // 更新上次滚动位置用于逻辑计算（不需要setData，因为不涉及渲染）
+    // this.setData({ lastScrollTop: scrollTop }); // 移除这行，改用 this.lastScrollTop
     
     // 非VIP用户检查滚动限制
     if (scrollTop > this.data.maxScrollForNonMember) {
@@ -1433,7 +1486,10 @@ Page({
       });
     }
 
-    // 初始化视频上下文
+    this.setData({
+      currentFontSize: 32,
+      fontSizeStyle: `--content-font-size: 32rpx;`
+    });
     this.initVideoContext();
     
     // 立即检查当前VIP状态，如果不是VIP则显示会员锁
@@ -1844,12 +1900,15 @@ Page({
   
   // 城市点击
   onCityTap: async function(e) {
-    const city = e.currentTarget.dataset.city;
+    let city = e.currentTarget.dataset.city;
     
     if (city.unlocked) {
       // 初始化该城市的地标数据（异步转换云存储图片）
       const landmarks = await this.generateLandmarksForCity(city);
       
+      // 处理文本内容，分离首句和趣味知识
+      city = this.processCityText(city);
+
       this.setData({
         showCityDetail: true,
         selectedCity: city,
@@ -1862,25 +1921,14 @@ Page({
         visitedTabs: ['nature'], // 重置已访问 Tab 列表
         explorationProgress: 20 // 重置探险进度
       }, async () => {
-        // 初始化音频上下文
-        await this.initAudioContext();
-        this.toggleBgMusic(); // 自动播放背景音乐
+        const defaultSectionUrl = this.getSectionAudioRawUrl(this.data.selectedCity, 'nature');
+        if (defaultSectionUrl) {
+          await this.initAudioContext(defaultSectionUrl);
+        }
+        this.toggleBgMusic();
         await this.resolveCityDetailImages();
         this.refreshActionsRect();
-      
-        // 注释掉VIP用户的板块动画触发
-        /*
-        if (this.data.isVIP) {
-          // 延迟触发第一个板块的动画（页面打开后立即显示）
-          setTimeout(() => {
-            const sectionAnimations = [...this.data.sectionAnimations];
-            sectionAnimations[0] = true; // 第一个板块立即显示
-            this.setData({
-              sectionAnimations: sectionAnimations
-            });
-          }, 100);
-        }
-        */
+        
       });
     } else {
       wx.showToast({
@@ -1890,11 +1938,43 @@ Page({
     }
   },
 
+  // 处理城市文本内容，分离首句和趣味知识
+  processCityText: function(city) {
+    const fields = ['nature', 'climate', 'culture', 'cityStructure', 'streetTreasures'];
+    const processed = {};
+    
+    fields.forEach(field => {
+      const text = city[field] || '';
+      const splitResult = this.splitTextContent(text);
+      processed[field + 'Main'] = splitResult.main;
+      processed[field + 'FunFact'] = splitResult.funFact;
+    });
+    
+    return { ...city, ...processed };
+  },
+
+  // 分割文本工具函数
+  splitTextContent: function(text) {
+    if (!text) return { main: '', funFact: '' };
+    // 查找第一个句号（支持中英文句号）
+    let idx = text.indexOf('。');
+    if (idx === -1) idx = text.indexOf('.');
+    
+    if (idx !== -1 && idx < text.length - 1) { // 确保句号不是最后一个字符
+       return {
+         main: text.substring(0, idx + 1),
+         funFact: text.substring(idx + 1).trim()
+       };
+    }
+    // 如果没有句号或只有一句，全部作为主文本
+    return { main: text, funFact: '' };
+  },
+
   resolveCityDetailImages: async function() {
     const sc = this.data.selectedCity || {};
     const updates = {};
     if (sc.natureImageRaw) {
-      updates.natureImage = await getTemporaryImageUrl(sc.natureImageRaw, '自然地理');
+      updates.natureImage = await getTemporaryImageUrl(sc.natureImageRaw, '自然探险');
     }
     if (sc.climateImageRaw) {
       updates.climateImage = await getTemporaryImageUrl(sc.climateImageRaw, '气候时节');
@@ -1910,6 +1990,15 @@ Page({
     }
     if (sc.videoRaw) {
       updates.videoUrl = await getTemporaryImageUrl(sc.videoRaw, 'video');
+    }
+    // 处理寻宝与勋章图片
+    if (sc.treasure && sc.treasure.image) {
+      const tImg = await getTemporaryImageUrl(sc.treasure.image, '寻宝发现');
+      updates.treasure = { ...(sc.treasure || {}), image: tImg };
+    }
+    if (sc.medal && sc.medal.image) {
+      const mImg = await getTemporaryImageUrl(sc.medal.image, '纪念勋章');
+      updates.medal = { ...(sc.medal || {}), image: mImg };
     }
     if (Object.keys(updates).length > 0) {
       this.setData({ selectedCity: { ...this.data.selectedCity, ...updates } });
@@ -2256,6 +2345,54 @@ Page({
     } catch (e) {
       console.error('创建音频上下文失败:', e);
     }
+  },
+
+  // 打开挑战弹窗
+  openChallenge: function() {
+    this.setData({
+      showChallenge: true,
+      challengeStep: 1,
+      singleQuestion: {
+        ...this.data.singleQuestion,
+        showResult: false,
+        selectedOption: null
+      },
+      multiQuestion: {
+        ...this.data.multiQuestion,
+        showResult: false,
+        selectedOptions: [false, false, false, false]
+      }
+    });
+    
+    // 初始化挑战数据
+    this.initChallenge();
+  },
+
+  // 打开寻宝发现弹窗
+  openTreasure: function() {
+    this.setData({ showTreasureModal: true });
+  },
+
+  // 关闭寻宝发现弹窗
+  closeTreasure: function() {
+    this.setData({ showTreasureModal: false });
+  },
+
+  // 打开纪念勋章弹窗
+  openMedal: function() {
+    this.setData({ showMedalModal: true });
+  },
+
+  // 关闭纪念勋章弹窗
+  closeMedal: function() {
+    this.setData({ showMedalModal: false });
+  },
+
+  // 关闭挑战弹窗
+  closeChallenge: function() {
+    this.setData({
+      showChallenge: false
+    });
   },
   
   // 播放全部完成音效
@@ -4467,16 +4604,15 @@ initSimplePuzzle: function() {
   },
 
   // 音频相关方法
-  initAudioContext: async function() {
-    console.log('初始化音频上下文:', this.data.selectedCity);
+  initAudioContext: async function(srcUrl) {
     
     // 销毁旧的音频上下文
     if (this.data.audioContext) {
       this.data.audioContext.destroy();
     }
     
-    if (this.data.selectedCity && this.data.selectedCity.audioUrl) {
-      console.log('准备加载音频:', this.data.selectedCity.audioUrl);
+    const candidate = srcUrl;
+    if (candidate) {
       
       // 创建音频上下文
       const audioContext = wx.createInnerAudioContext();
@@ -4484,7 +4620,7 @@ initSimplePuzzle: function() {
       audioContext.obeyMuteSwitch = false;
       
       // 处理音频源 - 使用统一的getTemporaryImageUrl函数
-      const audioSrc = await getTemporaryImageUrl(this.data.selectedCity.audioUrl, 'audio');
+      const audioSrc = await getTemporaryImageUrl(candidate, 'audio');
       if (!audioSrc) {
         wx.showToast({
           title: '音频加载失败',
@@ -4493,15 +4629,12 @@ initSimplePuzzle: function() {
         return;
       }
       
-      // 设置音频源
       audioContext.src = audioSrc;
       // 设置播放速度
       audioContext.playbackRate = this.data.audioPlaybackRate;
-      console.log('设置音频源完成:', audioSrc, '播放速度:', this.data.audioPlaybackRate);
       
       // 监听音频事件
       audioContext.onCanplay(() => {
-        console.log('音频加载完成，可以播放');
         // 获取音频总时长
         const duration = audioContext.duration;
         const durationStr = this.formatTime(duration);
@@ -4512,7 +4645,6 @@ initSimplePuzzle: function() {
       });
       
       audioContext.onPlay(() => {
-        console.log('音频开始播放');
         this.setData({ 
           isPlaying: true,
           showAudioPlayer: true
@@ -4520,7 +4652,6 @@ initSimplePuzzle: function() {
       });
       
       audioContext.onPause(() => {
-        console.log('音频暂停');
         this.setData({ isPlaying: false });
       });
       
@@ -4542,12 +4673,12 @@ initSimplePuzzle: function() {
       });
       
       audioContext.onEnded(() => {
-        console.log('音频播放结束');
         this.setData({ 
           isPlaying: false,
           currentTime: 0,
           currentTimeStr: '00:00',
-          showAudioPlayer: false
+          showAudioPlayer: false,
+          currentPlayingSection: null
         });
       });
       
@@ -4582,6 +4713,36 @@ initSimplePuzzle: function() {
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   },
 
+  getSectionAudioRawUrl: function(city, section) {
+    if (!city) return '';
+    const pathsBySection = {
+      nature: ['natureAudioRaw', 'contentBlocks.geography.audio', 'natureAudio', 'nature.audio', 'geography.audio'],
+      climate: ['climateAudioRaw', 'contentBlocks.climate.audio', 'climateAudio', 'climate.audio', 'season.audio'],
+      culture: ['cultureAudioRaw', 'contentBlocks.culture.audio', 'cultureAudio', 'culture.audio'],
+      structure: ['cityStructureAudioRaw', 'contentBlocks.cityStructure.audio', 'cityStructureAudio', 'cityStructure.audio', 'structure.audio'],
+      treasures: ['streetTreasuresAudioRaw', 'contentBlocks.streetTreasures.audio', 'streetTreasuresAudio', 'streetTreasures.audio', 'treasures.audio']
+    };
+    const paths = pathsBySection[section] || [];
+    for (let i = 0; i < paths.length; i++) {
+      const val = this.safeGet(city, paths[i]);
+      if (val) {
+        return val;
+      }
+    }
+    return '';
+  },
+
+  safeGet: function(obj, path) {
+    if (!obj || !path) return '';
+    const parts = path.split('.');
+    let cur = obj;
+    for (let i = 0; i < parts.length; i++) {
+      cur = cur[parts[i]];
+      if (cur === undefined || cur === null) return '';
+    }
+    return cur;
+  },
+
   // 播放/暂停音频
   toggleAudio: async function() {
     const { selectedCity } = this.data;
@@ -4609,6 +4770,52 @@ initSimplePuzzle: function() {
     }
   },
 
+  // 板块音频播放按钮
+  playSectionAudio: async function(e) {
+    const section = e.currentTarget.dataset.section;
+    const { selectedCity } = this.data;
+
+    const rawUrl = this.getSectionAudioRawUrl(selectedCity, section);
+    if (!rawUrl) {
+      wx.showToast({ title: '暂无音频', icon: 'none' });
+      return;
+    }
+
+    if (!this.data.audioContext) {
+      await this.initAudioContext(rawUrl);
+    }
+
+    const { audioContext, isPlaying, currentPlayingSection } = this.data;
+    if (!audioContext) {
+      wx.showToast({ title: '音频初始化失败', icon: 'none' });
+      return;
+    }
+
+    if (isPlaying && currentPlayingSection === section) {
+      audioContext.pause();
+      this.setData({ isPlaying: false });
+      return;
+    }
+
+    this.setData({ currentPlayingSection: section, showAudioPlayer: true });
+    try {
+      const isCloud = rawUrl && rawUrl.startsWith('cloud://');
+      const audioSrc = await getTemporaryImageUrl(rawUrl, 'audio');
+      if (!audioSrc) {
+        wx.showToast({ title: '音频加载失败', icon: 'none' });
+        return;
+      }
+      audioContext.stop();
+      audioContext.src = audioSrc;
+    } catch (err) {
+      wx.showToast({ title: '音频地址错误', icon: 'none' });
+      return;
+    }
+
+    audioContext.play();
+    this.setData({ isPlaying: true });
+  },
+
   // 隐藏音频播放器
   hideAudioPlayer: function() {
     if (this.audioContext) {
@@ -4617,7 +4824,8 @@ initSimplePuzzle: function() {
     this.setData({
       isPlaying: false,
       showAudioPlayer: false,
-      showSpeedSelector: false
+      showSpeedSelector: false,
+      currentPlayingSection: null
     });
   },
 
@@ -4657,13 +4865,16 @@ initSimplePuzzle: function() {
         showAudioPlayer: false
       });
     }
-    // 停止背景音乐
     if (this.data.bgMusicContext) {
       this.data.bgMusicContext.stop();
       this.setData({
         isBgMusicPlaying: false
       });
     }
+    this.setData({
+      currentFontSize: 32,
+      fontSizeStyle: `--content-font-size: 32rpx;`
+    });
   },
 
   // 在页面卸载时销毁音频
@@ -4672,7 +4883,6 @@ initSimplePuzzle: function() {
       this.audioContext.destroy();
       this.audioContext = null;
     }
-    // 销毁背景音乐
     if (this.data.bgMusicContext) {
       this.data.bgMusicContext.destroy();
       this.setData({
@@ -4680,6 +4890,10 @@ initSimplePuzzle: function() {
         isBgMusicPlaying: false
       });
     }
+    this.setData({
+      currentFontSize: 32,
+      fontSizeStyle: `--content-font-size: 32rpx;`
+    });
   },
 
   // 音频进度控制

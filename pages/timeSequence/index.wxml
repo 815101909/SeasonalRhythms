@@ -33,6 +33,38 @@
   </view>
 </view>
 
+<!-- 寻宝发现弹窗 -->
+<view class="child-modal" wx:if="{{showTreasureModal}}" catchtap="closeTreasure">
+  <view class="child-modal-content" catchtap="stopPropagation">
+    <view class="child-modal-header treasure-header">
+      <text>寻宝发现</text>
+      <view class="child-close-btn" catchtap="closeTreasure">×</view>
+    </view>
+    <view class="child-modal-body">
+      <image wx:if="{{selectedCity.treasure && selectedCity.treasure.image}}" class="child-modal-image" src="{{selectedCity.treasure.image}}" mode="aspectFill"></image>
+      <view class="child-modal-desc-box">
+        <text>{{(selectedCity.treasure && selectedCity.treasure.description) || '暂无发现'}}</text>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 纪念勋章弹窗 -->
+<view class="child-modal" wx:if="{{showMedalModal}}" catchtap="closeMedal">
+  <view class="child-modal-content" catchtap="stopPropagation">
+    <view class="child-modal-header medal-header">
+      <text>纪念勋章</text>
+      <view class="child-close-btn" catchtap="closeMedal">×</view>
+    </view>
+    <view class="child-modal-body">
+      <image wx:if="{{selectedCity.medal && selectedCity.medal.image}}" class="child-modal-image medal-img" src="{{selectedCity.medal.image}}" mode="aspectFit"></image>
+      <view class="child-modal-desc-box">
+        <text>{{(selectedCity.medal && selectedCity.medal.description) || '暂无勋章'}}</text>
+      </view>
+    </view>
+  </view>
+</view>
+
 <view class="time-sequence-container" wx:if="{{!isLoading}}">
   <!-- 页面标题 -->
   <view class="page-title">
@@ -152,7 +184,7 @@
     <view class="city-detail-content">
       
       <!-- 封面和视频并排显示容器 - 只在城市详情模式显示 -->
-      <view class="media-container" wx:if="{{!showCityMuseum && showMediaContainer}}">
+      <view class="media-container {{showMediaContainer ? '' : 'collapsed'}}" wx:if="{{!showCityMuseum}}">
         <view class="city-detail-header">
           <!-- 封面图片 -->
           <image class="city-icon-large" src="{{selectedCity.iconUrl}}" mode="aspectFill" wx:if="{{selectedCity.iconUrl}}"></image>
@@ -258,21 +290,23 @@
         </view>
       </view>
       
-      <scroll-view scroll-y="{{isVIP || !showMembershipLock}}" class="city-info-scroll" enhanced="true" show-scrollbar="true" bounces="true" bindscroll="onContentScroll" scroll-top="{{scrollTop}}">
-        <!-- Tab 导航栏 -->
-        <scroll-view scroll-x class="city-tabs-container" wx:if="{{!showCityMuseum}}">
-          <view class="city-tab {{currentCityTab === item.id ? 'active' : ''}}" 
-                wx:for="{{cityTabs}}" 
-                wx:key="id" 
-                bindtap="switchCityTab" 
-                data-id="{{item.id}}"
-                style="{{currentCityTab === item.id ? 'background-color:' + item.color + '; border-color:' + item.color : ''}}">
-            <text>{{item.name}}</text>
-          </view>
-        </scroll-view>
+      <!-- Tab 导航栏 - 移出 scroll-view 以固定在顶部 -->
+      <view class="city-tabs-container" wx:if="{{!showCityMuseum}}">
+        <view class="city-tab {{currentCityTab === item.id ? 'active' : ''}}" 
+              wx:for="{{cityTabs}}" 
+              wx:key="id" 
+              bindtap="switchCityTab" 
+              data-id="{{item.id}}"
+              style="{{currentCityTab === item.id ? 'background-color:' + item.color + '; border-color:' + item.color : ''}}">
+          <image wx:if="{{currentCityTab === item.id}}" class="tab-boat-icon" src="/images/icons/小船1.png" mode="aspectFit"></image>
+          <text>{{item.name}}</text>
+        </view>
+      </view>
 
-        <!-- 探险进度条 -->
-        <view class="exploration-progress-container" wx:if="{{!showCityMuseum}}">
+      <scroll-view scroll-y="{{isVIP || !showMembershipLock}}" class="city-info-scroll" enhanced="true" show-scrollbar="true" bounces="true" bindscroll="onContentScroll" scroll-top="{{scrollTop}}" style="{{fontSizeStyle}}">
+
+        <!-- 探险进度条（已隐藏） -->
+        <view class="exploration-progress-container" wx:if="{{false}}">
           <view class="exploration-progress-text">探险进度: {{explorationProgress}}%</view>
           <view class="exploration-progress-bar-bg">
             <view class="exploration-progress-bar-fill" style="width: {{explorationProgress}}%"></view>
@@ -282,65 +316,340 @@
         <!-- 城市详情内容 - 只在城市详情模式显示 -->
         <block wx:if="{{!showCityMuseum}}">
           <!-- 自然地理板块 -->
-          <view class="info-section {{currentCityTab === 'nature' ? 'tab-active' : ''}}" data-index="0" id="section-0">
+          <view class="info-section section-nature {{currentCityTab === 'nature' ? 'tab-active' : ''}}" data-index="0" id="section-0">
             <view class="info-content-wrapper">
-              <image class="floating-image nature-image" src="{{selectedCity.natureImage}}" mode="aspectFill" wx:if="{{selectedCity.natureImage}}"></image>
-              <view class="floating-image-placeholder nature-image" wx:else></view>
-              <view class="info-content">
-                <text>{{selectedCity.nature || '该城市的自然地理信息尚未更新'}}</text>
+              <!-- 第一部分：首句 -->
+              <view class="intro-text">
+                <text>{{selectedCity.natureMain || selectedCity.nature || '该城市的自然地理信息尚未更新'}}</text>
               </view>
+              
+              <!-- 第二部分：趣味知识（图片 + 剩余文本） -->
+              <view class="fun-fact-box" wx:if="{{selectedCity.natureImage || selectedCity.natureFunFact}}">
+                <image class="fun-fact-image nature-image" src="{{selectedCity.natureImage}}" mode="aspectFill" wx:if="{{selectedCity.natureImage}}"></image>
+                <view style="position: relative; display: inline-block;">
+                  <image src="/images/icons/小船2.png" class="fun-fact-boat-icon" mode="aspectFit"></image>
+                  <text class="fun-fact-label">趣味知识</text>
+                </view>
+                <text class="fun-fact-text" wx:if="{{selectedCity.natureFunFact}}">{{selectedCity.natureFunFact}}</text>
+              </view>
+            </view>
+            <view class="section-audio-bar" wx:if="{{false}}">
+              <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'nature' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="nature">
+                <view wx:if="{{!(isPlaying && currentPlayingSection === 'nature')}}" class="icon-play"></view>
+                <view wx:else class="icon-pause"></view>
+              </view>
+              <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'nature') ? 'playing' : 'paused'}}" wx:if="{{true}}">
+                <view class="wave-bar bar1"></view>
+                <view class="wave-bar bar2"></view>
+                <view class="wave-bar bar3"></view>
+                <view class="wave-bar bar4"></view>
+                <view class="wave-bar bar5"></view>
+                <view class="wave-bar bar6"></view>
+                <view class="wave-bar bar7"></view>
+                <view class="wave-bar bar8"></view>
+                <view class="wave-bar bar9"></view>
+                <view class="wave-bar bar10"></view>
+                <view class="wave-bar bar11"></view>
+                <view class="wave-bar bar12"></view>
+              </view>
+              <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}</view>
+            </view>
+          </view>
+          
+          <view class="audio-bg-band bg-unified" wx:if="{{selectedCity.natureAudioRaw && currentCityTab === 'nature'}}">
+            <view class="section-audio-bar audio-nature">
+              <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'nature' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="nature">
+                <view wx:if="{{!(isPlaying && currentPlayingSection === 'nature')}}" class="icon-play"></view>
+                <view wx:else class="icon-pause"></view>
+              </view>
+              <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'nature') ? 'playing' : 'paused'}}" wx:if="{{true}}">
+                <view class="wave-bar bar1"></view>
+                <view class="wave-bar bar2"></view>
+                <view class="wave-bar bar3"></view>
+                <view class="wave-bar bar4"></view>
+                <view class="wave-bar bar5"></view>
+                <view class="wave-bar bar6"></view>
+                <view class="wave-bar bar7"></view>
+                <view class="wave-bar bar8"></view>
+                <view class="wave-bar bar9"></view>
+                <view class="wave-bar bar10"></view>
+                <view class="wave-bar bar11"></view>
+                <view class="wave-bar bar12"></view>
+              </view>
+              <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}</view>
             </view>
           </view>
           
           <!-- 气候时节板块 -->
-          <view class="info-section {{currentCityTab === 'climate' ? 'tab-active' : ''}}" data-index="1" id="section-1">
+          <view class="info-section section-climate {{currentCityTab === 'climate' ? 'tab-active' : ''}}" data-index="1" id="section-1">
             <view class="info-content-wrapper">
-              <image class="floating-image climate-image" src="{{selectedCity.climateImage}}" mode="aspectFill" wx:if="{{selectedCity.climateImage}}"></image>
-              <view class="floating-image-placeholder climate-image" wx:else></view>
-              <view class="info-content">
-                <text>{{selectedCity.climate || '该城市的气候时节信息尚未更新'}}</text>
+              <view class="intro-text">
+                <text>{{selectedCity.climateMain || selectedCity.climate || '该城市的气候时节信息尚未更新'}}</text>
               </view>
+              <view class="fun-fact-box" wx:if="{{selectedCity.climateImage || selectedCity.climateFunFact}}">
+                <image class="fun-fact-image climate-image" src="{{selectedCity.climateImage}}" mode="aspectFill" wx:if="{{selectedCity.climateImage}}"></image>
+                <view style="position: relative; display: inline-block;">
+                  <image src="/images/icons/小船2.png" class="fun-fact-boat-icon" mode="aspectFit"></image>
+                  <text class="fun-fact-label">趣味知识</text>
+                </view>
+                <text class="fun-fact-text" wx:if="{{selectedCity.climateFunFact}}">{{selectedCity.climateFunFact}}</text>
+              </view>
+              <view class="section-audio-bar" wx:if="{{false}}">
+                <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'climate' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="climate">
+                  <view wx:if="{{!(isPlaying && currentPlayingSection === 'climate')}}" class="icon-play"></view>
+                  <view wx:else class="icon-pause"></view>
+                </view>
+                <view class="section-playing-wave" wx:if="{{isPlaying && currentPlayingSection === 'climate'}}">
+                  <view class="wave-bar bar1"></view>
+                  <view class="wave-bar bar2"></view>
+                  <view class="wave-bar bar3"></view>
+                  <view class="wave-bar bar4"></view>
+                  <view class="wave-bar bar5"></view>
+                  <view class="wave-bar bar6"></view>
+                  <view class="wave-bar bar7"></view>
+                  <view class="wave-bar bar8"></view>
+                  <view class="wave-bar bar9"></view>
+                  <view class="wave-bar bar10"></view>
+                  <view class="wave-bar bar11"></view>
+                  <view class="wave-bar bar12"></view>
+                </view>
+                <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}</view>
+              </view>
+            </view>
+          </view>
+          <view class="audio-bg-band bg-unified" wx:if="{{selectedCity.climateAudioRaw && currentCityTab === 'climate'}}">
+            <view class="section-audio-bar audio-climate">
+              <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'climate' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="climate">
+                <view wx:if="{{!(isPlaying && currentPlayingSection === 'climate')}}" class="icon-play"></view>
+                <view wx:else class="icon-pause"></view>
+              </view>
+              <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'climate') ? 'playing' : 'paused'}}" wx:if="{{true}}">
+                <view class="wave-bar bar1"></view>
+                <view class="wave-bar bar2"></view>
+                <view class="wave-bar bar3"></view>
+                <view class="wave-bar bar4"></view>
+                <view class="wave-bar bar5"></view>
+                <view class="wave-bar bar6"></view>
+                <view class="wave-bar bar7"></view>
+                <view class="wave-bar bar8"></view>
+                <view class="wave-bar bar9"></view>
+                <view class="wave-bar bar10"></view>
+                <view class="wave-bar bar11"></view>
+                <view class="wave-bar bar12"></view>
+              </view>
+              <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}</view>
             </view>
           </view>
           
           <!-- 人文气息板块 -->
-          <view class="info-section {{currentCityTab === 'culture' ? 'tab-active' : ''}}" data-index="2" id="section-2">
+          <view class="info-section section-culture {{currentCityTab === 'culture' ? 'tab-active' : ''}}" data-index="2" id="section-2">
             <view class="info-content-wrapper">
-              <image class="floating-image culture-image" src="{{selectedCity.cultureImage}}" mode="aspectFill" wx:if="{{selectedCity.cultureImage}}"></image>
-              <view class="floating-image-placeholder culture-image" wx:else></view>
-              <view class="info-content">
-                <text>{{selectedCity.culture || '该城市的人文气息信息尚未更新'}}</text>
+              <view class="intro-text">
+                <text>{{selectedCity.cultureMain || selectedCity.culture || '该城市的人文气息信息尚未更新'}}</text>
+              </view>
+              <view class="fun-fact-box" wx:if="{{selectedCity.cultureImage || selectedCity.cultureFunFact}}">
+                <image class="fun-fact-image culture-image" src="{{selectedCity.cultureImage}}" mode="aspectFill" wx:if="{{selectedCity.cultureImage}}"></image>
+                <view style="position: relative; display: inline-block;">
+                  <image src="/images/icons/小船2.png" class="fun-fact-boat-icon" mode="aspectFit"></image>
+                  <text class="fun-fact-label">趣味知识</text>
+                </view>
+                <text class="fun-fact-text" wx:if="{{selectedCity.cultureFunFact}}">{{selectedCity.cultureFunFact}}</text>
+              </view>
+              <view class="section-audio-bar" wx:if="{{false}}">
+                <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'culture' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="culture">
+                  <view wx:if="{{!(isPlaying && currentPlayingSection === 'culture')}}" class="icon-play"></view>
+                  <view wx:else class="icon-pause"></view>
+                </view>
+              <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'structure') ? 'playing' : 'paused'}}" wx:if="{{true}}">
+                  <view class="wave-bar bar1"></view>
+                  <view class="wave-bar bar2"></view>
+                  <view class="wave-bar bar3"></view>
+                  <view class="wave-bar bar4"></view>
+                  <view class="wave-bar bar5"></view>
+                  <view class="wave-bar bar6"></view>
+                  <view class="wave-bar bar7"></view>
+                  <view class="wave-bar bar8"></view>
+                  <view class="wave-bar bar9"></view>
+                  <view class="wave-bar bar10"></view>
+                  <view class="wave-bar bar11"></view>
+                  <view class="wave-bar bar12"></view>
+                </view>
+                <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}
+                </view>
+              </view>
+            </view>
+          </view>
+          <view class="audio-bg-band bg-unified" wx:if="{{selectedCity.cultureAudioRaw && currentCityTab === 'culture'}}">
+            <view class="section-audio-bar audio-culture">
+              <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'culture' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="culture">
+                <view wx:if="{{!(isPlaying && currentPlayingSection === 'culture')}}" class="icon-play"></view>
+                <view wx:else class="icon-pause"></view>
+              </view>
+              <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'culture') ? 'playing' : 'paused'}}" wx:if="{{true}}">
+                <view class="wave-bar bar1"></view>
+                <view class="wave-bar bar2"></view>
+                <view class="wave-bar bar3"></view>
+                <view class="wave-bar bar4"></view>
+                <view class="wave-bar bar5"></view>
+                <view class="wave-bar bar6"></view>
+                <view class="wave-bar bar7"></view>
+                <view class="wave-bar bar8"></view>
+                <view class="wave-bar bar9"></view>
+                <view class="wave-bar bar10"></view>
+                <view class="wave-bar bar11"></view>
+                <view class="wave-bar bar12"></view>
+              </view>
+              <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}
               </view>
             </view>
           </view>
           
           <!-- 城市脉络板块 -->
-          <view class="info-section {{currentCityTab === 'structure' ? 'tab-active' : ''}}" data-index="3" id="section-3">
+          <view class="info-section section-structure {{currentCityTab === 'structure' ? 'tab-active' : ''}}" data-index="3" id="section-3">
             <view class="info-content-wrapper">
-              <image class="floating-image city-history-image" src="{{selectedCity.cityStructureImage}}" mode="aspectFill" wx:if="{{selectedCity.cityStructureImage}}"></image>
-              <view class="floating-image-placeholder city-history-image" wx:else></view>
-              <view class="info-content">
-                <text>{{selectedCity.cityStructure || '该城市的城市结构信息尚未更新'}}</text>
+              <view class="intro-text">
+                <text>{{selectedCity.cityStructureMain || selectedCity.cityStructure || '该城市的城市结构信息尚未更新'}}</text>
+              </view>
+              <view class="fun-fact-box" wx:if="{{selectedCity.cityStructureImage || selectedCity.cityStructureFunFact}}">
+                <image class="fun-fact-image city-history-image" src="{{selectedCity.cityStructureImage}}" mode="aspectFill" wx:if="{{selectedCity.cityStructureImage}}"></image>
+                <view style="position: relative; display: inline-block;">
+                  <image src="/images/icons/小船2.png" class="fun-fact-boat-icon" mode="aspectFit"></image>
+                  <text class="fun-fact-label">趣味知识</text>
+                </view>
+                <text class="fun-fact-text" wx:if="{{selectedCity.cityStructureFunFact}}">{{selectedCity.cityStructureFunFact}}</text>
+              </view>
+              <view class="section-audio-bar" wx:if="{{false}}">
+                <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'structure' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="structure">
+                  <view wx:if="{{!(isPlaying && currentPlayingSection === 'structure')}}" class="icon-play"></view>
+                  <view wx:else class="icon-pause"></view>
+                </view>
+                <view class="section-playing-wave" wx:if="{{isPlaying && currentPlayingSection === 'structure'}}">
+                  <view class="wave-bar bar1"></view>
+                  <view class="wave-bar bar2"></view>
+                  <view class="wave-bar bar3"></view>
+                  <view class="wave-bar bar4"></view>
+                  <view class="wave-bar bar5"></view>
+                  <view class="wave-bar bar6"></view>
+                  <view class="wave-bar bar7"></view>
+                  <view class="wave-bar bar8"></view>
+                  <view class="wave-bar bar9"></view>
+                  <view class="wave-bar bar10"></view>
+                  <view class="wave-bar bar11"></view>
+                  <view class="wave-bar bar12"></view>
+                </view>
+                <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}
+                </view>
+              </view>
+            </view>
+          </view>
+          <view class="audio-bg-band bg-unified" wx:if="{{selectedCity.cityStructureAudioRaw && currentCityTab === 'structure'}}">
+            <view class="section-audio-bar audio-structure">
+              <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'structure' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="structure">
+                <view wx:if="{{!(isPlaying && currentPlayingSection === 'structure')}}" class="icon-play"></view>
+                <view wx:else class="icon-pause"></view>
+              </view>
+              <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'structure') ? 'playing' : 'paused'}}" wx:if="{{true}}">
+                <view class="wave-bar bar1"></view>
+                <view class="wave-bar bar2"></view>
+                <view class="wave-bar bar3"></view>
+                <view class="wave-bar bar4"></view>
+                <view class="wave-bar bar5"></view>
+                <view class="wave-bar bar6"></view>
+                <view class="wave-bar bar7"></view>
+                <view class="wave-bar bar8"></view>
+                <view class="wave-bar bar9"></view>
+                <view class="wave-bar bar10"></view>
+                <view class="wave-bar bar11"></view>
+                <view class="wave-bar bar12"></view>
+              </view>
+              <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}
               </view>
             </view>
           </view>
           
           <!-- 街巷宝库板块 -->
-          <view class="info-section {{currentCityTab === 'treasures' ? 'tab-active' : ''}}" data-index="4" id="section-4" style="padding-bottom: 60rpx;">
+          <view class="info-section section-treasures {{currentCityTab === 'treasures' ? 'tab-active' : ''}}" data-index="4" id="section-4" style="padding-bottom: 60rpx;">
             <view class="info-content-wrapper">
-              <image class="floating-image treasure-image" src="{{selectedCity.streetTreasuresImage}}" mode="aspectFill" wx:if="{{selectedCity.streetTreasuresImage}}"></image>
-              <view class="floating-image-placeholder treasure-image" wx:else></view>
-              <view class="info-content">
-                <text>{{selectedCity.streetTreasures || '该城市的街巷宝库信息尚未更新'}}</text>
+              <view class="intro-text">
+                <text>{{selectedCity.streetTreasuresMain || selectedCity.streetTreasures || '该城市的街巷宝库信息尚未更新'}}</text>
+              </view>
+              <view class="fun-fact-box" wx:if="{{selectedCity.streetTreasuresImage || selectedCity.streetTreasuresFunFact}}">
+                <image class="fun-fact-image treasure-image" src="{{selectedCity.streetTreasuresImage}}" mode="aspectFill" wx:if="{{selectedCity.streetTreasuresImage}}"></image>
+                <view style="position: relative; display: inline-block;">
+                  <image src="/images/icons/小船2.png" class="fun-fact-boat-icon" mode="aspectFit"></image>
+                  <text class="fun-fact-label">趣味知识</text>
+                </view>
+                <text class="fun-fact-text" wx:if="{{selectedCity.streetTreasuresFunFact}}">{{selectedCity.streetTreasuresFunFact}}</text>
+              </view>
+              <view class="section-audio-bar" wx:if="{{false}}">
+                <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'treasures' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="treasures">
+                  <view wx:if="{{!(isPlaying && currentPlayingSection === 'treasures')}}" class="icon-play"></view>
+                  <view wx:else class="icon-pause"></view>
+                </view>
+                <view class="section-playing-wave" wx:if="{{isPlaying && currentPlayingSection === 'treasures'}}">
+                  <view class="wave-bar bar1"></view>
+                  <view class="wave-bar bar2"></view>
+                  <view class="wave-bar bar3"></view>
+                  <view class="wave-bar bar4"></view>
+                  <view class="wave-bar bar5"></view>
+                  <view class="wave-bar bar6"></view>
+                  <view class="wave-bar bar7"></view>
+                  <view class="wave-bar bar8"></view>
+                  <view class="wave-bar bar9"></view>
+                  <view class="wave-bar bar10"></view>
+                  <view class="wave-bar bar11"></view>
+                  <view class="wave-bar bar12"></view>
+                </view>
+                <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}
+                </view>
+              </view>
+            </view>
+          </view>
+          <view class="audio-bg-band bg-unified" wx:if="{{selectedCity.streetTreasuresAudioRaw && currentCityTab === 'treasures'}}">
+            <view class="section-audio-bar audio-treasures">
+              <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'treasures' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="treasures">
+                <view wx:if="{{!(isPlaying && currentPlayingSection === 'treasures')}}" class="icon-play"></view>
+                <view wx:else class="icon-pause"></view>
+              </view>
+              <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'treasures') ? 'playing' : 'paused'}}" wx:if="{{true}}">
+                <view class="wave-bar bar1"></view>
+                <view class="wave-bar bar2"></view>
+                <view class="wave-bar bar3"></view>
+                <view class="wave-bar bar4"></view>
+                <view class="wave-bar bar5"></view>
+                <view class="wave-bar bar6"></view>
+                <view class="wave-bar bar7"></view>
+                <view class="wave-bar bar8"></view>
+                <view class="wave-bar bar9"></view>
+                <view class="wave-bar bar10"></view>
+                <view class="wave-bar bar11"></view>
+                <view class="wave-bar bar12"></view>
+              </view>
+              <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}
               </view>
             </view>
           </view>
           
-          <!-- 将挑战按钮移到街巷宝库文本框的下方 -->
-          <view class="challenge-btn-container">
-            <view class="challenge-btn" bindtap="openChallenge" data-test="test">开始挑战</view>
-            <view class="challenge-tag-line"></view>
-            <view class="challenge-tag">小舟摇风溪</view>
+          <!-- 操作按钮网格 -->
+          <view class="action-grid-container">
+            <view class="action-grid-item" bindtap="openChallenge">
+              <view class="action-icon">
+                <view class="css-icon-challenge"></view>
+              </view>
+              <text class="action-text">开始挑战</text>
+            </view>
+            <view class="action-grid-item" bindtap="openTreasure">
+              <view class="action-icon">
+                <view class="css-icon-gem"></view>
+              </view>
+              <text class="action-text">寻宝发现</text>
+            </view>
+            <view class="action-grid-item" bindtap="openMedal">
+              <view class="action-icon">
+                <view class="css-icon-medal"></view>
+              </view>
+              <text class="action-text">纪念勋章</text>
+            </view>
           </view>
         </block>
         
@@ -586,42 +895,6 @@
       </view>
       
       <view class="landmark-close-btn" catchtap="closeLandmarkModal">×</view>
-    </view>
-  </view>
-  
-  <!-- 固定在底部的音频播放器 -->
-  <view class="fixed-audio-player show" wx:if="{{showCityDetail && selectedCity.audioUrl && isVIP}}">
-    <view class="audio-content">
-      <view class="audio-info">
-        <text class="audio-title">{{selectedCity.name}} - 音频导览</text>
-      </view>
-      <view class="audio-controls">
-        <view class="play-btn {{isPlaying ? 'playing' : ''}}" bindtap="toggleAudio">
-          <view wx:if="{{!isPlaying}}" class="icon-play" aria-label="播放"></view>
-          <view wx:else class="icon-pause" aria-label="暂停"></view>
-        </view>
-        <view class="speed-btn" bindtap="toggleSpeedSelector">
-          <text class="btn-icon">{{audioPlaybackRate}}x</text>
-        </view>
-        <view class="audio-time">
-          <text>{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}</text>
-        </view>
-      </view>
-    </view>
-    
-    <!-- 速度选择器 -->
-    <view class="speed-selector" wx:if="{{showSpeedSelector}}">
-      <view class="speed-options">
-        <view 
-          class="speed-option {{audioPlaybackRate === item ? 'active' : ''}}"
-          wx:for="{{speedOptions}}"
-          wx:key="*this"
-          data-rate="{{item}}"
-          bindtap="selectPlaybackRate"
-        >
-          {{item}}x
-        </view>
-      </view>
     </view>
   </view>
 </view>
@@ -881,4 +1154,3 @@
     </view>
   </view>
 </view>
-
