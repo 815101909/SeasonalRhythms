@@ -267,12 +267,6 @@
                 bindtap="switchCityTab" 
                 data-id="{{item.id}}"
                 style="{{currentCityTab === item.id ? 'background-color:' + item.color + '; border-color:' + item.color : ''}}">
-            <!-- 使用emoji代替font-awesome图标，因为小程序可能未引入 -->
-            <text wx:if="{{item.id === 'nature'}}" class="tab-icon">🏔️</text>
-            <text wx:if="{{item.id === 'climate'}}" class="tab-icon">⛅</text>
-            <text wx:if="{{item.id === 'culture'}}" class="tab-icon">🎵</text>
-            <text wx:if="{{item.id === 'structure'}}" class="tab-icon">🏙️</text>
-            <text wx:if="{{item.id === 'treasures'}}" class="tab-icon">💎</text>
             <text>{{item.name}}</text>
           </view>
         </scroll-view>
