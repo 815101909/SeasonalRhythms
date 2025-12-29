@@ -531,11 +531,18 @@
 
 /* 城市信息滚动区域 */
 .city-info-scroll {
-  height: calc(100vh - 400rpx); /* 调整高度，不再减去挑战区域的高度 */
+  flex: 1; /* 使用 Flex 布局自动填充剩余空间 */
+  height: 0; /* 配合 flex: 1 使用 */
   background-color: white;
   padding: 20rpx 0;
   position: relative;
   transition: opacity 0.3s ease;
+}
+
+/* 底部额外空间，防止内容被音频播放器遮挡 */
+.scroll-bottom-space {
+  height: 200rpx;
+  width: 100%;
 }
 
 /* 滚动指示器 */
