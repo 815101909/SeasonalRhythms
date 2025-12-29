@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>西安探险乐园</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', '幼圆', 'Arial Rounded MT Bold', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #a2d2ff 0%, #ffafcc 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        .cloud {
+            position: fixed;
+            background-color: white;
+            border-radius: 50px;
+            z-index: -1;
+            opacity: 0.7;
+        }
+
+        .cloud1 {
+            width: 150px;
+            height: 60px;
+            top: 10%;
+            left: 5%;
+        }
+
+        .cloud2 {
+            width: 200px;
+            height: 80px;
+            top: 20%;
+            right: 8%;
+        }
+
+        .cloud3 {
+            width: 120px;
+            height: 50px;
+            bottom: 20%;
+            left: 10%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .title-container {
+            background-color: #ffd166;
+            border-radius: 50px;
+            padding: 20px 40px;
+            display: inline-block;
+            margin-bottom: 20px;
+            border: 8px solid #ef476f;
+            box-shadow: 0 10px 0 #c1121f;
+            transform: rotate(-2deg);
+        }
+
+        .title {
+            color: #073b4c;
+            font-size: 3.2rem;
+            text-shadow: 3px 3px 0 #06d6a0;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            color: #118ab2;
+            font-size: 1.6rem;
+            font-weight: bold;
+        }
+
+        .guide-character {
+            position: absolute;
+            right: 10%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 120px;
+            display: none;
+        }
+
+        @media (min-width: 1100px) {
+            .guide-character {
+                display: block;
+            }
+        }
+
+        .robot {
+            position: relative;
+            width: 100%;
+            height: 150px;
+        }
+
+        .robot-head {
+            width: 80px;
+            height: 80px;
+            background-color: #ef476f;
+            border-radius: 30px;
+            margin: 0 auto;
+            position: relative;
+            border: 5px solid #073b4c;
+        }
+
+        .robot-eye {
+            width: 20px;
+            height: 25px;
+            background-color: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 25px;
+            border: 3px solid #073b4c;
+        }
+
+        .robot-eye.left {
+            left: 15px;
+        }
+
+        .robot-eye.right {
+            right: 15px;
+        }
+
+        .robot-eye::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #06d6a0;
+            border-radius: 50%;
+            top: 5px;
+            left: 3px;
+        }
+
+        .robot-mouth {
+            width: 40px;
+            height: 10px;
+            background-color: #073b4c;
+            border-radius: 10px;
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .robot-body {
+            width: 100px;
+            height: 70px;
+            background-color: #118ab2;
+            border-radius: 20px;
+            margin: 0 auto;
+            border: 5px solid #073b4c;
+            border-top: none;
+        }
+
+        .tabs-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            background-color: #06d6a0;
+            color: #073b4c;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 6px 0 #04966d;
+            min-width: 180px;
+            justify-content: center;
+        }
+
+        .tab:hover {
+            background-color: #0ee9b6;
+            transform: translateY(3px);
+            box-shadow: 0 3px 0 #04966d;
+        }
+
+        .tab.active {
+            background-color: #ef476f;
+            color: white;
+            box-shadow: 0 6px 0 #c1121f;
+        }
+
+        .tab.active:hover {
+            background-color: #f56a8d;
+            box-shadow: 0 3px 0 #c1121f;
+        }
+
+        .content-area {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 40px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 10px solid #ffd166;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            min-height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-card {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .content-card.active {
+            display: block;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            gap: 20px;
+        }
+
+        .card-icon {
+            font-size: 4rem;
+            width: 100px;
+            height: 100px;
+            background-color: #a2d2ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 8px solid #118ab2;
+        }
+
+        .card-title {
+            color: #073b4c;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 0 #ffd166;
+        }
+
+        .card-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .card-text {
+            flex: 1;
+            min-width: 300px;
+            font-size: 1.3rem;
+            line-height: 1.8;
+            color: #073b4c;
+            padding-right: 20px;
+        }
+
+        .card-image {
+            flex: 1;
+            min-width: 300px;
+            background-color: #cbf3f0;
+            border-radius: 30px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 5px dashed #06d6a0;
+        }
+
+        .image-placeholder {
+            width: 100%;
+            height: 200px;
+            background-color: #ffd166;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 5rem;
+            color: #ef476f;
+        }
+
+        .fun-fact {
+            background-color: #ffd166;
+            padding: 15px;
+            border-radius: 20px;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #073b4c;
+            font-size: 1.2rem;
+            border: 4px dotted #ef476f;
+        }
+
+        .interactive-area {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .game-button {
+            background-color: #ef476f;
+            color: white;
+            border: none;
+            padding: 18px 30px;
+            border-radius: 40px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 0 #c1121f;
+        }
+
+        .game-button:hover {
+            background-color: #f56a8d;
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #c1121f;
+        }
+
+        .game-button:nth-child(2) {
+            background-color: #118ab2;
+            box-shadow: 0 8px 0 #0a5a75;
+        }
+
+        .game-button:nth-child(2):hover {
+            background-color: #1aa3d1;
+            box-shadow: 0 4px 0 #0a5a75;
+        }
+
+        .game-button:nth-child(3) {
+            background-color: #06d6a0;
+            box-shadow: 0 8px 0 #04966d;
+        }
+
+        .game-button:nth-child(3):hover {
+            background-color: #0ee9b6;
+            box-shadow: 0 4px 0 #04966d;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 25px;
+            background-color: #073b4c;
+            border-radius: 30px;
+            color: white;
+        }
+
+        .footer p {
+            margin: 10px 0;
+            font-size: 1.2rem;
+        }
+
+        .floating {
+            position: fixed;
+            font-size: 2.5rem;
+            z-index: -1;
+            animation: float 6s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+
+        .f1 {
+            top: 15%;
+            left: 3%;
+            color: #ef476f;
+            animation-delay: 0s;
+        }
+
+        .f2 {
+            top: 20%;
+            right: 5%;
+            color: #06d6a0;
+            animation-delay: 1s;
+        }
+
+        .f3 {
+            bottom: 25%;
+            left: 5%;
+            color: #118ab2;
+            animation-delay: 2s;
+        }
+
+        .f4 {
+            bottom: 20%;
+            right: 10%;
+            color: #ffd166;
+            animation-delay: 3s;
+        }
+
+        .badge {
+            position: absolute;
+            top: -15px;
+            right: 30px;
+            background-color: #ef476f;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transform: rotate(10deg);
+            border: 4px solid #ffd166;
+        }
+
+        .sticker {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-color: #ffd166;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            border: 5px solid #ef476f;
+            transform: rotate(-15deg);
+        }
+
+        .sticker1 {
+            top: 20px;
+            left: 20px;
+        }
+
+        .sticker2 {
+            bottom: 20px;
+            right: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.2rem;
+            }
+
+            .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .tab {
+                min-width: 140px;
+                font-size: 1.1rem;
+                padding: 12px 20px;
+            }
+
+            .card-title {
+                font-size: 2rem;
+            }
+
+            .card-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 3rem;
+            }
+        }
+
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 20px;
+            margin: 20px 0;
+            height: 30px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #06d6a0, #118ab2);
+            border-radius: 20px;
+            width: 20%;
+            transition: width 1s;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-weight: bold;
+            color: #073b4c;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .achievement {
+            background-color: #ffd166;
+            border-radius: 20px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+            border: 5px solid #ef476f;
+            font-weight: bold;
+            color: #073b4c;
+            font-size: 1.3rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 浮动元素 -->
+    <div class="floating f1"><i class="fas fa-mountain"></i></div>
+    <div class="floating f2"><i class="fas fa-utensils"></i></div>
+    <div class="floating f3"><i class="fas fa-landmark"></i></div>
+    <div class="floating f4"><i class="fas fa-crown"></i></div>
+
+    <!-- 云朵背景 -->
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+    <div class="cloud cloud3"></div>
+
+    <!-- 页面头部 -->
+    <div class="header">
+        <div class="title-container">
+            <h1 class="title">西安探险乐园</h1>
+            <p class="subtitle">一起发现古都的秘密！</p>
+        </div>
+
+        <div class="guide-character">
+            <div class="robot">
+                <div class="robot-head">
+                    <div class="robot-eye left"></div>
+                    <div class="robot-eye right"></div>
+                    <div class="robot-mouth"></div>
+                </div>
+                <div class="robot-body"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 选项卡 -->
+    <div class="tabs-container">
+        <button class="tab active" data-tab="tab1">
+            <i class="fas fa-mountain"></i> 自然探险
+        </button>
+        <button class="tab" data-tab="tab2">
+            <i class="fas fa-cloud-sun"></i> 天气密码
+        </button>
+        <button class="tab" data-tab="tab3">
+            <i class="fas fa-music"></i> 文化宝藏
+        </button>
+        <button class="tab" data-tab="tab4">
+            <i class="fas fa-city"></i> 城市时光机
+        </button>
+        <button class="tab" data-tab="tab5">
+            <i class="fas fa-gem"></i> 历史宝盒
+        </button>
+    </div>
+
+    <!-- 进度条 -->
+    <div class="progress-text">探险进度: <span id="progressPercent">20%</span></div>
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- 内容区域 -->
+    <div class="content-area">
+        <div class="badge">小探险家</div>
+
+        <div class="sticker sticker1">
+            <i class="fas fa-star"></i>
+        </div>
+
+        <div class="sticker sticker2">
+            <i class="fas fa-heart"></i>
+        </div>
+
+        <!-- 自然地理内容 -->
+        <div class="content-card active" id="tab1">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-mountain"></i>
+                </div>
+                <h2 class="card-title">自然探险</h2>
+            </div>
+
+            <div class="card-content">
+                <div class="card-text">
+                    <p>西安就像一个大自然的游乐场！南边有高高的秦岭山脉，像一条巨龙保护着城市。北边是广阔的渭河平原，西安城就建在渭河旁边。</p>
+                    <p>古代有"八水绕长安"的说法，八条河流像八条丝带一样绕着城市，最后都流进了渭河。</p>
+
+                    <div class="fun-fact">
+                        <i class="fas fa-lightbulb"></i> 趣味知识：秦岭被称为"中国父亲山"，是南北方的分界线！
+                    </div>
+                </div>
+
+                <div class="card-image">
+                    <div class="image-placeholder">
+                        <i class="fas fa-water"></i>
+                    </div>
+                    <p>八条河流环绕西安的示意图</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 气候内容 -->
+        <div class="content-card" id="tab2">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-cloud-sun"></i>
+                </div>
+                <h2 class="card-title">天气密码</h2>
+            </div>
+
+            <div class="card-content">
+                <div class="card-text">
+                    <p>西安的天气就像魔术师一样会变戏法！春天温暖，夏天炎热，秋天凉爽，冬天寒冷，四季分明。</p>
+                    <p>十二月是深冬季节，天气非常冷，温度常在0℃左右，像一个大冰箱！这时候很少下雨下雪，大部分时间都是晴天。</p>
+
+                    <div class="fun-fact">
+                        <i class="fas fa-snowflake"></i> 趣味知识：西安夏天最热时能达到40℃，冬天最冷时能到-10℃！
+                    </div>
+                </div>
+
+                <div class="card-image">
+                    <div class="image-placeholder">
+                        <i class="fas fa-thermometer-full"></i>
+                    </div>
+                    <p>西安四季温度变化图</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 人文内容 -->
+        <div class="content-card" id="tab3">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-music"></i>
+                </div>
+                <h2 class="card-title">文化宝藏</h2>
+            </div>
+
+            <div class="card-content">
+                <div class="card-text">
+                    <p>西安有很多好玩的传统文化！秦腔是这里特有的戏曲，唱起来声音洪亮有力，像在"吼"一样！</p>
+                    <p>西安的美食多得数不清：肉夹馍就像中国的汉堡包，粉汤羊血又辣又香，面条有几十种做法！</p>
+                    <p>每年春节，街上会有热闹的社火表演，人们穿着鲜艳的衣服跳舞、敲锣打鼓，特别好玩！</p>
+
+                    <div class="fun-fact">
+                        <i class="fas fa-drumstick-bite"></i> 趣味知识：肉夹馍的意思是"肉夹在馍里"，但其实是"馍夹肉"哦！
+                    </div>
+                </div>
+
+                <div class="card-image">
+                    <div class="image-placeholder">
+                        <i class="fas fa-drum"></i>
+                    </div>
+                    <p>春节社火表演场景</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 城市发展内容 -->
+        <div class="content-card" id="tab4">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-city"></i>
+                </div>
+                <h2 class="card-title">城市时光机</h2>
+            </div>
+
+            <div class="card-content">
+                <div class="card-text">
+                    <p>西安是一座有3000多岁的老爷爷城市！曾经有13个朝代在这里建都，就像换了13次衣服一样。</p>
+                    <p>古代这里叫"长安"，意思是"长久平安"。唐朝时长安是世界上最繁华的城市，有100多万人居住！</p>
+                    <p>西安还是丝绸之路的起点，古代的商队从这里出发，把中国的丝绸、茶叶运到很远很远的地方。</p>
+
+                    <div class="fun-fact">
+                        <i class="fas fa-route"></i> 趣味知识：丝绸之路全长6400公里，相当于从北京到广州走3个来回！
+                    </div>
+                </div>
+
+                <div class="card-image">
+                    <div class="image-placeholder">
+                        <i class="fas fa-road"></i>
+                    </div>
+                    <p>古代丝绸之路地图</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 历史宝库内容 -->
+        <div class="content-card" id="tab5">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-gem"></i>
+                </div>
+                <h2 class="card-title">历史宝盒</h2>
+            </div>
+
+            <div class="card-content">
+                <div class="card-text">
+                    <p>西安就像一个大宝盒，装满了中国历史的宝贝！周文王、周武王在这里建立了周朝，唐太宗、唐玄宗开创了唐朝盛世。</p>
+                    <p>中国最早的诗歌总集《诗经》和最古老的政论《尚书》都诞生在这里。</p>
+                    <p>1936年的"西安事变"也发生在这里，张学良和杨虎城两位将军的勇敢举动，帮助中国人民团结起来对抗侵略者。</p>
+
+                    <div class="fun-fact">
+                        <i class="fas fa-book-open"></i> 趣味知识：《诗经》里有305首诗，最古老的已经有3000多年历史了！
+                    </div>
+                </div>
+
+                <div class="card-image">
+                    <div class="image-placeholder">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <p>《诗经》古代版本</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 互动区域 -->
+    <div class="interactive-area">
+        <button class="game-button" id="exploreGame">
+            <i class="fas fa-search"></i> 寻宝游戏
+        </button>
+        <button class="game-button" id="quizGame">
+            <i class="fas fa-question-circle"></i> 知识挑战
+        </button>
+        <button class="game-button" id="colorGame">
+            <i class="fas fa-palette"></i> 涂色乐园
+        </button>
+    </div>
+
+    <!-- 成就提示 -->
+    <div class="achievement" id="achievementMessage"></div>
+
+    <!-- 页脚 -->
+    <div class="footer">
+        <p>© 2023 西安探险乐园 - 儿童版</p>
+        <p>继续探索，收集所有知识徽章！</p>
+        <p>已解锁: <span id="unlockedCount">1</span>/5 个主题</p>
+    </div>
+
+    <script>
+        // 选项卡切换功能
+        const tabs = document.querySelectorAll('.tab');
+        const cards = document.querySelectorAll('.content-card');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+
+                // 更新活动选项卡
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // 显示对应内容卡片
+                cards.forEach(card => {
+                    card.classList.remove('active');
+                    if (card.id === tabId) {
+                        card.classList.add('active');
+                    }
+                });
+
+                // 更新进度
+                updateProgress();
+
+                // 显示成就
+                showAchievement(解锁了${getTabName(tabId)}知识！);
+            });
+        });
+
+        // 获取选项卡名称
+        function getTabName(tabId) {
+            const names = {
+                'tab1': '自然探险',
+                'tab2': '天气密码',
+                'tab3': '文化宝藏',
+                'tab4': '城市时光机',
+                'tab5': '历史宝盒'
+            };
+            return names[tabId] || '新知识';
+        }
+
+        // 更新进度条
+        function updateProgress() {
+            const activeTabs = document.querySelectorAll('.tab.active').length;
+            const progress = (activeTabs / tabs.length) * 100;
+
+            const progressBar = document.getElementById('progressBar');
+            const progressPercent = document.getElementById('progressPercent');
+            const unlockedCount = document.getElementById('unlockedCount');
+
+            progressBar.style.width = ${progress}%;
+            progressPercent.textContent = ${Math.round(progress)}%;
+            unlockedCount.textContent = activeTabs;
+        }
+
+        // 显示成就消息
+        function showAchievement(message) {
+            const achievement = document.getElementById('achievementMessage');
+            achievement.textContent = 🎉 成就达成: ${message};
+            achievement.style.display = 'block';
+
+            setTimeout(() => {
+                achievement.style.display = 'none';
+            }, 3000);
+        }
+
+        // 游戏按钮交互
+        document.getElementById('exploreGame').addEventListener('click', function() {
+            const randomFact = [
+                "西安有世界八大奇迹之一的秦始皇兵马俑！",
+                "大雁塔是唐朝时期修建的，用来保存从印度带回的佛经。",
+                "西安城墙是中国现存最完整的古代城墙，全长13.74公里！",
+                "钟楼和鼓楼是古代报时的地方，早上敲钟，晚上击鼓。",
+                "华清池是唐朝皇帝洗澡的地方，杨贵妃也在这里洗过澡哦！"
+            ][Math.floor(Math.random() * 5)];
+
+            alert(🔍 寻宝发现！\n\n${randomFact}\n\n继续探索发现更多宝藏！);
+        });
+
+        document.getElementById('quizGame').addEventListener('click', function() {
+            const question = "西安在唐朝时期叫什么名字？";
+            const options = "A. 北京\nB. 长安\nC. 南京\nD. 东京";
+
+            const answer = prompt(${question}\n\n${options}\n\n请输入答案 (A/B/C/D):);
+
+            if (answer && answer.toUpperCase() === 'B') {
+                alert("🎊 太棒了！答对了！\n\n唐朝时西安叫'长安'，是当时世界上最繁华的城市！");
+                showAchievement("历史小专家徽章获得！");
+            } else if (answer) {
+                alert("再想想看！提示：这个名称的意思是'长久平安'。");
+            }
+        });
+
+        document.getElementById('colorGame').addEventListener('click', function() {
+            const colors = ["#FF6B6B", "#4ECDC4", "#FFD166", "#06D6A0", "#118AB2", "#EF476F"];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+            document.body.style.background = linear-gradient(135deg, ${randomColor}20 0%, ${colors[(colors.indexOf(randomColor)+1)%colors.length]}20 100%);
+
+            alert(🎨 颜色已改变！\n\n现在背景是${getColorName(randomColor)}主题！\n\n再次点击可以换色！);
+        });
+
+        // 获取颜色名称
+        function getColorName(hex) {
+            const colors = {
+                "#FF6B6B": "红色",
+                "#4ECDC4": "青色",
+                "#FFD166": "黄色",
+                "#06D6A0": "绿色",
+                "#118AB2": "蓝色",
+                "#EF476F": "粉红色"
+            };
+            return colors[hex] || "彩色";
+        }
+
+        // 初始进度
+        updateProgress();
+
+        // 欢迎消息
+        setTimeout(() => {
+            alert("欢迎来到西安探险乐园！\n\n我是你的向导小机器人🤖\n\n点击上面的按钮探索西安的五个秘密，完成所有探索可以获得惊喜奖励！");
+        }, 800);
+
+        // 云朵动画
+        const clouds = document.querySelectorAll('.cloud');
+        clouds.forEach((cloud, index) => {
+            cloud.style.animation = float ${8 + index * 2}s infinite ease-in-out;
+        });
+    </script>
+</body>
+</html>
+
+文章素材
+12月12日 西安（双十二事变）
+自然地理
+西安市位于中国西北部，坐落在黄河流域中部的关中平原上。南倚巍峨的秦岭山脉，北临广袤的渭河平原，城市便建立在渭河之畔的阶地之上。这里自古有“八水绕长安”的美誉，河网密集，众多河流由南向北汇入渭河，共同塑造了这座城市山水相映的独特地理格局。
+
+气候时节
+西安市属于典型的暖温带半湿润大陆性季风气候，四季轮转呈现出鲜明而完整的韵律。西安的十二月，正值深冬严寒季节，城市笼罩在寒冷干燥的氛围中。此时寒风凛冽，气温常在冰点附近徘徊。降水稀少，天气以晴到多云为主，为古城平添了几分萧瑟与清冷。
+
+人文气息
+作为中国戏曲的重要声腔，秦腔在此地广为流传，独具韵味。饮食文化丰富多彩，以多样的面条、蒸馍和稀饭等面食为日常基础，更拥有肉夹馍、粉汤羊血等风味独特的特色美食。每年春节期间的社火巡游热闹非凡，这一古老的民俗活动融合了祈福、祭祀与娱乐，成为展现西安传统风貌的生动窗口。
+
+城市发展
+西安是中华文明的重要发祥地，拥有三千余年的建城史。历史上，曾有十多个朝代在此建都，孕育了璀璨的长安文化。从西周的“丰镐”、西汉的“长安”，到明代定名的“西安”，其名称变迁见证了古老的历史。这里不仅是古丝绸之路的起点，与罗马、雅典等古城齐名，如今更是一座融汇厚重历史与现代活力的国家中心城市和世界历史名城。
+
+城市宝库
+西安，作为周、秦、汉、唐等十三朝古都，是中华文明的重要一页。周文王、武王于此奠基，唐太宗、玄宗在此开创盛世；中国最早的诗歌总集《诗经》与政论《尚书》均诞生于此。至近代，1936年的“西安事变”在这里爆发，张学良、杨虎城两位将军在此发动兵谏，这一决定性的举动促成了抗日民族统一战线的形成，深刻改变了国家命运。
+
+西安事变旧址
+西安事变旧址由张学良公馆、杨虎城止园别墅、华清池五间厅等多处相关地点组成，完整记录了1936年震撼全国的历史事件。这里不仅见证了张学良、杨虎城促成“停止内战、一致抗日”的关键决策，也是研究近现代中国政治转折的重要场所。
+
+---
+大雁塔
+大雁塔坐落于西安市大慈恩寺内，由玄奘法师于652年主持修建，初建五层，后由武则天改为七层并沿袭至今。塔身以严格的方形楼阁式砖塔结构著称，不仅保存着高僧取经的文化记忆，还镶嵌着褚遂良书写的名碑，被誉为“二圣三绝”。
+
+---
+西安碑林
+西安碑林始建于北宋元祐二年，是中国最早的石刻艺术博物馆，也是收藏碑石数量最多、体系最完整的文化宝库。馆内珍藏万余件文物，包括国宝级石刻和书法名碑，其规模与价值在国内外均位居前列。
+
+---
+华清宫遗址
+华清宫遗址位于临潼骊山脚下，始建于唐贞观时期，是唐代皇帝利用温泉而设的著名行宫。遗址内出土了贵妃汤、御汤等多处皇家汤池及殿堂、回廊等建筑遗迹，重现了盛唐宫苑的宏大格局。<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>西安探险乐园</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', '幼圆', 'Arial Rounded MT Bold', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #a2d2ff 0%, #ffafcc 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        .cloud {
+            position: fixed;
+            background-color: white;
+            border-radius: 50px;
+            z-index: -1;
+            opacity: 0.7;
+        }
+
+        .cloud1 {
+            width: 150px;
+            height: 60px;
+            top: 10%;
+            left: 5%;
+        }
+
+        .cloud2 {
+            width: 200px;
+            height: 80px;
+            top: 20%;
+            right: 8%;
+        }
+
+        .cloud3 {
+            width: 120px;
+            height: 50px;
+            bottom: 20%;
+            left: 10%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .title-container {
+            background-color: #ffd166;
+            border-radius: 50px;
+            padding: 20px 40px;
+            display: inline-block;
+            margin-bottom: 20px;
+            border: 8px solid #ef476f;
+            box-shadow: 0 10px 0 #c1121f;
+            transform: rotate(-2deg);
+        }
+
+        .title {
+            color: #073b4c;
+            font-size: 3.2rem;
+            text-shadow: 3px 3px 0 #06d6a0;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            color: #118ab2;
+            font-size: 1.6rem;
+            font-weight: bold;
+        }
+
+        .guide-character {
+            position: absolute;
+            right: 10%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 120px;
+            display: none;
+        }
+
+        @media (min-width: 1100px) {
+            .guide-character {
+                display: block;
+            }
+        }
+
+        .robot {
+            position: relative;
+            width: 100%;
+            height: 150px;
+        }
+
+        .robot-head {
+            width: 80px;
+            height: 80px;
+            background-color: #ef476f;
+            border-radius: 30px;
+            margin: 0 auto;
+            position: relative;
+            border: 5px solid #073b4c;
+        }
+
+        .robot-eye {
+            width: 20px;
+            height: 25px;
+            background-color: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 25px;
+            border: 3px solid #073b4c;
+        }
+
+        .robot-eye.left {
+            left: 15px;
+        }
+
+        .robot-eye.right {
+            right: 15px;
+        }
+
+        .robot-eye::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #06d6a0;
+            border-radius: 50%;
+            top: 5px;
+            left: 3px;
+        }
+
+        .robot-mouth {
+            width: 40px;
+            height: 10px;
+            background-color: #073b4c;
+            border-radius: 10px;
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .robot-body {
+            width: 100px;
+            height: 70px;
+            background-color: #118ab2;
+            border-radius: 20px;
+            margin: 0 auto;
+            border: 5px solid #073b4c;
+            border-top: none;
+        }
+
+        .tabs-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            background-color: #06d6a0;
+            color: #073b4c;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 6px 0 #04966d;
+            min-width: 180px;
+            justify-content: center;
+        }
+
+        .tab:hover {
+            background-color: #0ee9b6;
+            transform: translateY(3px);
+            box-shadow: 0 3px 0 #04966d;
+        }
+
+        .tab.active {
+            background-color: #ef476f;
+            color: white;
+            box-shadow: 0 6px 0 #c1121f;
+        }
+
+        .tab.active:hover {
+            background-color: #f56a8d;
+            box-shadow: 0 3px 0 #c1121f;
+        }
+
+        .content-area {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 40px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 10px solid #ffd166;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            min-height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-card {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .content-card.active {
+            display: block;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            gap: 20px;
+        }
+
+        .card-icon {
+            font-size: 4rem;
+            width: 100px;
+            height: 100px;
+            background-color: #a2d2ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 8px solid #118ab2;
+        }
+
+        .card-title {
+            color: #073b4c;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 0 #ffd166;
+        }
+
+        .card-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .card-text {
+            flex: 1;
+            min-width: 300px;
+            font-size: 1.3rem;
+            line-height: 1.8;
+            color: #073b4c;
+            padding-right: 20px;
+        }
+
+        .card-image {
+            flex: 1;
+            min-width: 300px;
+            background-color: #cbf3f0;
+            border-radius: 30px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 5px dashed #06d6a0;
+        }
+
+        .image-placeholder {
+            width: 100%;
+            height: 200px;
+            background-color: #ffd166;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 5rem;
+            color: #ef476f;
+        }
+
+        .fun-fact {
+            background-color: #ffd166;
+            padding: 15px;
+            border-radius: 20px;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #073b4c;
+            font-size: 1.2rem;
+            border: 4px dotted #ef476f;
+        }
+
+        .interactive-area {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .game-button {
+            background-color: #ef476f;
+            color: white;
+            border: none;
+            padding: 18px 30px;
+            border-radius: 40px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 0 #c1121f;
+        }
+
+        .game-button:hover {
+            background-color: #f56a8d;
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #c1121f;
+        }
+
+        .game-button:nth-child(2) {
+            background-color: #118ab2;
+            box-shadow: 0 8px 0 #0a5a75;
+        }
+
+        .game-button:nth-child(2):hover {
+            background-color: #1aa3d1;
+            box-shadow: 0 4px 0 #0a5a75;
+        }
+
+        .game-button:nth-child(3) {
+            background-color: #06d6a0;
+            box-shadow: 0 8px 0 #04966d;
+        }
+
+        .game-button:nth-child(3):hover {
+            background-color: #0ee9b6;
+            box-shadow: 0 4px 0 #04966d;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 25px;
+            background-color: #073b4c;
+            border-radius: 30px;
+            color: white;
+        }
+
+        .footer p {
+            margin: 10px 0;
+            font-size: 1.2rem;
+        }
+
+        .floating {
+            position: fixed;
+            font-size: 2.5rem;
+            z-index: -1;
+            animation: float 6s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+
+        .f1 {
+            top: 15%;
+            left: 3%;
+            color: #ef476f;
+            animation-delay: 0s;
+        }
+
+        .f2 {
+            top: 20%;
+            right: 5%;
+            color: #06d6a0;
+            animation-delay: 1s;
+        }
+
+        .f3 {
+            bottom: 25%;
+            left: 5%;
+            color: #118ab2;
+            animation-delay: 2s;
+        }
+
+        .f4 {
+            bottom: 20%;
+            right: 10%;
+            color: #ffd166;
+            animation-delay: 3s;
+        }
+
+        .badge {
+            position: absolute;
+            top: -15px;
+            right: 30px;
+            background-color: #ef476f;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transform: rotate(10deg);
+            border: 4px solid #ffd166;
+        }
+
+        .sticker {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-color: #ffd166;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            border: 5px solid #ef476f;
+            transform: rotate(-15deg);
+        }
+
+        .sticker1 {
+            top: 20px;
+            left: 20px;
+        }
+
+        .sticker2 {
+            bottom: 20px;
+            right: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.2rem;
+            }
+
+            .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .tab {
+                min-width: 140px;
+                font-size: 1.1rem;
+                padding: 12px 20px;
+            }
+
+            .card-title {
+                font-size: 2rem;
+            }
+
+            .card-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 3rem;
+            }
+        }
+
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 20px;
+            margin: 20px 0;
+            height: 30px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #06d6a0, #118ab2);
+            border-radius: 20px;
+            width: 20%;
+            transition: width 1s;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-weight: bold;
+            color: #073b4c;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .achievement {
+            background-color: #ffd166;
+            border-radius: 20px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+            border: 5px solid #ef476f;
+            font-weight: bold;
+            color: #073b4c;
+            font-size: 1.3rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 浮动元素 -->
+    <div class="floating f1"><i class="fas fa-mountain"></i></div>
+    <div class="floating f2"><i class="fas fa-utensils"></i></div>
+    <div class="floating f3"><i class="fas fa-landmark"></i></div>
+    <div class="floating f4"><i class="fas fa-crown"></i></div>
+
+    <!-- 云朵背景 -->
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+    <div class="cloud cloud3"></div>
+
+    <!-- 页面头部 -->
+    <div class="header">
+        <div class="title-container">
+            <h1 class="title">西安探险乐园</h1>
+            <p class="subtitle">一起发现古都的秘密！</p>
+        </div>
+
+        <div class="guide-character">
+            <div class="robot">
+                <div class="robot-head">
+                    <div class="robot-eye left"></div>
+                    <div class="robot-eye right"></div>
+                    <div class="robot-mouth"></div>
+                </div>
+                <div class="robot-body"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 选项卡 -->
+    <div class="tabs-container">
+        <button class="tab active" data-tab="tab1">
+            <i class="fas fa-mountain"></i> 自然探险
+        </button>
+        <button class="tab" data-tab="tab2">
+            <i class="fas fa-cloud-sun"></i> 天气密码
+        </button>
+        <button class="tab" data-tab="tab3">
+            <i class="fas fa-music"></i> 文化宝藏
+        </button>
+        <button class="tab" data-tab="tab4">
+            <i class="fas fa-city"></i> 城市时光机
+        </button>
+        <button class="tab" data-tab="tab5">
+            <i class="fas fa-gem"></i> 历史宝盒
+        </button>
+    </div>
+
+    <!-- 进度条 -->
+    <div class="progress-text">探险进度: <span id="progressPercent">20%</span></div>
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- 内容区域 -->
+    <div class="content-area">
+        <div class="badge">小探险家</div>
+
+        <div class="sticker sticker1">
+            <i class="fas fa-star"></i>
+        </div>
+
+        <div class="sticker sticker2">
+            <i class="fas fa-heart"></i>
+        </div>
+
+        <!-- 自然地理内容 -->
+        <div class="content-card active" id="tab1">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-mountain"></i>
+                </div>
+                <h2 class="card-title">自然探险</h2>
+            </div>
+
+            <div class="card-content">
+                <div class="card-text">
+                    <p>西安就像一个大自然的游乐场！南边有高高的秦岭山脉，像一条巨龙保护着城市。北边是广阔的渭河平原，西安城就建在渭河旁边。</p>
+                    <p>古代有"八水绕长安"的说法，八条河流像八条丝带一样绕着城市，最后都流进了渭河。</p>
+
+                    <div class="fun-fact">
+                        <i class="fas fa-lightbulb"></i> 趣味知识：秦岭被称为"中国父亲山"，是南北方的分界线！
+                    </div>
+                </div>
+
+                <div class="card-image">
+                    <div class="image-placeholder">
+                        <i class="fas fa-water"></i>
+                    </div>
+                    <p>八条河流环绕西安的示意图</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 气候内容 -->
+        <div class="content-card" id="tab2">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-cloud-sun"></i>
+                </div>
+                <h2 class="card-title">天气密码</h2>
+            </div>
+
+            <div class="card-content">
+                <div class="card-text">
+                    <p>西安的天气就像魔术师一样会变戏法！春天温暖，夏天炎热，秋天凉爽，冬天寒冷，四季分明。</p>
+                    <p>十二月是深冬季节，天气非常冷，温度常在0℃左右，像一个大冰箱！这时候很少下雨下雪，大部分时间都是晴天。</p>
+
+                    <div class="fun-fact">
+                        <i class="fas fa-snowflake"></i> 趣味知识：西安夏天最热时能达到40℃，冬天最冷时能到-10℃！
+                    </div>
+                </div>
+
+                <div class="card-image">
+                    <div class="image-placeholder">
+                        <i class="fas fa-thermometer-full"></i>
+                    </div>
+                    <p>西安四季温度变化图</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 人文内容 -->
+        <div class="content-card" id="tab3">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-music"></i>
+                </div>
+                <h2 class="card-title">文化宝藏</h2>
+            </div>
+
+            <div class="card-content">
+                <div class="card-text">
+                    <p>西安有很多好玩的传统文化！秦腔是这里特有的戏曲，唱起来声音洪亮有力，像在"吼"一样！</p>
+                    <p>西安的美食多得数不清：肉夹馍就像中国的汉堡包，粉汤羊血又辣又香，面条有几十种做法！</p>
+                    <p>每年春节，街上会有热闹的社火表演，人们穿着鲜艳的衣服跳舞、敲锣打鼓，特别好玩！</p>
+
+                    <div class="fun-fact">
+                        <i class="fas fa-drumstick-bite"></i> 趣味知识：肉夹馍的意思是"肉夹在馍里"，但其实是"馍夹肉"哦！
+                    </div>
+                </div>
+
+                <div class="card-image">
+                    <div class="image-placeholder">
+                        <i class="fas fa-drum"></i>
+                    </div>
+                    <p>春节社火表演场景</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 城市发展内容 -->
+        <div class="content-card" id="tab4">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-city"></i>
+                </div>
+                <h2 class="card-title">城市时光机</h2>
+            </div>
+
+            <div class="card-content">
+                <div class="card-text">
+                    <p>西安是一座有3000多岁的老爷爷城市！曾经有13个朝代在这里建都，就像换了13次衣服一样。</p>
+                    <p>古代这里叫"长安"，意思是"长久平安"。唐朝时长安是世界上最繁华的城市，有100多万人居住！</p>
+                    <p>西安还是丝绸之路的起点，古代的商队从这里出发，把中国的丝绸、茶叶运到很远很远的地方。</p>
+
+                    <div class="fun-fact">
+                        <i class="fas fa-route"></i> 趣味知识：丝绸之路全长6400公里，相当于从北京到广州走3个来回！
+                    </div>
+                </div>
+
+                <div class="card-image">
+                    <div class="image-placeholder">
+                        <i class="fas fa-road"></i>
+                    </div>
+                    <p>古代丝绸之路地图</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 历史宝库内容 -->
+        <div class="content-card" id="tab5">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-gem"></i>
+                </div>
+                <h2 class="card-title">历史宝盒</h2>
+            </div>
+
+            <div class="card-content">
+                <div class="card-text">
+                    <p>西安就像一个大宝盒，装满了中国历史的宝贝！周文王、周武王在这里建立了周朝，唐太宗、唐玄宗开创了唐朝盛世。</p>
+                    <p>中国最早的诗歌总集《诗经》和最古老的政论《尚书》都诞生在这里。</p>
+                    <p>1936年的"西安事变"也发生在这里，张学良和杨虎城两位将军的勇敢举动，帮助中国人民团结起来对抗侵略者。</p>
+
+                    <div class="fun-fact">
+                        <i class="fas fa-book-open"></i> 趣味知识：《诗经》里有305首诗，最古老的已经有3000多年历史了！
+                    </div>
+                </div>
+
+                <div class="card-image">
+                    <div class="image-placeholder">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <p>《诗经》古代版本</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 互动区域 -->
+    <div class="interactive-area">
+        <button class="game-button" id="exploreGame">
+            <i class="fas fa-search"></i> 寻宝游戏
+        </button>
+        <button class="game-button" id="quizGame">
+            <i class="fas fa-question-circle"></i> 知识挑战
+        </button>
+        <button class="game-button" id="colorGame">
+            <i class="fas fa-palette"></i> 涂色乐园
+        </button>
+    </div>
+
+    <!-- 成就提示 -->
+    <div class="achievement" id="achievementMessage"></div>
+
+    <!-- 页脚 -->
+    <div class="footer">
+        <p>© 2023 西安探险乐园 - 儿童版</p>
+        <p>继续探索，收集所有知识徽章！</p>
+        <p>已解锁: <span id="unlockedCount">1</span>/5 个主题</p>
+    </div>
+
+    <script>
+        // 选项卡切换功能
+        const tabs = document.querySelectorAll('.tab');
+        const cards = document.querySelectorAll('.content-card');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+
+                // 更新活动选项卡
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // 显示对应内容卡片
+                cards.forEach(card => {
+                    card.classList.remove('active');
+                    if (card.id === tabId) {
+                        card.classList.add('active');
+                    }
+                });
+
+                // 更新进度
+                updateProgress();
+
+                // 显示成就
+                showAchievement(解锁了${getTabName(tabId)}知识！);
+            });
+        });
+
+        // 获取选项卡名称
+        function getTabName(tabId) {
+            const names = {
+                'tab1': '自然探险',
+                'tab2': '天气密码',
+                'tab3': '文化宝藏',
+                'tab4': '城市时光机',
+                'tab5': '历史宝盒'
+            };
+            return names[tabId] || '新知识';
+        }
+
+        // 更新进度条
+        function updateProgress() {
+            const activeTabs = document.querySelectorAll('.tab.active').length;
+            const progress = (activeTabs / tabs.length) * 100;
+
+            const progressBar = document.getElementById('progressBar');
+            const progressPercent = document.getElementById('progressPercent');
+            const unlockedCount = document.getElementById('unlockedCount');
+
+            progressBar.style.width = ${progress}%;
+            progressPercent.textContent = ${Math.round(progress)}%;
+            unlockedCount.textContent = activeTabs;
+        }
+
+        // 显示成就消息
+        function showAchievement(message) {
+            const achievement = document.getElementById('achievementMessage');
+            achievement.textContent = 🎉 成就达成: ${message};
+            achievement.style.display = 'block';
+
+            setTimeout(() => {
+                achievement.style.display = 'none';
+            }, 3000);
+        }
+
+        // 游戏按钮交互
+        document.getElementById('exploreGame').addEventListener('click', function() {
+            const randomFact = [
+                "西安有世界八大奇迹之一的秦始皇兵马俑！",
+                "大雁塔是唐朝时期修建的，用来保存从印度带回的佛经。",
+                "西安城墙是中国现存最完整的古代城墙，全长13.74公里！",
+                "钟楼和鼓楼是古代报时的地方，早上敲钟，晚上击鼓。",
+                "华清池是唐朝皇帝洗澡的地方，杨贵妃也在这里洗过澡哦！"
+            ][Math.floor(Math.random() * 5)];
+
+            alert(🔍 寻宝发现！\n\n${randomFact}\n\n继续探索发现更多宝藏！);
+        });
+
+        document.getElementById('quizGame').addEventListener('click', function() {
+            const question = "西安在唐朝时期叫什么名字？";
+            const options = "A. 北京\nB. 长安\nC. 南京\nD. 东京";
+
+            const answer = prompt(${question}\n\n${options}\n\n请输入答案 (A/B/C/D):);
+
+            if (answer && answer.toUpperCase() === 'B') {
+                alert("🎊 太棒了！答对了！\n\n唐朝时西安叫'长安'，是当时世界上最繁华的城市！");
+                showAchievement("历史小专家徽章获得！");
+            } else if (answer) {
+                alert("再想想看！提示：这个名称的意思是'长久平安'。");
+            }
+        });
+
+        document.getElementById('colorGame').addEventListener('click', function() {
+            const colors = ["#FF6B6B", "#4ECDC4", "#FFD166", "#06D6A0", "#118AB2", "#EF476F"];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+            document.body.style.background = linear-gradient(135deg, ${randomColor}20 0%, ${colors[(colors.indexOf(randomColor)+1)%colors.length]}20 100%);
+
+            alert(🎨 颜色已改变！\n\n现在背景是${getColorName(randomColor)}主题！\n\n再次点击可以换色！);
+        });
+
+        // 获取颜色名称
+        function getColorName(hex) {
+            const colors = {
+                "#FF6B6B": "红色",
+                "#4ECDC4": "青色",
+                "#FFD166": "黄色",
+                "#06D6A0": "绿色",
+                "#118AB2": "蓝色",
+                "#EF476F": "粉红色"
+            };
+            return colors[hex] || "彩色";
+        }
+
+        // 初始进度
+        updateProgress();
+
+        // 欢迎消息
+        setTimeout(() => {
+            alert("欢迎来到西安探险乐园！\n\n我是你的向导小机器人🤖\n\n点击上面的按钮探索西安的五个秘密，完成所有探索可以获得惊喜奖励！");
+        }, 800);
+
+        // 云朵动画
+        const clouds = document.querySelectorAll('.cloud');
+        clouds.forEach((cloud, index) => {
+            cloud.style.animation = float ${8 + index * 2}s infinite ease-in-out;
+        });
+    </script>
+</body>
+</html>

@@ -2887,11 +2887,73 @@
   display: flex;
   justify-content: space-between;
   padding: 20rpx 30rpx;
-  background-color: #fff;
-  border-bottom: 1rpx solid #eee;
+}
+
+/* 城市详情 Tab 导航 */
+.city-tabs-container {
+  display: flex;
+  white-space: nowrap;
+  padding: 20rpx 20rpx 30rpx;
+  background-color: #fffcf0;
+  z-index: 10;
   position: sticky;
   top: 0;
-  z-index: 100;
+  border-bottom: 1rpx solid rgba(0,0,0,0.05);
+}
+
+/* 隐藏滚动条 - 针对不同平台 */
+.city-tabs-container::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  color: transparent;
+}
+
+.city-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 30rpx;
+  margin-right: 20rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #073b4c;
+  background-color: #fff;
+  box-shadow: 0 6rpx 0 rgba(0,0,0,0.1);
+  transition: all 0.2s;
+  border: 2rpx solid rgba(0,0,0,0.05);
+}
+
+.city-tab:last-child {
+  margin-right: 20rpx; /* 确保最后一个元素也有右边距 */
+}
+
+.city-tab.active {
+  color: #fff;
+  transform: translateY(4rpx);
+  box-shadow: 0 2rpx 0 rgba(0,0,0,0.2) !important; /* 强制覆盖 */
+}
+
+.tab-icon {
+  margin-right: 10rpx;
+  font-size: 32rpx;
+}
+
+/* 隐藏原有板块样式，改为 Tab 切换显示 */
+.info-section {
+  display: none; /* 默认隐藏所有板块 */
+  margin-top: 10rpx;
+}
+
+.info-section.tab-active {
+  display: block; /* 仅显示激活的板块 */
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20rpx); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .action-btn {

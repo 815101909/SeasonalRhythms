@@ -258,11 +258,29 @@
         </view>
       </view>
       
-      <scroll-view scroll-y="{{isVIP || !showMembershipLock}}" class="city-info-scroll" enhanced="true" show-scrollbar="true" bounces="true" bindscroll="onContentScroll">
+      <scroll-view scroll-y="{{isVIP || !showMembershipLock}}" class="city-info-scroll" enhanced="true" show-scrollbar="true" bounces="true" bindscroll="onContentScroll" scroll-top="{{scrollTop}}">
+        <!-- Tab 导航栏 -->
+        <scroll-view scroll-x class="city-tabs-container" wx:if="{{!showCityMuseum}}">
+          <view class="city-tab {{currentCityTab === item.id ? 'active' : ''}}" 
+                wx:for="{{cityTabs}}" 
+                wx:key="id" 
+                bindtap="switchCityTab" 
+                data-id="{{item.id}}"
+                style="{{currentCityTab === item.id ? 'background-color:' + item.color + '; border-color:' + item.color : ''}}">
+            <!-- 使用emoji代替font-awesome图标，因为小程序可能未引入 -->
+            <text wx:if="{{item.id === 'nature'}}" class="tab-icon">🏔️</text>
+            <text wx:if="{{item.id === 'climate'}}" class="tab-icon">⛅</text>
+            <text wx:if="{{item.id === 'culture'}}" class="tab-icon">🎵</text>
+            <text wx:if="{{item.id === 'structure'}}" class="tab-icon">🏙️</text>
+            <text wx:if="{{item.id === 'treasures'}}" class="tab-icon">💎</text>
+            <text>{{item.name}}</text>
+          </view>
+        </scroll-view>
+
         <!-- 城市详情内容 - 只在城市详情模式显示 -->
         <block wx:if="{{!showCityMuseum}}">
           <!-- 自然地理板块 -->
-          <view class="info-section {{isVIP && sectionAnimations[0] ? 'section-visible' : ''}} {{isVIP ? '' : 'no-animation'}}" data-index="0" id="section-0">
+          <view class="info-section {{currentCityTab === 'nature' ? 'tab-active' : ''}}" data-index="0" id="section-0">
             <view class="info-content-wrapper">
               <image class="floating-image nature-image" src="{{selectedCity.natureImage}}" mode="aspectFill" wx:if="{{selectedCity.natureImage}}"></image>
               <view class="floating-image-placeholder nature-image" wx:else></view>
@@ -273,7 +291,7 @@
           </view>
           
           <!-- 气候时节板块 -->
-          <view class="info-section {{isVIP && sectionAnimations[1] ? 'section-visible' : ''}} {{isVIP ? '' : 'no-animation'}}" data-index="1" id="section-1">
+          <view class="info-section {{currentCityTab === 'climate' ? 'tab-active' : ''}}" data-index="1" id="section-1">
             <view class="info-content-wrapper">
               <image class="floating-image climate-image" src="{{selectedCity.climateImage}}" mode="aspectFill" wx:if="{{selectedCity.climateImage}}"></image>
               <view class="floating-image-placeholder climate-image" wx:else></view>
@@ -284,7 +302,7 @@
           </view>
           
           <!-- 人文气息板块 -->
-          <view class="info-section {{isVIP && sectionAnimations[2] ? 'section-visible' : ''}} {{isVIP ? '' : 'no-animation'}}" data-index="2" id="section-2">
+          <view class="info-section {{currentCityTab === 'culture' ? 'tab-active' : ''}}" data-index="2" id="section-2">
             <view class="info-content-wrapper">
               <image class="floating-image culture-image" src="{{selectedCity.cultureImage}}" mode="aspectFill" wx:if="{{selectedCity.cultureImage}}"></image>
               <view class="floating-image-placeholder culture-image" wx:else></view>
@@ -295,7 +313,7 @@
           </view>
           
           <!-- 城市脉络板块 -->
-          <view class="info-section {{isVIP && sectionAnimations[3] ? 'section-visible' : ''}} {{isVIP ? '' : 'no-animation'}}" data-index="3" id="section-3">
+          <view class="info-section {{currentCityTab === 'structure' ? 'tab-active' : ''}}" data-index="3" id="section-3">
             <view class="info-content-wrapper">
               <image class="floating-image city-history-image" src="{{selectedCity.cityStructureImage}}" mode="aspectFill" wx:if="{{selectedCity.cityStructureImage}}"></image>
               <view class="floating-image-placeholder city-history-image" wx:else></view>
@@ -306,7 +324,7 @@
           </view>
           
           <!-- 街巷宝库板块 -->
-          <view class="info-section {{isVIP && sectionAnimations[4] ? 'section-visible' : ''}} {{isVIP ? '' : 'no-animation'}}" data-index="4" id="section-4" style="padding-bottom: 60rpx;">
+          <view class="info-section {{currentCityTab === 'treasures' ? 'tab-active' : ''}}" data-index="4" id="section-4" style="padding-bottom: 60rpx;">
             <view class="info-content-wrapper">
               <image class="floating-image treasure-image" src="{{selectedCity.streetTreasuresImage}}" mode="aspectFill" wx:if="{{selectedCity.streetTreasuresImage}}"></image>
               <view class="floating-image-placeholder treasure-image" wx:else></view>

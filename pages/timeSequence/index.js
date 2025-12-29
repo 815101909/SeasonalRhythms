@@ -1121,6 +1121,16 @@ Page({
     lastScrollTop: 0, // 上次滚动位置
     currentFontSize: 32,
     fontSizeStyle: `--content-font-size: 32rpx;`,
+    
+    // 城市详情 Tab 相关
+    currentCityTab: 'nature',
+    cityTabs: [
+      { id: 'nature', name: '自然地理', icon: 'fas fa-mountain', color: '#06d6a0' },
+      { id: 'climate', name: '气候时节', icon: 'fas fa-cloud-sun', color: '#118ab2' },
+      { id: 'culture', name: '人文气息', icon: 'fas fa-music', color: '#ef476f' },
+      { id: 'structure', name: '城市脉络', icon: 'fas fa-city', color: '#ffd166' },
+      { id: 'treasures', name: '街巷宝库', icon: 'fas fa-gem', color: '#073b4c' }
+    ],
   },
 
   /**
@@ -1312,63 +1322,22 @@ Page({
   
   // 检测板块是否进入视口
   checkSectionVisibility(scrollTop) {
-    const query = wx.createSelectorQuery().in(this);
-    const sectionAnimations = [...this.data.sectionAnimations];
-    let hasUpdate = false;
-    
-    // 记录哪些板块需要查询（用于后续索引映射）
-    const sectionsToQuery = [];
-    
-    // 检查每个板块
-    for (let i = 0; i < 5; i++) {
-      // 如果该板块动画已触发，跳过
-      if (sectionAnimations[i]) continue;
-      
-      sectionsToQuery.push(i);
-      query.select(`#section-${i}`).boundingClientRect();
+    // Tab模式下不需要滚动检测板块可见性，直接显示
+    return;
+  },
+
+  // 切换城市详情Tab
+  switchCityTab: function(e) {
+    const tabId = e.currentTarget.dataset.id;
+    if (tabId && tabId !== this.data.currentCityTab) {
+      this.setData({
+        currentCityTab: tabId
+      });
+      // 切换Tab时滚动回顶部
+      this.setData({
+        scrollTop: 0
+      });
     }
-    
-    // 如果没有需要查询的板块，直接返回
-    if (sectionsToQuery.length === 0) return;
-    
-    query.selectViewport().scrollOffset();
-    
-    query.exec((res) => {
-      if (!res || res.length === 0) return;
-      
-      // 获取视口信息（最后一个元素）
-      const viewportInfo = res[res.length - 1];
-      const windowInfo = wx.getWindowInfo();
-      const windowHeight = windowInfo.windowHeight;
-      
-      // 检查每个板块的位置
-      for (let i = 0; i < res.length - 1; i++) {
-        const rect = res[i];
-        if (!rect) continue;
-        
-        // 找到对应的板块索引（使用映射数组）
-        const sectionIndex = sectionsToQuery[i];
-        
-        // 如果该板块已经触发过动画，跳过
-        if (sectionAnimations[sectionIndex]) continue;
-        
-        // 计算板块是否进入视口
-        // 当板块顶部距离视口底部小于80%窗口高度时触发
-        const threshold = windowHeight * 0.8;
-        if (rect.top < threshold && rect.top + rect.height > 0) {
-          sectionAnimations[sectionIndex] = true;
-          hasUpdate = true;
-          console.log(`板块 ${sectionIndex} 触发动画`);
-        }
-      }
-      
-      // 如果有更新，更新数据
-      if (hasUpdate) {
-        this.setData({
-          sectionAnimations: sectionAnimations
-        });
-      }
-    });
   },
    
    // 点击会员锁定区域
