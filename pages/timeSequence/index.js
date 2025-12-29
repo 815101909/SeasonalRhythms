@@ -1382,7 +1382,7 @@ Page({
   },
 
   // 切换城市详情Tab
-  switchCityTab: function(e) {
+  switchCityTab: async function(e) {
     const tabId = e.currentTarget.dataset.id;
     if (tabId && tabId !== this.data.currentCityTab) {
       // 更新已访问的 Tab 列表和进度
@@ -1406,6 +1406,28 @@ Page({
       this.setData({
         scrollTop: 0
       });
+
+      const city = this.data.selectedCity;
+      const rawUrl = this.getSectionAudioRawUrl(city, tabId);
+      if (this.data.isPlaying && this.data.currentPlayingSection !== tabId && this.data.audioContext) {
+        this.data.audioContext.pause();
+        this.setData({ isPlaying: false, currentPlayingSection: null });
+      }
+      if (rawUrl) {
+        if (!this.data.audioContext) {
+          await this.initAudioContext(rawUrl);
+        } else {
+          try {
+            const audioSrc = await getTemporaryImageUrl(rawUrl, 'audio');
+            if (audioSrc) {
+              this.data.audioContext.stop();
+              this.data.audioContext.src = audioSrc;
+            }
+          } catch (err) {
+            wx.showToast({ title: '音频加载失败', icon: 'none' });
+          }
+        }
+      }
     }
   },
    
