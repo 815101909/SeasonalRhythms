@@ -355,34 +355,10 @@
   flex-shrink: 0;
   min-height: 230rpx;
   max-height: 230rpx;
-  /* 过渡动画 */
-  transition: opacity 0.3s ease, transform 0.3s ease, height 0.3s ease, margin-top 0.3s ease, margin-bottom 0.3s ease, min-height 0.3s ease, max-height 0.3s ease;
-  animation: media-slide-in 0.3s ease-out;
   overflow: hidden;
 }
 
-.media-container.collapsed {
-  height: 0;
-  min-height: 0;
-  max-height: 0;
-  margin-top: 0;
-  margin-bottom: 0;
-  opacity: 0;
-  transform: translateY(-20rpx);
-  pointer-events: none;
-}
-
-/* 封面视频入场动画 */
-@keyframes media-slide-in {
-  from {
-    opacity: 0;
-    transform: translateY(-20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* 取消旧的隐藏动画与入场动画，简化为直接显示/隐藏 */
 
 /* 封面样式 */
 .city-detail-header {
@@ -4185,6 +4161,7 @@
   bottom: 100%;
   left: 0;
   right: 0;
+  z-index: 30;
   background: rgba(255, 255, 255, 0.98);
   border-top: 1rpx solid #e0e0e0;
   padding: 20rpx;
@@ -5005,6 +4982,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
   border: 3rpx dashed #FFC107;
   background-color: rgba(255, 255, 255, 0.24);
   -webkit-backdrop-filter: saturate(160%) blur(12px);
@@ -5016,7 +4994,7 @@
 .audio-bg-band {
   margin: 16rpx 20rpx 0;
   border-radius: 14rpx;
-  overflow: hidden;
+  overflow: visible;
 }
 .audio-bg-band > .section-audio-bar {
   margin: 0;

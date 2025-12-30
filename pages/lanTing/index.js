@@ -132,6 +132,19 @@ Page({
       userAnswer: ''
     }
   },
+  
+  onTabItemTap(item) {
+    try {
+      const c = wx.createInnerAudioContext();
+      c.obeyMuteSwitch = false;
+      c.autoplay = false;
+      c.src = '/static/click.wav';
+      c.volume = 0.5;
+      c.play();
+      c.onEnded(() => { c.destroy(); });
+      c.onError(() => { c.destroy(); });
+    } catch (e) {}
+  },
 
   /**
    * 生命周期函数--监听页面加载
@@ -490,6 +503,7 @@ Page({
    * 选择阵营
    */
   selectFaction(e) {
+    this.playClickSound();
     console.log('selectFaction 被调用');
     const faction = e.currentTarget.dataset.faction;
     console.log('选择的阵营:', faction);
@@ -620,6 +634,7 @@ Page({
    * 阵营PK入口点击事件
    */
   async navigateToPK() {
+    this.playClickSound();
     // 检查用户是否已登录
     const userInfo = wx.getStorageSync('userInfo');
     if (!userInfo || !userInfo.openid) {
@@ -923,6 +938,7 @@ Page({
    * 返回选择阵营页面
    */
   backToHome() {
+    this.playClickSound();
     this.setData({
       currentState: 'home',
       selectedFaction: '',
@@ -1086,6 +1102,7 @@ Page({
    * 选择答案选项
    */
   selectOption(e) {
+    this.playClickSound();
     const optionIndex = e.currentTarget.dataset.optionIndex;
     const currentQuestion = this.data.currentQuestion;
     
@@ -1133,6 +1150,7 @@ Page({
    * 提交答案
    */
   submitAnswer() {
+    this.playClickSound();
     const { questionType, currentQuestion, selectedOption, selectedOptions, currentQuestionIndex, currentQuestionList, fillAnswers } = this.data;
     
     let isCorrect = false;
@@ -1452,6 +1470,7 @@ Page({
    * 开始训练
    */
   startTraining(e) {
+    this.playClickSound();
     // 检查用户是否已登录
     const userInfo = wx.getStorageSync('userInfo');
     if (!userInfo || !userInfo.openid) {
@@ -1879,6 +1898,7 @@ Page({
    * 关闭结果弹窗
    */
   closeResult() {
+    this.playClickSound();
     this.setData({
       showResult: false
     });
@@ -1944,6 +1964,7 @@ Page({
    * 确认解释弹窗，进入下一题
    */
   confirmExplanation() {
+    this.playClickSound();
     this.closeExplanationModal();
     this.proceedToNextQuestion();
   },
@@ -2263,10 +2284,21 @@ Page({
     } catch (e) {
       console.error('获取阵营人数失败:', e);
     }
+  },
+  
+  playClickSound: function() {
+    try {
+      const c = wx.createInnerAudioContext();
+      c.obeyMuteSwitch = false;
+      c.autoplay = false;
+      c.src = '/static/click.wav';
+      c.volume = 0.5;
+      c.play();
+      c.onEnded(() => { c.destroy(); });
+      c.onError(() => { c.destroy(); });
+    } catch (e) {}
   }
 });
-
-
 
 
 

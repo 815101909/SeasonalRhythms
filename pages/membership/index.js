@@ -26,6 +26,16 @@ Page({
    * 兑换激活码
    */
   async redeemActivationCode() {
+    try {
+      const c = wx.createInnerAudioContext();
+      c.obeyMuteSwitch = false;
+      c.autoplay = false;
+      c.src = '/static/click.wav';
+      c.volume = 0.5;
+      c.play();
+      c.onEnded(() => { c.destroy(); });
+      c.onError(() => { c.destroy(); });
+    } catch (e) {}
     const code = this.data.activationCode.trim();
     if (!code) {
       wx.showToast({
@@ -255,6 +265,16 @@ Page({
    * 选择会员方案
    */
   selectPlan(e) {
+    try {
+      const c = wx.createInnerAudioContext();
+      c.obeyMuteSwitch = false;
+      c.autoplay = false;
+      c.src = '/static/click.wav';
+      c.volume = 0.5;
+      c.play();
+      c.onEnded(() => { c.destroy(); });
+      c.onError(() => { c.destroy(); });
+    } catch (e) {}
     const index = e.currentTarget.dataset.index;
     this.setData({
       selectedPlan: index
@@ -265,6 +285,16 @@ Page({
    * 购买会员
    */
   async purchaseMembership() {
+    try {
+      const c = wx.createInnerAudioContext();
+      c.obeyMuteSwitch = false;
+      c.autoplay = false;
+      c.src = '/static/click.wav';
+      c.volume = 0.5;
+      c.play();
+      c.onEnded(() => { c.destroy(); });
+      c.onError(() => { c.destroy(); });
+    } catch (e) {}
     const selectedPlan = this.data.membershipInfo.prices[this.data.selectedPlan];
     
     if (!selectedPlan) {
@@ -505,6 +535,16 @@ Page({
    * 返回上一页
    */
   navigateBack: function() {
+    try {
+      const c = wx.createInnerAudioContext();
+      c.obeyMuteSwitch = false;
+      c.autoplay = false;
+      c.src = '/static/click.wav';
+      c.volume = 0.5;
+      c.play();
+      c.onEnded(() => { c.destroy(); });
+      c.onError(() => { c.destroy(); });
+    } catch (e) {}
     wx.navigateBack({
       delta: 1
     });

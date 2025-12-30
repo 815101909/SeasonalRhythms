@@ -377,6 +377,7 @@ Page({
 
   // 选择画轴
   onSelectScroll(e) {
+    this.playClickSound();
     const type = e.currentTarget.dataset.type;
     this.setData({
       showScrolls: false,
@@ -386,6 +387,7 @@ Page({
 
   // 返回画轴选择
   onBack() {
+    this.playClickSound();
     this.setData({
       showScrolls: true,
       selectedType: '',
@@ -398,6 +400,7 @@ Page({
 
   // 切换章节菜单
   toggleChapterMenu() {
+    this.playClickSound();
     console.log('切换章节菜单，当前状态:', !this.data.showChapterMenu);
     this.setData({
       showChapterMenu: !this.data.showChapterMenu
@@ -414,6 +417,7 @@ Page({
 
   // 选择章节
   selectChapter(e) {
+    this.playClickSound();
     const chapter = e.currentTarget.dataset.chapter;
     console.log('选择章节:', chapter);
     this.setData({
@@ -425,6 +429,7 @@ Page({
 
   // 选择区域
   selectArea(e) {
+    this.playClickSound();
     const area = e.currentTarget.dataset.area;
     this.setData({
       selectedSeasonArea: area,
@@ -434,6 +439,7 @@ Page({
 
   // 打开城市章节
   openCityChapter(e) {
+    this.playClickSound();
     const chapterId = e.currentTarget.dataset.chapter;
     const chapter = this.data.cityMuseum.chapters.find(c => c.chapter_id === chapterId);
     
@@ -455,6 +461,7 @@ Page({
    * 打开时节博物馆区域
    */
   openSeasonArea(e) {
+    this.playClickSound();
     const area = e.currentTarget.dataset.area;
     
     // 找到对应的展区数据
@@ -560,11 +567,16 @@ Page({
   onShareAppMessage() {
 
   },
+  
+  onTabItemTap(item) {
+    this.playClickSound();
+  },
 
   /**
    * 选择某个节气，显示详情
    */
   selectSolarTerm(e) {
+    this.playClickSound();
     const index = e.currentTarget.dataset.index;
     this.showSolarTermDetail(index);
   },
@@ -588,6 +600,7 @@ Page({
    * 打开季节介绍页面
    */
   openSeasonIntro(e) {
+    this.playClickSound();
     const season = e.currentTarget.dataset.season;
     let seasonName = '';
     
@@ -626,6 +639,7 @@ Page({
   
   // 显示诗词详情
   showPoetryDetail: function(e) {
+    this.playClickSound();
     const index = e.currentTarget.dataset.index;
     const poetry = this.data.cityPoetry[index];
     wx.showModal({
@@ -644,6 +658,7 @@ Page({
    * 切换节气区域选择菜单显示状态
    */
   toggleSeasonAreaMenu() {
+    this.playClickSound();
     this.setData({
       showSeasonAreaMenu: !this.data.showSeasonAreaMenu
     });
@@ -653,6 +668,7 @@ Page({
    * 选择要显示的节气区域
    */
   selectSeasonArea(e) {
+    this.playClickSound();
     const area = e.currentTarget.dataset.area;
     console.log('选择区域:', area);
     this.setData({
@@ -720,11 +736,25 @@ Page({
 
   // 点击展区
   onAreaTap(e) {
+    this.playClickSound();
     const area = e.currentTarget.dataset.area;
 
     // 跳转到展区详情页
     wx.navigateTo({
       url: `/pages/articleDetail/index?type=time&area=${area.area_id}`
     })
+  },
+  
+  playClickSound: function() {
+    try {
+      const c = wx.createInnerAudioContext();
+      c.obeyMuteSwitch = false;
+      c.autoplay = false;
+      c.src = '/static/click.wav';
+      c.volume = 0.5;
+      c.play();
+      c.onEnded(() => { c.destroy(); });
+      c.onError(() => { c.destroy(); });
+    } catch (e) {}
   }
 })

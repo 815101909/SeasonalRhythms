@@ -184,7 +184,7 @@
     <view class="city-detail-content">
       
       <!-- 封面和视频并排显示容器 - 只在城市详情模式显示 -->
-      <view class="media-container {{showMediaContainer ? '' : 'collapsed'}}" wx:if="{{!showCityMuseum}}">
+      <view class="media-container" wx:if="{{!showCityMuseum && showMediaContainer}}">
         <view class="city-detail-header">
           <!-- 封面图片 -->
           <image class="city-icon-large" src="{{selectedCity.iconUrl}}" mode="aspectFill" wx:if="{{selectedCity.iconUrl}}"></image>
@@ -362,6 +362,14 @@
                 <view wx:if="{{!(isPlaying && currentPlayingSection === 'nature')}}" class="icon-play"></view>
                 <view wx:else class="icon-pause"></view>
               </view>
+              <view class="speed-btn" bindtap="toggleSpeedSelector">
+                <view class="btn-icon">{{audioPlaybackRate}}x</view>
+              </view>
+              <view class="speed-selector" wx:if="{{showSpeedSelector}}">
+                <view class="speed-options">
+                  <view wx:for="{{speedOptions}}" wx:key="index" class="speed-option {{audioPlaybackRate === item ? 'active' : ''}}" bindtap="selectPlaybackRate" data-rate="{{item}}">{{item}}x</view>
+                </view>
+              </view>
               <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'nature') ? 'playing' : 'paused'}}" wx:if="{{true}}">
                 <view class="wave-bar bar1"></view>
                 <view class="wave-bar bar2"></view>
@@ -422,6 +430,14 @@
               <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'climate' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="climate">
                 <view wx:if="{{!(isPlaying && currentPlayingSection === 'climate')}}" class="icon-play"></view>
                 <view wx:else class="icon-pause"></view>
+              </view>
+              <view class="speed-btn" bindtap="toggleSpeedSelector">
+                <view class="btn-icon">{{audioPlaybackRate}}x</view>
+              </view>
+              <view class="speed-selector" wx:if="{{showSpeedSelector}}">
+                <view class="speed-options">
+                  <view wx:for="{{speedOptions}}" wx:key="index" class="speed-option {{audioPlaybackRate === item ? 'active' : ''}}" bindtap="selectPlaybackRate" data-rate="{{item}}">{{item}}x</view>
+                </view>
               </view>
               <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'climate') ? 'playing' : 'paused'}}" wx:if="{{true}}">
                 <view class="wave-bar bar1"></view>
@@ -484,6 +500,14 @@
               <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'culture' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="culture">
                 <view wx:if="{{!(isPlaying && currentPlayingSection === 'culture')}}" class="icon-play"></view>
                 <view wx:else class="icon-pause"></view>
+              </view>
+              <view class="speed-btn" bindtap="toggleSpeedSelector">
+                <view class="btn-icon">{{audioPlaybackRate}}x</view>
+              </view>
+              <view class="speed-selector" wx:if="{{showSpeedSelector}}">
+                <view class="speed-options">
+                  <view wx:for="{{speedOptions}}" wx:key="index" class="speed-option {{audioPlaybackRate === item ? 'active' : ''}}" bindtap="selectPlaybackRate" data-rate="{{item}}">{{item}}x</view>
+                </view>
               </view>
               <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'culture') ? 'playing' : 'paused'}}" wx:if="{{true}}">
                 <view class="wave-bar bar1"></view>
@@ -548,6 +572,14 @@
                 <view wx:if="{{!(isPlaying && currentPlayingSection === 'structure')}}" class="icon-play"></view>
                 <view wx:else class="icon-pause"></view>
               </view>
+              <view class="speed-btn" bindtap="toggleSpeedSelector">
+                <view class="btn-icon">{{audioPlaybackRate}}x</view>
+              </view>
+              <view class="speed-selector" wx:if="{{showSpeedSelector}}">
+                <view class="speed-options">
+                  <view wx:for="{{speedOptions}}" wx:key="index" class="speed-option {{audioPlaybackRate === item ? 'active' : ''}}" bindtap="selectPlaybackRate" data-rate="{{item}}">{{item}}x</view>
+                </view>
+              </view>
               <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'structure') ? 'playing' : 'paused'}}" wx:if="{{true}}">
                 <view class="wave-bar bar1"></view>
                 <view class="wave-bar bar2"></view>
@@ -610,6 +642,14 @@
               <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'treasures' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="treasures">
                 <view wx:if="{{!(isPlaying && currentPlayingSection === 'treasures')}}" class="icon-play"></view>
                 <view wx:else class="icon-pause"></view>
+              </view>
+              <view class="speed-btn" bindtap="toggleSpeedSelector">
+                <view class="btn-icon">{{audioPlaybackRate}}x</view>
+              </view>
+              <view class="speed-selector" wx:if="{{showSpeedSelector}}">
+                <view class="speed-options">
+                  <view wx:for="{{speedOptions}}" wx:key="index" class="speed-option {{audioPlaybackRate === item ? 'active' : ''}}" bindtap="selectPlaybackRate" data-rate="{{item}}">{{item}}x</view>
+                </view>
               </view>
               <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'treasures') ? 'playing' : 'paused'}}" wx:if="{{true}}">
                 <view class="wave-bar bar1"></view>

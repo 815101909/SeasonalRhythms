@@ -1433,6 +1433,7 @@ Page({
    
    // 点击会员锁定区域
   onMembershipLockTap() {
+    this.playClickSound();
     if (!this.data.isVIP) {
       // 直接跳转到会员页面
       wx.navigateTo({
@@ -1903,6 +1904,7 @@ Page({
   
   // 翻页操作
   onPrevPage: function() {
+    this.playClickSound();
     if (this.data.currentPage > 1) {
       this.setData({
         currentPage: this.data.currentPage - 1
@@ -1912,6 +1914,7 @@ Page({
   },
   
   onNextPage: function() {
+    this.playClickSound();
     if (this.data.currentPage < this.data.totalPages) {
       this.setData({
         currentPage: this.data.currentPage + 1
@@ -1922,6 +1925,7 @@ Page({
   
   // 城市点击
   onCityTap: async function(e) {
+    this.playClickSound();
     let city = e.currentTarget.dataset.city;
     
     if (city.unlocked) {
@@ -2043,6 +2047,7 @@ Page({
   },
 
   disabledBackTap: function() {
+    this.playClickSound();
     if (this.data.bgMusicContext) {
       this.data.bgMusicContext.stop();
       this.data.bgMusicContext.destroy();
@@ -2221,6 +2226,7 @@ Page({
   
   // 点击地标
   onLandmarkTap: function(e) {
+    this.playClickSound();
     const index = e.currentTarget.dataset.index;
     const landmark = this.data.cityLandmarks[index];
     const landmarks = this.data.cityLandmarks;
@@ -2248,6 +2254,7 @@ Page({
   
   // 关闭地标弹窗
   closeLandmarkModal: function() {
+    this.playClickSound();
     this.setData({
       showLandmarkModal: false
     });
@@ -2369,8 +2376,30 @@ Page({
     }
   },
 
+  playClickSound: function() {
+    try {
+      const c = wx.createInnerAudioContext();
+      c.obeyMuteSwitch = false;
+      c.autoplay = false;
+      c.src = '/static/click.wav';
+      c.volume = 0.5;
+      c.play();
+      c.onEnded(() => {
+        c.destroy();
+      });
+      c.onError(() => {
+        c.destroy();
+      });
+    } catch (e) {}
+  },
+  
+  onTabItemTap: function(item) {
+    this.playClickSound();
+  },
+
   // 打开挑战弹窗
   openChallenge: function() {
+    this.playClickSound();
     this.setData({
       showChallenge: true,
       challengeStep: 1,
@@ -2392,21 +2421,25 @@ Page({
 
   // 打开寻宝发现弹窗
   openTreasure: function() {
+    this.playClickSound();
     this.setData({ showTreasureModal: true });
   },
 
   // 关闭寻宝发现弹窗
   closeTreasure: function() {
+    this.playClickSound();
     this.setData({ showTreasureModal: false });
   },
 
   // 打开纪念勋章弹窗
   openMedal: function() {
+    this.playClickSound();
     this.setData({ showMedalModal: true });
   },
 
   // 关闭纪念勋章弹窗
   closeMedal: function() {
+    this.playClickSound();
     this.setData({ showMedalModal: false });
   },
 
@@ -2585,16 +2618,19 @@ Page({
 
   // 九宫格拼图 - 选择拼图块
   onPuzzlePieceTap: function(e) {
+    this.playClickSound();
     puzzlePieceTouchStart.call(this, e);
   },
 
   // 九宫格拼图 - 点击槽位
   onPuzzleSlotTap: function(e) {
+    this.playClickSound();
     puzzleSlotTouchStart.call(this, e);
   },
   
   // 记忆游戏 - 翻牌
   onFlipCard: function(e) {
+    this.playClickSound();
     const index = e.currentTarget.dataset.index;
     const { memoryGame, memoryCards } = this.data;
     
@@ -2689,6 +2725,7 @@ Page({
   
   // 打印城市信息
   onPrintCity: async function() {
+    this.playClickSound();
     // 检查会员权限
     if (!this.data.isVIP) {
       wx.showToast({
@@ -2795,6 +2832,7 @@ Page({
 
   // 切换打印预览标签页
   switchPrintTab: function(e) {
+    this.playClickSound();
     const tab = e.currentTarget.dataset.tab;
     this.setData({
       activePrintTab: tab
@@ -2803,6 +2841,7 @@ Page({
 
   // 关闭打印预览
   closePrintPreview: function() {
+    this.playClickSound();
     this.setData({
       showPrintPreview: false
     });
@@ -2956,6 +2995,7 @@ Page({
 
   // 字体调大功能
   increaseFontSize: function() {
+    this.playClickSound();
     // 获取当前字体大小设置
     const currentSize = this.data.currentFontSize;
     // 字体最大不超过36rpx
@@ -2971,6 +3011,7 @@ Page({
 
   // 字体调小功能
   decreaseFontSize: function() {
+    this.playClickSound();
     // 获取当前字体大小设置
     const currentSize = this.data.currentFontSize;
     // 字体最小不低于22rpx
@@ -2986,6 +3027,7 @@ Page({
 
   // 切换背景音乐播放状态
   toggleBgMusic: async function() {
+    this.playClickSound();
 
 
     if (this.data.isBgMusicPlaying) {
@@ -3103,6 +3145,7 @@ Page({
 
   // 留下足迹功能
   leaveFootprint: async function() {
+    this.playClickSound();
     // 获取当前城市
     const city = this.data.selectedCity;
     if (!city || !city.id) {
@@ -3541,6 +3584,7 @@ Page({
 
   // 关闭挑战弹窗
   closeChallenge: function() {
+    this.playClickSound();
     this.setData({
       showChallenge: false
     });
@@ -3560,6 +3604,7 @@ Page({
 
   // 选择单选题选项
   selectSingleOption: function(e) {
+    this.playClickSound();
     const selectedIndex = parseInt(e.currentTarget.dataset.index);
     
     // 只选择选项，不立即判断结果
@@ -3570,6 +3615,7 @@ Page({
 
   // 提交单选题答案
   submitSingleAnswer: function() {
+    this.playClickSound();
     const selectedIndex = this.data.singleQuestion.selectedOption;
     const correctOption = this.data.singleQuestion.correctOption;
     const isCorrect = selectedIndex === correctOption;
@@ -3590,6 +3636,7 @@ Page({
 
   // 选择多选题选项
   selectMultiOption: function(e) {
+    this.playClickSound();
     const selectedIndex = e.currentTarget.dataset.index;
     const currentValue = this.data.multiQuestion.selectedOptions[selectedIndex];
     
@@ -3608,6 +3655,7 @@ Page({
 
   // 提交多选题答案
   submitMultiAnswer: function() {
+    this.playClickSound();
     // 检查多选题答案是否正确
     let multiCorrect = true;
     const selectedOptions = this.data.multiQuestion.selectedOptions;
@@ -3640,6 +3688,7 @@ Page({
 
   // 下一步挑战
   nextChallengeStep: function() {
+    this.playClickSound();
     const currentStep = this.data.challengeStep;
     
     // 在步骤1（单选题）
@@ -3903,6 +3952,7 @@ Page({
 
   // 关闭结果弹窗
   closeResult: function() {
+    this.playClickSound();
     this.setData({
       showResult: false
     });
@@ -4605,6 +4655,7 @@ initSimplePuzzle: function() {
 
   // 预览图片
   previewImage: function(e) {
+    this.playClickSound();
     const current = e.currentTarget.dataset.current; // 当前图片
     const urls = e.currentTarget.dataset.urls; // 所有图片的数组
     
@@ -4794,6 +4845,7 @@ initSimplePuzzle: function() {
 
   // 板块音频播放按钮
   playSectionAudio: async function(e) {
+    this.playClickSound();
     const section = e.currentTarget.dataset.section;
     const { selectedCity } = this.data;
 
@@ -4853,6 +4905,7 @@ initSimplePuzzle: function() {
 
   // 切换速度选择器显示
   toggleSpeedSelector: function() {
+    this.playClickSound();
     this.setData({
       showSpeedSelector: !this.data.showSpeedSelector
     });
@@ -4860,6 +4913,7 @@ initSimplePuzzle: function() {
 
   // 选择播放速度
   selectPlaybackRate: function(e) {
+    this.playClickSound();
     const rate = parseFloat(e.currentTarget.dataset.rate);
     this.setData({
       audioPlaybackRate: rate,

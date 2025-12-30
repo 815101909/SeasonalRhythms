@@ -1036,6 +1036,16 @@ Page({
    * 开通会员
    */
   upgradeMembership() {
+    try {
+      const c = wx.createInnerAudioContext();
+      c.obeyMuteSwitch = false;
+      c.autoplay = false;
+      c.src = '/static/click.wav';
+      c.volume = 0.5;
+      c.play();
+      c.onEnded(() => { c.destroy(); });
+      c.onError(() => { c.destroy(); });
+    } catch (e) {}
     wx.navigateTo({
       url: '/pages/membership/index'
     });
@@ -1045,6 +1055,7 @@ Page({
    * 导航到其他页面
    */
   navigateTo(e) {
+    this.playClickSound();
     const page = e.currentTarget.dataset.page;
     
     // 使用switchTab而不是navigateTo，因为这些都是Tab页面
@@ -1057,6 +1068,7 @@ Page({
    * 打开设置页面
    */
   openSettings: function() {
+    this.playClickSound();
     // 尝试从本地存储获取用户信息
     const userInfo = wx.getStorageSync('userInfo') || {
       username: '晓时用户',
@@ -1383,6 +1395,10 @@ Page({
       path: '/pages/cloudDwelling/index'
     };
   },
+  
+  onTabItemTap(item) {
+    this.playClickSound();
+  },
 
   /**
    * 加载用户足迹数据
@@ -1510,6 +1526,7 @@ Page({
    * 查看某个足迹对应的城市详情
    */
   viewFootprintCity(e) {
+    this.playClickSound();
     const city = e.currentTarget.dataset.city;
     // 跳转到时城漫游页面并传入城市ID
     wx.navigateTo({
@@ -1521,6 +1538,7 @@ Page({
    * 查看全部足迹记录
    */
   viewAllFootprints() {
+    this.playClickSound();
     // 可以跳转到一个专门的足迹列表页面
     wx.navigateTo({
       url: '/pages/footprints/index'
@@ -1531,6 +1549,7 @@ Page({
    * 导航到系统页面
    */
   navigateToSystemPage(e) {
+    this.playClickSound();
     const page = e.currentTarget.dataset.page;
     
     if (page === 'about') {
@@ -1567,6 +1586,7 @@ Page({
    * 关闭关于我们弹窗
    */
   closeAboutDialog() {
+    this.playClickSound();
     this.setData({
       showAboutDialog: false
     });
@@ -1576,6 +1596,7 @@ Page({
    * 显示小树规则弹窗
    */
   showTreeRules() {
+    this.playClickSound();
     this.setData({
       showTreeRulesDialog: true
     });
@@ -1585,6 +1606,7 @@ Page({
    * 关闭小树规则弹窗
    */
   closeTreeRulesDialog() {
+    this.playClickSound();
     this.setData({
       showTreeRulesDialog: false
     });
@@ -1594,6 +1616,7 @@ Page({
    * 显示小树兑换弹窗
    */
   showTreeExchangeDialog() {
+    this.playClickSound();
     this.setData({
       showTreeExchangeDialog: true
     });
@@ -1603,6 +1626,7 @@ Page({
    * 关闭小树兑换弹窗
    */
   closeTreeExchangeDialog() {
+    this.playClickSound();
     this.setData({
       showTreeExchangeDialog: false
     });
@@ -1612,6 +1636,7 @@ Page({
    * 兑换会员
    */
   async exchangeMembership(e) {
+    this.playClickSound();
     const { days, cost } = e.currentTarget.dataset;
     const treeCost = parseInt(cost);
     const membershipDays = parseInt(days);
@@ -1707,6 +1732,7 @@ Page({
    * 复制邮箱
    */
   copyEmail() {
+    this.playClickSound();
     wx.setClipboardData({
       data: this.data.aboutInfo.email,
       success() {
@@ -1722,6 +1748,7 @@ Page({
    * 复制用户编号
    */
   copyUserId() {
+    this.playClickSound();
     if (!this.data.userId) {
       wx.showToast({
         title: '用户编号不存在',
@@ -1964,6 +1991,7 @@ Page({
   },
 
     logout: function() {
+        this.playClickSound();
         const that = this;
         wx.showModal({
             title: '确认退出',
@@ -2019,4 +2047,17 @@ Page({
             }
         });
     },
+  
+  playClickSound: function() {
+    try {
+      const c = wx.createInnerAudioContext();
+      c.obeyMuteSwitch = false;
+      c.autoplay = false;
+      c.src = '/static/click.wav';
+      c.volume = 0.5;
+      c.play();
+      c.onEnded(() => { c.destroy(); });
+      c.onError(() => { c.destroy(); });
+    } catch (e) {}
+  },
 });
