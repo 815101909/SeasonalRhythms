@@ -61,6 +61,12 @@
       <view class="child-modal-desc-box">
         <text>{{(selectedCity.medal && selectedCity.medal.description) || '暂无勋章'}}</text>
       </view>
+      <block wx:if="{{!medalClaimed}}">
+        <view class="submit-btn" bindtap="claimMedal">领取</view>
+      </block>
+      <block wx:else>
+        <view class="submit-btn disabled">已领取</view>
+      </block>
     </view>
   </view>
 </view>

@@ -1,0 +1,39 @@
+<view class="badges-container">
+  <view class="header">
+    <view class="title">我的勋章</view>
+    <view class="actions">
+      <view class="count">共{{badgeCount}}枚</view>
+      <view class="back" bindtap="navigateBack">返回</view>
+    </view>
+  </view>
+  <block wx:if="{{badges && badges.length > 0}}">
+    <scroll-view scroll-y class="list-scroll">
+      <view class="badge-list">
+        <view class="badge-item" wx:for="{{badges}}" wx:key="badgeId" bindtap="showBadgeDetail" data-badge="{{item}}">
+          <image class="badge-icon" src="{{item.iconUrl}}" mode="aspectFit"></image>
+          <view class="badge-info">
+            <view class="badge-name">{{item.name}}</view>
+            <view class="badge-time">{{item.obtainedAtDisplay}}</view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </block>
+  <block wx:else>
+    <view class="empty">
+      <view class="empty-icon">🏅</view>
+      <view class="empty-text">暂无勋章</view>
+    </view>
+  </block>
+  <view class="badge-detail-modal" wx:if="{{showDetail}}">
+    <view class="badge-detail-content">
+      <view class="badge-detail-header">
+        <view class="badge-detail-title">{{selectedBadge.name}}</view>
+        <view class="badge-detail-close" bindtap="hideBadgeDetail">×</view>
+      </view>
+      <image class="badge-detail-icon" src="{{selectedBadge.iconUrl}}" mode="aspectFit"></image>
+      <view class="badge-detail-desc">{{selectedBadge.description}}</view>
+      <view class="badge-detail-date">领取日期：{{selectedBadge.obtainedAtDisplay}}</view>
+    </view>
+  </view>
+</view>

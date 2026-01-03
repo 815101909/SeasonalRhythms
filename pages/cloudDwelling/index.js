@@ -123,6 +123,10 @@ Page({
     daysToNextSeason: 0, // 距离下一个节气的天数
     footprints: [], // 用户足迹数据
     activities: [], // 用户活动记录
+    badges: [], // 用户勋章
+    badgeCount: 0,
+    showBadgeDetail: false,
+    selectedBadge: null,
     // 关于我们弹窗
     showAboutDialog: false,
     showTreeRulesDialog: false,
@@ -242,6 +246,7 @@ Page({
     if (userInfo && userInfo.openid) {
       this.loadUserFootprints();
       this.loadUserActivities();
+      this.loadUserBadges();
     }
   },
 
@@ -1294,6 +1299,8 @@ Page({
       
       // 重新加载活动记录
       this.loadUserActivities();
+      
+      this.loadUserBadges();
     } else {
       // 未登录，清除会员相关信息
       this.setData({
@@ -1523,6 +1530,69 @@ Page({
   },
 
   /**
+   * 加载用户勋章
+   */
+  async loadUserBadges() {
+    try {
+      const userInfo = wx.getStorageSync('userInfo');
+      if (!userInfo || !userInfo.openid) {
+        this.setData({
+          badges: [],
+          badgeCount: 0
+        });
+        return;
+      }
+      const cloud = new wx.cloud.Cloud({
+        identityless: true,
+        resourceAppid: 'wx85d92d28575a70f4',
+        resourceEnv: 'cloud1-1gsyt78b92c539ef'
+      });
+      await cloud.init();
+      const res = await cloud.callFunction({
+        name: 'xsj_auth',
+        data: {
+          action: 'getUserBadges',
+          data: { openid: userInfo.openid }
+        }
+      });
+      if (res.result && res.result.success) {
+        const list = res.result.data || [];
+        const processed = [];
+        for (let i = 0; i < list.length; i++) {
+          const icon = list[i].iconUrl ? await getTemporaryImageUrl(list[i].iconUrl, '勋章图标') : '../../images/placeholder-a4.svg';
+          const formattedDate = this.formatBadgeDate(list[i].obtainedAt);
+          const bgColor = this.getBadgeBgColor(list[i].category);
+          processed.push({
+            badgeId: list[i].badgeId || (list[i]._id || ''),
+            name: list[i].name || '',
+            iconUrl: icon,
+            description: list[i].description || '',
+            category: list[i].category || '',
+            obtainedAt: list[i].obtainedAt || '',
+            obtainedAtFormatted: formattedDate,
+            bgColor: bgColor
+          });
+        }
+        const displayList = processed.slice(0, 8);
+        this.setData({
+          badges: displayList,
+          badgeCount: processed.length
+        });
+      } else {
+        this.setData({
+          badges: [],
+          badgeCount: 0
+        });
+      }
+    } catch (e) {
+      this.setData({
+        badges: [],
+        badgeCount: 0
+      });
+    }
+  },
+
+  /**
    * 查看某个足迹对应的城市详情
    */
   viewFootprintCity(e) {
@@ -1545,6 +1615,41 @@ Page({
     });
   },
 
+  /**
+   * 查看全部勋章
+   */
+  viewAllBadges() {
+    this.playClickSound();
+    wx.navigateTo({
+      url: '/pages/badges/index'
+    });
+  },
+  formatBadgeDate(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    const y = d.getFullYear();
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    return `${y}年${m}月${day}日`;
+  },
+  getBadgeBgColor(category) {
+    return 'linear-gradient(135deg, #fff7d6, #ffe08a)';
+  },
+  showBadgeDetail(e) {
+    this.playClickSound();
+    const badge = e.currentTarget.dataset.badge;
+    this.setData({
+      showBadgeDetail: true,
+      selectedBadge: badge
+    });
+  },
+  hideBadgeDetail() {
+    this.playClickSound();
+    this.setData({
+      showBadgeDetail: false
+    });
+  },
+ 
   /**
    * 导航到系统页面
    */

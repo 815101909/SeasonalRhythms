@@ -1140,6 +1140,7 @@ Page({
     // 寻宝发现与纪念勋章
     showTreasureModal: false,
     showMedalModal: false,
+    medalClaimed: false,
     
     // 封面和视频显示控制
     showMediaContainer: true, // 是否显示封面和视频
@@ -1383,6 +1384,7 @@ Page({
 
   // 切换城市详情Tab
   switchCityTab: async function(e) {
+    this.playClickSound();
     const tabId = e.currentTarget.dataset.id;
     if (tabId && tabId !== this.data.currentCityTab) {
       // 更新已访问的 Tab 列表和进度
@@ -2431,16 +2433,98 @@ Page({
     this.setData({ showTreasureModal: false });
   },
 
-  // 打开纪念勋章弹窗
-  openMedal: function() {
+  // 打开纪念勋章弹窗（并检查是否已领取）
+  openMedal: async function() {
     this.playClickSound();
-    this.setData({ showMedalModal: true });
+    this.setData({ showMedalModal: true, medalClaimed: false });
+    try {
+      const userInfo = wx.getStorageSync('userInfo');
+      const city = this.data.selectedCity;
+      if (!userInfo || !userInfo.openid || !city || !city.id) {
+        return;
+      }
+      var c = new wx.cloud.Cloud({
+        identityless: true,
+        resourceAppid: 'wx85d92d28575a70f4',
+        resourceEnv: 'cloud1-1gsyt78b92c539ef'
+      });
+      await c.init();
+      const res = await c.callFunction({
+        name: 'xsj_auth',
+        data: {
+          action: 'getUserBadges',
+          data: { openid: userInfo.openid }
+        }
+      });
+      if (res.result && res.result.success) {
+        const list = res.result.data || [];
+        const badgeId = `MEDAL_${city.id}`;
+        const claimed = list.some(b => (b.badgeId || b._id) === badgeId);
+        this.setData({ medalClaimed: claimed });
+      }
+    } catch (e) {
+      // ignore
+    }
   },
 
   // 关闭纪念勋章弹窗
   closeMedal: function() {
     this.playClickSound();
     this.setData({ showMedalModal: false });
+  },
+  
+  claimMedal: async function() {
+    this.playClickSound();
+    if (this.data.medalClaimed) {
+      wx.showToast({ title: '已领取', icon: 'none' });
+      return;
+    }
+    const city = this.data.selectedCity;
+    if (!city || !city.medal) {
+      wx.showToast({ title: '暂无勋章', icon: 'none' });
+      return;
+    }
+    const userInfo = wx.getStorageSync('userInfo');
+    if (!userInfo || !userInfo.openid) {
+      wx.showToast({ title: '请先登录', icon: 'none' });
+      return;
+    }
+    wx.showLoading({ title: '领取中...' });
+    try {
+      var c = new wx.cloud.Cloud({ 
+        identityless: true, 
+        resourceAppid: 'wx85d92d28575a70f4', 
+        resourceEnv: 'cloud1-1gsyt78b92c539ef' 
+      });
+      await c.init();
+      const payload = {
+        openid: userInfo.openid,
+        badgeId: `MEDAL_${city.id}`,
+        name: city.medal.name ? city.medal.name : ((city.name || '城市') + '纪念勋章'),
+        iconUrl: city.medal.image || '',
+        description: city.medal.description || ''
+      };
+      const res = await c.callFunction({
+        name: 'xsj_auth',
+        data: {
+          action: 'claimBadge',
+          data: payload
+        }
+      });
+      if (res.result && res.result.success) {
+        wx.showToast({ title: '领取成功', icon: 'success' });
+        this.setData({ showMedalModal: false, medalClaimed: true });
+      } else {
+        wx.showToast({ title: (res.result && res.result.error) ? res.result.error : '领取失败', icon: 'none' });
+        if (res.result && res.result.error === '已领取过') {
+          this.setData({ medalClaimed: true });
+        }
+      }
+    } catch (e) {
+      wx.showToast({ title: '领取失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
   },
 
   // 关闭挑战弹窗

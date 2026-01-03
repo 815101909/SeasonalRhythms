@@ -1,0 +1,143 @@
+.badges-container {
+  min-height: 100vh;
+  background-color: #e8f5e9;
+  padding: 20rpx;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+.title {
+  font-size: 34rpx;
+  font-weight: bold;
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+.count {
+  font-size: 26rpx;
+  color: #666;
+}
+.back {
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  background-color: #4caf50;
+  color: #fff;
+  font-size: 24rpx;
+}
+.list-scroll {
+  max-height: calc(100vh - 160rpx);
+}
+.badge-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+}
+.badge-item {
+  display: flex;
+  align-items: center;
+  padding: 16rpx;
+  background-color: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.08);
+}
+.badge-icon {
+  width: 120rpx;
+  height: 120rpx;
+  margin-right: 16rpx;
+}
+.badge-info {
+  display: flex;
+  flex-direction: column;
+}
+.badge-name {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+.badge-time {
+  font-size: 24rpx;
+  color: #888;
+  margin-top: 8rpx;
+}
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 0;
+}
+.empty-icon {
+  font-size: 60rpx;
+  margin-bottom: 20rpx;
+}
+.empty-text {
+  font-size: 28rpx;
+  color: #888;
+}
+
+.badge-detail-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.badge-detail-content {
+  width: 80%;
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.15);
+  padding: 24rpx;
+}
+
+.badge-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.badge-detail-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333333;
+}
+
+.badge-detail-close {
+  font-size: 36rpx;
+  width: 36rpx;
+  line-height: 36rpx;
+  text-align: center;
+  color: #888888;
+}
+
+.badge-detail-icon {
+  width: 180rpx;
+  height: 180rpx;
+  margin: 12rpx auto;
+  display: block;
+}
+
+.badge-detail-desc {
+  font-size: 26rpx;
+  color: #333333;
+  line-height: 1.6;
+  margin-top: 8rpx;
+}
+
+.badge-detail-date {
+  font-size: 24rpx;
+  color: #666666;
+  margin-top: 8rpx;
+  text-align: right;
+}

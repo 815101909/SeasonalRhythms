@@ -156,6 +156,42 @@
     </view>
   </view>
 
+  <!-- 勋章展示区域 -->
+  <view class="badge-section">
+    <view class="section-title">
+      <text>我的勋章</text>
+    </view>
+    <view class="badge-container">
+      <block wx:if="{{badges && badges.length > 0}}">
+        <scroll-view scroll-x class="badge-scroll">
+          <view class="badge-list">
+            <view class="badge-card" wx:for="{{badges}}" wx:key="badgeId" bindtap="showBadgeDetail" data-badge="{{item}}" style="background: {{item.bgColor}}">
+              <image class="badge-icon" src="{{item.iconUrl}}" mode="aspectFit"></image>
+              <view class="badge-name">{{item.name}}</view>
+            </view>
+          </view>
+        </scroll-view>
+        <view class="badges-more" bindtap="viewAllBadges">共{{badgeCount}}枚，查看全部</view>
+      </block>
+      <view class="empty-badges" wx:else>
+        <view class="empty-icon">🏅</view>
+        <view class="empty-text">暂无勋章</view>
+        <view class="empty-action" bindtap="navigateTo" data-page="timeSequence">去漫游城市获取</view>
+      </view>
+    </view>
+  </view>
+  <view class="badge-detail-modal" wx:if="{{showBadgeDetail}}">
+    <view class="badge-detail-content">
+      <view class="badge-detail-header">
+        <view class="badge-detail-title">{{selectedBadge.name}}</view>
+        <view class="badge-detail-close" bindtap="hideBadgeDetail">×</view>
+      </view>
+      <image class="badge-detail-icon" src="{{selectedBadge.iconUrl}}" mode="aspectFit"></image>
+      <view class="badge-detail-desc">{{selectedBadge.description}}</view>
+      <view class="badge-detail-date">领取日期：{{selectedBadge.obtainedAtFormatted}}</view>
+    </view>
+  </view>
+
   <!-- 足迹列表区域 -->
   <view class="footprints-section">
     <view class="section-title">

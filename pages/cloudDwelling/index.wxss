@@ -10,7 +10,7 @@
 }
 
 /* 各区块通用样式 */
-.user-profile-section, .season-display-section, .exploration-section, .activity-section, .footprints-section, .settings-section {
+.user-profile-section, .season-display-section, .exploration-section, .activity-section, .footprints-section, .settings-section, .badge-section {
   padding: 24rpx;
   background-color: #ffffff;
   border-radius: 16rpx;
@@ -644,6 +644,133 @@
   font-size: 22rpx;
 }
 
+/* 勋章展示样式 */
+.badge-container {
+  margin-top: 8rpx;
+}
+
+.badge-scroll {
+  white-space: nowrap;
+  width: 100%;
+}
+
+.badge-list {
+  display: inline-flex;
+  padding: 8rpx 0;
+  align-items: center;
+}
+
+.badge-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 20rpx;
+  padding: 12rpx;
+  width: 130rpx;
+  height: 140rpx;
+  background: linear-gradient(135deg, #fff7d6, #ffe08a);
+  border: 1rpx solid #e6e6e6;
+  border-radius: 10rpx;
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.05);
+}
+
+.badge-icon {
+  width: 88rpx;
+  height: 88rpx;
+  margin-bottom: 10rpx;
+}
+
+.badge-name {
+  font-size: 22rpx;
+  color: #333;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.badges-more {
+  text-align: center;
+  color: #4caf50;
+  font-size: 22rpx;
+  margin-top: 8rpx;
+  padding: 8rpx 0;
+}
+
+.badge-section {
+  padding: 16rpx 24rpx;
+}
+
+.empty-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32rpx 0;
+}
+
+.badge-detail-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.badge-detail-content {
+  width: 80%;
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.15);
+  padding: 24rpx;
+}
+
+.badge-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.badge-detail-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333333;
+}
+
+.badge-detail-close {
+  font-size: 36rpx;
+  width: 36rpx;
+  line-height: 36rpx;
+  text-align: center;
+  color: #888888;
+}
+
+.badge-detail-icon {
+  width: 180rpx;
+  height: 180rpx;
+  margin: 12rpx auto;
+  display: block;
+}
+
+.badge-detail-desc {
+  font-size: 26rpx;
+  color: #333333;
+  line-height: 1.6;
+  margin-top: 8rpx;
+}
+
+.badge-detail-date {
+  font-size: 24rpx;
+  color: #666666;
+  margin-top: 8rpx;
+  text-align: right;
+}
 /* 系统设置区域 */
 .settings-section {
   /* 使用通用样式，无需额外定义 */

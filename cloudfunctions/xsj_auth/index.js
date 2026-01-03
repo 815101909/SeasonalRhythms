@@ -507,6 +507,148 @@ exports.main = async (event, context) => {
 
       case 'recordUserActivity':
         return await recordUserActivity(event, context);
+      
+      case 'getUserBadges':
+        {
+          const wxContext2 = cloud.getWXContext();
+          const db2 = cloud.database();
+          const _2 = db2.command;
+          const userOpenid2 = wxContext2.FROM_OPENID || wxContext2.OPENID;
+          const passedOpenid2 = (event && event.data && event.data.openid) || '';
+          const usedOpenid2 = userOpenid2 || passedOpenid2;
+          if (!usedOpenid2) {
+            return { success: true, data: [] };
+          }
+          let rels = [];
+          try {
+            const byUserField = await db2.collection('user_badges')
+              .where({ userOpenid: usedOpenid2 })
+              .orderBy('obtainedAt', 'desc')
+              .limit(50)
+              .get();
+            rels = byUserField.data || [];
+          } catch (e) {}
+          if (!rels || rels.length === 0) {
+            try {
+              const byOpenid = await db2.collection('user_badges')
+                .where({ _openid: usedOpenid2 })
+                .orderBy('obtainedAt', 'desc')
+                .limit(50)
+                .get();
+              rels = byOpenid.data || [];
+            } catch (e2) {}
+          }
+          const list = rels.map(r => {
+            return {
+              badgeId: r.badgeId,
+              name: r.name || '',
+              iconUrl: r.iconUrl || '',
+              description: r.description || '',
+              category: r.category || '',
+              obtainedAt: r.obtainedAt || r.timestamp || ''
+            };
+          });
+          return {
+            success: true,
+            data: list
+          };
+        }
+        
+      case 'claimBadge':
+        {
+          const wxContext3 = cloud.getWXContext();
+          const db3 = cloud.database();
+          const userOpenid3 = wxContext3.FROM_OPENID || wxContext3.OPENID;
+          const payload = data || {};
+          const badgeId = payload.badgeId;
+          const name = payload.name || '';
+          const iconUrl = payload.iconUrl || '';
+          const description = payload.description || '';
+          const passedOpenid3 = (event && event.data && event.data.openid) || '';
+          const usedOpenid3 = userOpenid3 || passedOpenid3;
+          if (!badgeId) {
+            return {
+              success: false,
+              error: '缺少badgeId'
+            };
+          }
+          if (!usedOpenid3) {
+            return {
+              success: false,
+              error: '未获取到用户openid'
+            };
+          }
+          const existsRes = await db3.collection('user_badges')
+            .where({
+              _openid: usedOpenid3,
+              badgeId: badgeId
+            })
+            .limit(1)
+            .get();
+          
+          if (!existsRes.data || existsRes.data.length === 0) {
+            // 修复历史数据：若存在同 badgeId 但缺失 _openid 的记录，补齐 _openid
+            const orphanRes = await db3.collection('user_badges')
+              .where({
+                badgeId: badgeId,
+                _openid: _.or(_.exists(false), _.eq(''))
+              })
+              .limit(1)
+              .get();
+            if (orphanRes.data && orphanRes.data.length > 0) {
+              try {
+                await db3.collection('user_badges').doc(orphanRes.data[0]._id).update({
+                  data: { _openid: usedOpenid3, obtainedAt: orphanRes.data[0].obtainedAt || Date.now() }
+                });
+                return { success: true, data: { fixed: true } };
+              } catch (fixErr) {
+                // 如果修复失败，继续后续新增流程
+              }
+            }
+          }
+          if (existsRes.data && existsRes.data.length > 0) {
+            return {
+              success: false,
+              error: '已领取过'
+            };
+          }
+          try {
+            await db3.collection('user_badges').add({
+              data: {
+                _openid: usedOpenid3,
+                userOpenid: usedOpenid3,
+                badgeId: badgeId,
+                name: name,
+                iconUrl: iconUrl,
+                description: description,
+                obtainedAt: Date.now()
+              }
+            });
+          } catch (err) {
+            try {
+              await db3.createCollection('user_badges');
+              await db3.collection('user_badges').add({
+                data: {
+                  _openid: usedOpenid3,
+                  userOpenid: usedOpenid3,
+                  badgeId: badgeId,
+                  name: name,
+                  iconUrl: iconUrl,
+                  description: description,
+                  obtainedAt: Date.now()
+                }
+              });
+            } catch (err2) {
+              return {
+                success: false,
+                error: err2.message
+              };
+            }
+          }
+          return {
+            success: true
+          };
+        }
 
       case 'consumeTrees':
         // 消耗树苗（增量更新）
