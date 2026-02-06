@@ -170,4 +170,135 @@
   color: #a3be8c;
   font-size: 24rpx;
   opacity: 0.8;
+}
+
+/* 会员限制模式 */
+.locked-mode {
+  max-height: 1000rpx; /* 大约一张A4图的高度 */
+  overflow: hidden;
+  position: relative;
+}
+
+/* 雾霾遮罩 */
+.fog-mask {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 200rpx; /* 增加高度使渐变更自然 */
+  background: linear-gradient(to bottom, rgba(232, 245, 233, 0), rgba(232, 245, 233, 0.9) 40%, rgba(232, 245, 233, 1));
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 40rpx;
+}
+
+/* 会员弹窗样式 - 复用自 TimeSequence */
+.child-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.child-modal-content {
+  width: 85%;
+  max-width: 600rpx;
+  background-color: #fff;
+  border-radius: 30rpx;
+  overflow: hidden;
+  box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.2);
+  border: 6rpx solid #fff;
+  transform: scale(0.9);
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes popIn {
+  to { transform: scale(1); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.child-modal-header {
+  padding: 30rpx;
+  text-align: center;
+  position: relative;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #fff;
+  letter-spacing: 2rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.medal-header {
+  background: linear-gradient(135deg, #ffd1ff 0%, #fad0c4 100%);
+  color: #6d4c41;
+}
+
+.child-close-btn {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  width: 50rpx;
+  height: 50rpx;
+  line-height: 45rpx;
+  background-color: rgba(255,255,255,0.3);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 40rpx;
+  text-align: center;
+}
+
+.child-modal-body {
+  padding: 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-image: radial-gradient(#f0f0f0 10%, transparent 10%);
+  background-size: 30rpx 30rpx;
+  background-color: #fffdf5;
+}
+
+.child-modal-desc-box {
+  width: 100%;
+  padding: 24rpx;
+  background-color: #fff;
+  border-radius: 16rpx;
+  border: 2rpx dashed #ccc;
+  font-size: 28rpx;
+  color: #555;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+.submit-btn {
+  width: 80%;
+  height: 80rpx;
+  background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+  color: white;
+  border-radius: 40rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 32rpx;
+  font-weight: bold;
+  margin: 0 auto;
+  margin-top: 30rpx;
+  letter-spacing: 2rpx;
+  transition: all 0.3s;
+  box-shadow: 0 4rpx 12rpx rgba(76, 175, 80, 0.3);
 } 

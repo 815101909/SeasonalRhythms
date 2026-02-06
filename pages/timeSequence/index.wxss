@@ -417,6 +417,7 @@
   z-index: 5;
   font-family: "Source Han Sans", "Noto Sans SC", "思源黑体", sans-serif;
   font-weight: 500;
+  pointer-events: none;
 }
 
 .city-title {
@@ -525,6 +526,15 @@
   padding: 20rpx 0;
   position: relative;
   transition: opacity 0.3s ease;
+  overflow: hidden; /* 强制隐藏溢出内容，配合禁止滑动 */
+}
+
+/* 隐藏滚动条 - 针对 WebKit 内核 (iOS/Android/小程序) */
+.city-info-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  color: transparent;
 }
 
 /* 底部额外空间，防止内容被音频播放器遮挡 */
@@ -1455,7 +1465,8 @@
   background-color: #f8f8f8;
   padding: 12rpx 0;
   display: flex;
-  justify-content: space-between; /* 从space-around改为space-between */
+  justify-content: flex-start; /* 改为左对齐 */
+  gap: 20rpx; /* 添加间距 */
   align-items: center;
   box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.1);
   border-top: 1rpx solid #eee;
@@ -1525,9 +1536,13 @@
   left: 0;
   top: 0;
   bottom: 0;
-  width: 80rpx;
+  width: 40rpx;
   z-index: 120;
   background: linear-gradient(to right, rgba(255,255,255,0.15), rgba(255,255,255,0));
+}
+
+.edge-swipe-disabled {
+  pointer-events: none;
 }
 
 
@@ -2597,8 +2612,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 40rpx 20rpx 60rpx;
-  padding: 24rpx;
+  margin: 60rpx 16rpx 20rpx;
+  padding: 16rpx;
   background-color: #fffcf0; /* 与进度条背景一致 */
   border-radius: 24rpx;
   border: 1rpx solid #f2df8c;
@@ -2611,10 +2626,10 @@
   align-items: center;
   justify-content: center;
   flex: 1;
-  min-width: 200rpx;
+  min-width: 100rpx;
   margin: 0 8rpx;
-  padding: 20rpx 0;
-  border-radius: 24rpx;
+  padding: 14rpx 0;
+  border-radius: 18rpx;
   transition: transform 0.2s;
   background: transparent; /* 让容器浅黄透出 */
   border: 2rpx solid #f2df8c;
@@ -2627,9 +2642,9 @@
 }
 
 .action-icon {
-  width: 84rpx;
-  height: 84rpx;
-  margin-bottom: 10rpx;
+  width: 68rpx;
+  height: 68rpx;
+  margin-bottom: 8rpx;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -2678,42 +2693,42 @@
   position: relative;
   width: 0;
   height: 0;
-  border: 20rpx solid transparent;
-  border-bottom: 14rpx solid #4FC3F7; /* 浅蓝 */
+  border: 16rpx solid transparent;
+  border-bottom: 12rpx solid #4FC3F7; /* 浅蓝 */
   position: relative;
-  top: -26rpx;
+  top: -22rpx;
 }
 .css-icon-gem::after {
   content: '';
   position: absolute;
-  left: -20rpx;
-  top: 14rpx;
+  left: -16rpx;
+  top: 12rpx;
   width: 0;
   height: 0;
-  border: 20rpx solid transparent;
-  border-top: 28rpx solid #03A9F4; /* 深蓝 */
+  border: 16rpx solid transparent;
+  border-top: 24rpx solid #03A9F4; /* 深蓝 */
 }
 
 /* 勋章样式 */
 .css-icon-medal {
   position: relative;
-  width: 30rpx;
-  height: 30rpx;
+  width: 26rpx;
+  height: 26rpx;
   background-color: #FFC107; /* 金色圆牌 */
   border-radius: 50%;
-  border: 4rpx solid #FF9800;
+  border: 3rpx solid #FF9800;
   box-shadow: 0 0 0 3rpx #FFF8E1;
   z-index: 2;
-  margin-top: 20rpx;
+  margin-top: 16rpx;
 }
 .css-icon-medal::before {
   /* 丝带左 */
   content: '';
   position: absolute;
-  top: -14rpx;
+  top: -12rpx;
   left: 2rpx;
-  width: 8rpx;
-  height: 18rpx;
+  width: 7rpx;
+  height: 16rpx;
   background-color: #F44336; /* 红丝带 */
   transform: rotate(-15deg);
   z-index: -1;
@@ -2722,17 +2737,17 @@
   /* 丝带右 */
   content: '';
   position: absolute;
-  top: -14rpx;
+  top: -12rpx;
   right: 2rpx;
-  width: 8rpx;
-  height: 18rpx;
+  width: 7rpx;
+  height: 16rpx;
   background-color: #F44336;
   transform: rotate(15deg);
   z-index: -1;
 }
 
 .action-text {
-  font-size: 28rpx;
+  font-size: 24rpx;
   font-weight: 600;
   color: #7b5315;
   letter-spacing: 1rpx;
@@ -4298,14 +4313,17 @@
 
 /* 横向地标容器 - 扩大版 + 入场动画 */
 .landmarks-horizontal-container {
-  width: 100%;
-  padding: 18rpx 20rpx 20rpx;
-  background: linear-gradient(135deg, rgba(255, 248, 220, 0.8) 0%, rgba(255, 240, 245, 0.8) 100%);
-  border-bottom: 2rpx solid rgba(255, 200, 150, 0.3);
-  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.05);
+  flex: 1; /* 占据剩余空间 */
+  width: auto;
+  padding: 10rpx 20rpx; /* 添加内边距 */
+  background: linear-gradient(135deg, rgba(255, 248, 220, 0.5) 0%, rgba(255, 240, 245, 0.5) 100%); /* 添加淡雅背景色 */
+  border-radius: 30rpx; /* 添加圆角 */
+  border-bottom: none; /* 移除边框 */
+  box-shadow: none; /* 移除阴影 */
   overflow: visible;
   flex-shrink: 0;
   animation: container-slide-in 0.8s ease-out;
+  margin-right: 15rpx; /* 右侧留一点间距 */
 }
 
 /* 容器入场动画 */
@@ -4334,9 +4352,56 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding-left: 30rpx;
+  padding-left: 1rpx;
   flex-shrink: 0;
   gap: 6rpx;
+}
+
+.title-section .back-btn {
+  background: linear-gradient(145deg, #ffe0b2, #ffcc80);
+  margin-left: -12rpx;
+  margin-right: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rpx 32rpx;
+  border-radius: 30rpx;
+  box-shadow: 
+    4rpx 4rpx 10rpx rgba(0, 0, 0, 0.1),
+    -2rpx -2rpx 6rpx rgba(255, 218, 185, 0.9);
+  border: 1rpx solid #ffd699;
+  transition: all 0.2s ease;
+  color: #555;
+  font-weight: 600;
+}
+
+.title-section .back-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: inset 2rpx 2rpx 5rpx rgba(0, 0, 0, 0.05);
+  background: linear-gradient(145deg, #ffd699, #ffb74d);
+}
+
+.back-btn:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+.back-btn .btn-icon {
+  font-size: 24rpx;
+  color: #8B4513;
+  font-weight: bold;
+  margin-right: 2rpx;
+  margin-top: -2rpx; /* 视觉微调居中 */
+}
+
+.back-btn .btn-text {
+  font-size: 22rpx;
+  color: #8B4513;
+  font-weight: 600; /* 稍微减轻字重，不那么呆板 */
+  font-family: "Source Han Sans", "Noto Sans SC", "思源黑体", sans-serif;
+  line-height: 1;
+  letter-spacing: 1rpx;
+  white-space: nowrap; /* 强制不换行 */
 }
 
 /* emoji - 左侧 */
@@ -4345,6 +4410,7 @@
   line-height: 1;
   animation: title-fade-in 0.6s ease-out, title-glow 3s ease-in-out infinite;
   filter: drop-shadow(0 0 8rpx rgba(255, 215, 0, 0.3));
+  margin-left: 30rpx;
 }
 
 /* 文字 - 右侧 */
@@ -5232,4 +5298,476 @@
   0% { transform: translateY(-50%) rotate(-45deg) scale(0.85); opacity: 0.8; }
   50% { transform: translateY(-50%) rotate(-45deg) scale(1.05); opacity: 1; }
   100% { transform: translateY(-50%) rotate(-45deg) scale(0.85); opacity: 0.8; }
+}
+
+/* 视频卡片容器 */
+.video-gallery-section {
+  padding: 10rpx 24rpx 10rpx; /* 减少底部留白 */
+  position: relative;
+  z-index: 10;
+}
+
+.video-card-container {
+  position: relative;
+  margin-top: 60rpx;
+  padding-bottom: 0; /* 去掉底部内边距 */
+  border-radius: 24rpx;
+  overflow: visible;
+}
+
+/* װ���Բ��˱��� - λ�ڿ�Ƭ�󷽶��� */
+.wave-decoration {
+  position: absolute;
+  top: -24rpx;
+  left: 30rpx;
+  right: 30rpx;
+  height: 80rpx;
+  background-color: #e0f7fa; /* ��ǳ����ɫ */
+  border-radius: 40rpx 40rpx 0 0;
+  z-index: 0;
+  opacity: 0.8;
+  box-shadow: 0 -2rpx 10rpx rgba(0,0,0,0.02);
+}
+
+/* С������ */
+.boat-wrapper {
+  position: absolute;
+  top: -55rpx; /* ��С�����ڿ�Ƭ�Ϸ� */
+  right: 60rpx;
+  z-index: 20;
+  width: 90rpx;
+  height: 90rpx;
+  animation: float-boat 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.boat-icon {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 6rpx 8rpx rgba(0,0,0,0.15));
+}
+
+/* 视频卡片主体 */
+.video-card-main {
+  position: relative;
+  background: #fff;
+  border-radius: 30rpx;
+  overflow: hidden;
+  box-shadow: 0 20rpx 40rpx rgba(0,0,0,0.1), 0 4rpx 12rpx rgba(0,0,0,0.05);
+  border: 1rpx solid rgba(255,255,255,0.6);
+  z-index: 10;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  height: 360rpx; /* 明确设置高度 */
+}
+
+.video-card-main:active {
+  transform: scale(0.99);
+  box-shadow: 0 10rpx 20rpx rgba(0,0,0,0.08);
+}
+
+/* 视频区域 */
+.gallery-video {
+  width: calc(100% - 220rpx); /* 稍微调整比例 */
+  height: 100%; /* 填满父容器高度 */
+  display: block;
+  border-right: 1rpx solid rgba(0,0,0,0.05);
+}
+
+/* 视频双击接收区（遮罩上半区，避免遮挡底部控制条） */
+.double-tap-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 80%;
+  background-color: transparent;
+}
+
+.progress-blocker {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 30%;
+  background-color: transparent;
+}
+
+/* 视频信息栏 */
+.gallery-video-info {
+  width: 220rpx;
+  height: 100%; /* 跟随父容器高度 */
+  padding: 30rpx 20rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* 上下分布 */
+  align-items: flex-start;
+  background: linear-gradient(135deg, #ffffff 0%, #fefefe 50%, #f7f9fc 100%);
+  position: relative;
+  box-sizing: border-box; /* 包含内边距，防止撑高容器 */
+  overflow: hidden; /* 防止水印溢出 */
+}
+
+/* 背景水印 */
+.bg-watermark {
+  position: absolute;
+  bottom: -10rpx;
+  right: -10rpx;
+  font-size: 80rpx;
+  font-weight: 900;
+  color: rgba(0,0,0,0.03);
+  font-family: 'Impact', sans-serif;
+  transform: rotate(-15deg);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 装饰性左边条 */
+.gallery-video-info::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6rpx;
+  height: 100%;
+  background: linear-gradient(to bottom, #81c784, #4caf50);
+  opacity: 0.8;
+  z-index: 1;
+}
+
+.info-top {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+/* ...原有样式... */
+
+.gallery-city-name {
+  font-size: 38rpx;
+  font-weight: 800;
+  color: #2c3e50;
+  margin-bottom: 8rpx;
+  font-family: 'Source Han Serif', 'Noto Serif SC', '思源宋体', serif;
+  text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.05);
+  line-height: 1.2;
+}
+
+.gallery-en-name {
+  font-size: 16rpx;
+  color: #90a4ae;
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+  margin-bottom: 20rpx;
+  font-weight: 600;
+}
+
+.info-divider {
+  width: 40rpx;
+  height: 4rpx;
+  background: linear-gradient(to right, #81c784, #a5d6a7);
+  margin-bottom: 20rpx;
+  border-radius: 2rpx;
+}
+
+.gallery-slogan {
+  font-size: 24rpx;
+  color: #333;
+  font-weight: 700;
+  letter-spacing: 4rpx;
+  font-family: 'Times New Roman', serif;
+  opacity: 0.9;
+  transform: scaleY(0.9);
+  margin-bottom: 8rpx;
+}
+
+.gallery-coords {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-family: monospace;
+  font-size: 14rpx;
+  color: #b0bec5;
+  margin-top: 4rpx;
+  opacity: 0.8;
+}
+
+.gallery-coords .coord-dot {
+  color: #81c784;
+  font-weight: bold;
+}
+
+/* 中间装饰 */
+.info-middle-deco {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-top: auto;
+  margin-bottom: 20rpx;
+  position: relative;
+  z-index: 2;
+}
+
+.tech-tag {
+  font-size: 16rpx;
+  color: #b0bec5;
+  border: 1rpx solid #cfd8dc;
+  padding: 2rpx 6rpx;
+  border-radius: 4rpx;
+  font-family: monospace;
+}
+
+.tech-dot {
+  font-size: 12rpx;
+  color: #e57373; /* 红点装饰 */
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.info-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+  margin-top: 0; /* 由 flex 布局控制 */
+}
+
+/* 动态播放指示器 */
+.play-indicator {
+  display: flex;
+  align-items: flex-end;
+  height: 24rpx;
+  margin-bottom: 12rpx;
+}
+
+.play-indicator .bar {
+  width: 6rpx;
+  background-color: #81c784;
+  margin-right: 4rpx;
+  border-radius: 4rpx;
+  animation: equalize 1s infinite;
+}
+
+.play-indicator .bar1 { animation-delay: 0.2s; height: 12rpx; }
+.play-indicator .bar2 { animation-delay: 0.4s; height: 20rpx; }
+.play-indicator .bar3 { animation-delay: 0.0s; height: 16rpx; }
+
+@keyframes equalize {
+  0% { transform: scaleY(0.5); opacity: 0.6; }
+  50% { transform: scaleY(1); opacity: 1; }
+  100% { transform: scaleY(0.5); opacity: 0.6; }
+}
+
+.gallery-date {
+  font-size: 20rpx;
+  color: #cfd8dc;
+  font-family: 'Source Han Sans', 'Noto Sans SC', '思源黑体', sans-serif;
+  letter-spacing: 2rpx;
+  padding: 0;
+  border-radius: 0;
+  width: 100%;
+  text-align: left;
+  opacity: 1;
+  font-weight: 500;
+}
+
+/* С���������� */
+@keyframes float-boat {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-8rpx) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(5rpx) rotate(2deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+/* ==========================================
+   New Vivid Wave & Boat Styles
+   ========================================== */
+.video-card-container {
+  position: relative;
+  margin-top: 60rpx;
+  padding-bottom: 20rpx;
+  border-radius: 24rpx;
+  overflow: visible;
+}
+
+/* 动态多层波浪容器 */
+.waves-container {
+  position: absolute;
+  top: -120rpx; /* 调整高度覆盖 */
+  left: 0;
+  width: 100%;
+  height: 220rpx;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background-repeat: repeat-x;
+  background-position: 0 bottom;
+  transform-origin: center bottom;
+}
+
+/* 后层波浪 - 深海蓝 */
+.wave-bg {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 120' preserveAspectRatio='none'%3E%3Cpath d='M0,100 C150,90 250,20 400,60 C550,100 650,40 800,80 L800,120 L0,120 Z' fill='%231976D2' fill-opacity='0.2'/%3E%3C/svg%3E");
+  background-size: 50% 100%;
+  z-index: 1;
+  animation: wave-move 20s linear infinite;
+  opacity: 0.8;
+  height: 110%;
+}
+
+/* 中层波浪 - 海洋蓝 */
+.wave-mid {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 120' preserveAspectRatio='none'%3E%3Cpath d='M0,100 C180,50 320,130 500,70 C650,20 720,80 800,60 L800,120 L0,120 Z' fill='%232196F3' fill-opacity='0.4'/%3E%3C/svg%3E");
+  background-size: 50% 100%;
+  z-index: 2;
+  animation: wave-move 12s linear infinite reverse;
+  bottom: 0;
+  height: 100%;
+}
+
+/* 前层波浪 - 浅蓝浪花 */
+.wave-fg {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 120' preserveAspectRatio='none'%3E%3Cpath d='M0,100 C150,140 280,60 450,100 C600,130 700,50 800,90 L800,120 L0,120 Z' fill='%2364B5F6' fill-opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 50% 100%;
+  z-index: 4; /* 在小船之上 */
+  animation: wave-move 7s linear infinite;
+  bottom: 0;
+  height: 90%;
+}
+
+/* 小船容器 - 位于波浪层级中间 */
+.boat-wrapper {
+  position: absolute;
+  top: auto !important; /* 清除 top */
+  bottom: 60rpx; /* 改用 bottom 定位，随波浪起伏 */
+  right: 60rpx !important;
+  z-index: 3; /* 位于 mid 和 fg 之间 */
+  width: 120rpx !important;
+  height: 120rpx !important;
+  animation: boat-float 4s ease-in-out infinite !important;
+  transform-origin: center bottom;
+}
+
+.boat-icon {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4rpx 8rpx rgba(0,0,0,0.15));
+}
+
+@keyframes wave-move {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes boat-float {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-12rpx) rotate(3deg); }
+}
+
+/* 底部灵感卡片 */
+.inspiration-card {
+  margin: 30rpx 30rpx 10rpx; /* 减少底部边距，填补空白 */
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 24rpx 30rpx;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
+  border: 1rpx solid rgba(255, 248, 225, 0.8);
+}
+
+.inspiration-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+  border-bottom: 2rpx dashed #f0f0f0;
+  padding-bottom: 12rpx;
+}
+
+.inspiration-title {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #333;
+  display: flex;
+  align-items: center;
+}
+
+.inspiration-title::before {
+  content: '';
+  display: inline-block;
+  width: 6rpx;
+  height: 24rpx;
+  background-color: #ffd700;
+  margin-right: 12rpx;
+  border-radius: 3rpx;
+}
+
+.inspiration-date {
+  font-size: 20rpx;
+  color: #bbb;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+}
+
+.inspiration-content {
+  position: relative;
+  z-index: 2;
+}
+
+.quote-text {
+  font-size: 26rpx;
+  color: #555;
+  line-height: 1.6;
+  font-family: 'KaiTi', '楷体', serif;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.quote-author {
+  font-size: 20rpx;
+  color: #999;
+  text-align: right;
+  font-style: italic;
+}
+
+.inspiration-bg-icon {
+  position: absolute;
+  bottom: -10rpx;
+  right: 10rpx;
+  font-size: 120rpx;
+  opacity: 0.05;
+  transform: rotate(-20deg);
+  z-index: 1;
+  pointer-events: none;
 }

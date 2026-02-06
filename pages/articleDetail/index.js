@@ -13,7 +13,13 @@ Page({
       imageUrl: '/upload/image',
       maxImageSize: 5, // MB
       supportedImageFormats: ['jpg', 'jpeg', 'png']
-    }
+    },
+    isVIP: false,
+    showMembershipModal: false
+  },
+
+  onShow: function() {
+    this.checkUserMemberStatus();
   },
 
   onLoad: function(options) {
@@ -44,6 +50,95 @@ Page({
 
     // 加载图片和相关内容
     this.loadContent(type, chapter, area, term, season);
+    
+    // 检查会员状态
+    this.checkUserMemberStatus();
+  },
+
+  // 检查用户会员状态
+  checkUserMemberStatus: function() {
+    // 1. 先尝试从本地缓存获取
+    const userInfo = wx.getStorageSync('userInfo');
+    // 如果没有用户信息，肯定不是会员
+    if (!userInfo || !userInfo.openid) {
+      this.setData({ isVIP: false });
+      return;
+    }
+
+    // 2. 尝试从全局数据获取（如果有）
+    // const app = getApp();
+    // if (app.globalData.isVIP !== undefined) {
+    //   this.setData({ isVIP: app.globalData.isVIP });
+    // }
+    
+    // 3. 稳妥起见，这里简单默认 false，或者如果你确认 timeSequence 更新了本地存储的 isVIP，可以读一下
+    // 目前项目似乎没有把 isVIP 存到 storage，所以还是得默认 false 或者重新请求
+    // 为了体验，我们可以假设如果是会员，在之前的页面已经获取过状态并可能存到了 app.globalData 或者 storage
+    // 这里的实现复用 timeSequence 的逻辑，尝试云函数，但为了不阻塞显示，先静默检查
+    
+    // 临时方案：复用 timeSequence 的逻辑
+    // 为了性能，如果已经在 timeSequence 获取过并存了 globalData，最好用 globalData
+    // 现阶段我们再调一次云函数，或者根据 storage 里的标识（如果有）
+    
+    // 这里实现一个简化版：
+    // 如果有 'isVIP' 缓存则读取
+    const cachedVIP = wx.getStorageSync('isVIP');
+    if (cachedVIP === true) {
+      this.setData({ isVIP: true });
+    } else {
+       // 调用云函数检查（静默）
+       this.checkMemberStatusCloud();
+    }
+  },
+
+  async checkMemberStatusCloud() {
+    try {
+      // 创建跨环境调用的Cloud实例
+      var c = new wx.cloud.Cloud({ 
+        identityless: true, 
+        resourceAppid: 'wx85d92d28575a70f4', 
+        resourceEnv: 'cloud1-1gsyt78b92c539ef', 
+      }) 
+      await c.init();
+      
+      const res = await c.callFunction({
+        name: 'xsj_pay',
+        data: { action: 'checkMemberStatus' }
+      });
+
+      if (res.result && res.result.success) {
+        const isVIP = res.result.isVIP;
+        this.setData({ isVIP: isVIP });
+        wx.setStorageSync('isVIP', isVIP); // 缓存状态
+      }
+    } catch (e) {
+      console.error('检查会员状态失败', e);
+    }
+  },
+
+  // 非会员触摸锁定区域触发
+  handleLockTouch: function() {
+    if (!this.data.isVIP) {
+      this.setData({ showMembershipModal: true });
+    }
+  },
+
+  // 显示会员弹窗
+  showMemberModal: function() {
+    this.setData({ showMembershipModal: true });
+  },
+
+  // 关闭会员弹窗
+  closeMembershipModal: function() {
+    this.setData({ showMembershipModal: false });
+  },
+
+  // 跳转会员页
+  goToMembership: function() {
+    this.setData({ showMembershipModal: false });
+    wx.navigateTo({
+      url: '/pages/membership/index'
+    });
   },
 
   loadContent: function(type, chapter, area, term, season) {
@@ -197,6 +292,12 @@ Page({
 
   // 预览图片
   previewImage: function(e) {
+    // 非会员拦截
+    if (!this.data.isVIP) {
+      this.setData({ showMembershipModal: true });
+      return;
+    }
+
     const { index } = e.currentTarget.dataset;
     const urls = this.data.images.map(img => img.url);
     
@@ -447,5 +548,10 @@ Page({
     } catch (error) {
       console.error('记录评论活动失败:', error);
     }
+  },
+
+  // 阻止冒泡
+  stopPropagation: function() {
+    return;
   }
 });

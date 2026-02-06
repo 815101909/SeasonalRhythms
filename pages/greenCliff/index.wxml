@@ -1,17 +1,9 @@
 <!-- 绿崖时序页面 - 简化版 -->
 <view class="greencliff-container">
-  <!-- 全屏加载界面 -->
-  <view class="loading-container" wx:if="{{loading}}">
-    <view class="loading-content">
-      <view class="loading-animation">
-        <view class="loading-emoji">🏛️</view>
-      </view>
-      <view class="loading-text">正在加载博物馆数据...</view>
-    </view>
-  </view>
+  <!-- 全屏加载界面移除 -->
 
   <!-- 主要内容区域 -->
-  <view wx:if="{{!loading}}">
+  <view>
     <!-- 落叶动画 -->
     <view class="leaf leaf-1"></view>
     <view class="leaf leaf-2"></view>

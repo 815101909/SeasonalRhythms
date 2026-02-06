@@ -2,6 +2,22 @@
 const tempUrlCache = {};
 const CACHE_EXPIRATION_TIME = 3 * 60 * 60 * 1000; // 缓存有效期3小时
 
+let sharedCloudPromise = null;
+function getSharedCloud() {
+  if (!sharedCloudPromise) {
+    const cloud = new wx.cloud.Cloud({
+      identityless: true,
+      resourceAppid: 'wx85d92d28575a70f4',
+      resourceEnv: 'cloud1-1gsyt78b92c539ef',
+    });
+    sharedCloudPromise = (async () => {
+      await cloud.init();
+      return cloud;
+    })();
+  }
+  return sharedCloudPromise;
+}
+
 // 统一的图片、音频、视频URL处理函数
 async function getTemporaryImageUrl(imageUrl, type) {
   if (!imageUrl) {
@@ -18,18 +34,8 @@ async function getTemporaryImageUrl(imageUrl, type) {
   try {
     // 如果是云存储链接，转换为临时HTTP链接
     if (imageUrl.startsWith('cloud://')) {
-      
       try {
-        // 创建跨环境调用的Cloud实例
-        var c = new wx.cloud.Cloud({ 
-          // 必填，表示是未登录模式 
-          identityless: true, 
-          // 资源方 AppID 
-          resourceAppid: 'wx85d92d28575a70f4', 
-          // 资源方环境 ID 
-          resourceEnv: 'cloud1-1gsyt78b92c539ef', 
-        }) 
-        await c.init();
+        const c = await getSharedCloud();
         const result = await c.getTempFileURL({
           fileList: [imageUrl]
         });
@@ -119,6 +125,8 @@ Page({
       quote: '',
       imageUrl: '' // 添加图片字段
     },
+    loadingSeason: true,
+    isExactlyOnSolarTerm: false,
     nextSeasonName: '', // 下一个节气名称
     daysToNextSeason: 0, // 距离下一个节气的天数
     footprints: [], // 用户足迹数据
@@ -127,6 +135,7 @@ Page({
     badgeCount: 0,
     showBadgeDetail: false,
     selectedBadge: null,
+    isBgMusicPlaying: false,
     // 关于我们弹窗
     showAboutDialog: false,
     showTreeRulesDialog: false,
@@ -430,6 +439,9 @@ Page({
           treeCount: userData.treeCount || 0
         });
 
+        this.loadUserBadges();
+        this.loadUserFootprints();
+
         // 登录成功后清除推荐码（避免重复使用）
         if (referrerCode) {
           app.globalData.referrerCode = null;
@@ -524,12 +536,7 @@ Page({
   async getCurrentSolarTerm(silentUpdate = false) {
     try {
       // 调用云函数获取节气数据
-      const cloud = new wx.cloud.Cloud({
-        identityless: true,
-        resourceAppid: 'wx85d92d28575a70f4',
-        resourceEnv: 'cloud1-1gsyt78b92c539ef'
-      });
-      await cloud.init();
+      const cloud = await getSharedCloud();
       const { result } = await cloud.callFunction({
         name: 'getSolarTerm'
       });
@@ -614,7 +621,7 @@ Page({
 
           if (hasChanged || !silentUpdate) {
             console.log('更新节气数据到界面');
-            this.setData(newSeasonData);
+            this.setData(Object.assign({}, newSeasonData, { loadingSeason: false }));
           }
           
           // 总是更新缓存和时间戳
@@ -644,24 +651,45 @@ Page({
     const now = Date.now();
     const cacheExpiry = 3 * 60 * 60 * 1000; // 3小时缓存过期时间
     
-    // 检查缓存是否有效且未过期
-    if (cachedSeasonData && (now - cacheTimestamp) < cacheExpiry) {
-      console.log('使用有效的本地缓存节气数据');
+    // 只要有缓存，先显示缓存内容（优化首屏体验，防止闪烁）
+    if (cachedSeasonData) {
+      console.log('使用本地缓存节气数据');
       this.setData({
         currentSeason: cachedSeasonData.currentSeason,
         nextSeasonName: cachedSeasonData.nextSeasonName,
-        daysToNextSeason: cachedSeasonData.daysToNextSeason
+        daysToNextSeason: cachedSeasonData.daysToNextSeason,
+        loadingSeason: false
       });
       
-      // 缓存有效，不需要立即更新，但可以在后台静默更新
-      setTimeout(() => {
-        this.getCurrentSolarTerm(true); // 传入静默更新标志
-      }, 1000);
+      // 检查是否过期
+      if ((now - cacheTimestamp) >= cacheExpiry) {
+        console.log('缓存已过期，执行静默更新');
+        this.getCurrentSolarTerm(true);
+      } else {
+        // 缓存未过期，但也延迟检查更新
+        setTimeout(() => {
+          this.getCurrentSolarTerm(true);
+        }, 1000);
+      }
     } else {
-      // 缓存无效或过期，立即从数据库获取数据
-      console.log('缓存无效或过期，从数据库获取最新节气数据');
-      this.getCurrentSolarTerm(false);
+      // 没有任何缓存，才使用本地计算兜底
+      console.log('无缓存，使用本地计算兜底');
+      this.fetchSeasonData();
+      this.setData({ loadingSeason: false });
+      setTimeout(() => {
+        this.getCurrentSolarTerm(true);
+      }, 0);
     }
+  },
+
+  /**
+   * 图片加载失败处理
+   */
+  onImageError(e) {
+    console.log('时节图片加载失败，使用占位图');
+    this.setData({
+      'currentSeason.imageUrl': '../../images/placeholder-a4.svg'
+    });
   },
 
   /**
@@ -787,7 +815,8 @@ Page({
           currentMonth: month,
           currentDay: day,
           description: seasonInfo.description,
-          quote: seasonInfo.quote
+          quote: seasonInfo.quote,
+          imageUrl: '../../images/placeholder-a4.svg'
         },
         nextSeasonName: nextTerm.name,
         daysToNextSeason: daysToNext
@@ -1281,7 +1310,8 @@ Page({
         lantingTrees: lantingTrees,
         timeSequenceTrees: timeSequenceTrees,
         consumedTrees: consumedTrees,
-        treeCount: treeCount
+        treeCount: treeCount,
+        isBgMusicPlaying: app.globalData.isBgMusicPlaying || false
       });
     }
     
@@ -1311,6 +1341,23 @@ Page({
         footprints: [],
         activities: []
       });
+    }
+  },
+  
+  toggleGlobalBgMusic() {
+    this.playClickSound();
+    const app = getApp();
+    if (app && typeof app.toggleGlobalBgMusic === 'function') {
+      app.toggleGlobalBgMusic();
+      this.setData({
+        isBgMusicPlaying: app.globalData.isBgMusicPlaying || false
+      });
+      setTimeout(() => {
+        const a = getApp();
+        this.setData({
+          isBgMusicPlaying: (a.globalData && a.globalData.isBgMusicPlaying) || false
+        });
+      }, 300);
     }
   },
 
@@ -1542,12 +1589,7 @@ Page({
         });
         return;
       }
-      const cloud = new wx.cloud.Cloud({
-        identityless: true,
-        resourceAppid: 'wx85d92d28575a70f4',
-        resourceEnv: 'cloud1-1gsyt78b92c539ef'
-      });
-      await cloud.init();
+      const cloud = await getSharedCloud();
       const res = await cloud.callFunction({
         name: 'xsj_auth',
         data: {
@@ -1557,22 +1599,21 @@ Page({
       });
       if (res.result && res.result.success) {
         const list = res.result.data || [];
-        const processed = [];
-        for (let i = 0; i < list.length; i++) {
-          const icon = list[i].iconUrl ? await getTemporaryImageUrl(list[i].iconUrl, '勋章图标') : '../../images/placeholder-a4.svg';
-          const formattedDate = this.formatBadgeDate(list[i].obtainedAt);
-          const bgColor = this.getBadgeBgColor(list[i].category);
-          processed.push({
-            badgeId: list[i].badgeId || (list[i]._id || ''),
-            name: list[i].name || '',
+        const processed = await Promise.all(list.map(async (item) => {
+          const icon = item.iconUrl ? await getTemporaryImageUrl(item.iconUrl, '勋章图标') : '../../images/placeholder-a4.svg';
+          const formattedDate = this.formatBadgeDate(item.obtainedAt);
+          const bgColor = this.getBadgeBgColor(item.category);
+          return {
+            badgeId: item.badgeId || (item._id || ''),
+            name: item.name || '',
             iconUrl: icon,
-            description: list[i].description || '',
-            category: list[i].category || '',
-            obtainedAt: list[i].obtainedAt || '',
+            description: item.description || '',
+            category: item.category || '',
+            obtainedAt: item.obtainedAt || '',
             obtainedAtFormatted: formattedDate,
             bgColor: bgColor
-          });
-        }
+          };
+        }));
         const displayList = processed.slice(0, 8);
         this.setData({
           badges: displayList,
@@ -1856,7 +1897,7 @@ Page({
     this.playClickSound();
     if (!this.data.userId) {
       wx.showToast({
-        title: '用户编号不存在',
+        title: '用户ID不存在',
         icon: 'none'
       });
       return;
@@ -1866,7 +1907,7 @@ Page({
       data: this.data.userId,
       success() {
         wx.showToast({
-          title: '用户编号已复制',
+          title: '用户ID已复制',
           icon: 'success'
         });
       },
@@ -2036,6 +2077,8 @@ Page({
             treeCount: userData.treeCount || 0
           });
 
+          this.loadUserBadges();
+          this.loadUserFootprints();
           // 登录成功后清除推荐码（避免重复使用）
           if (referrerCode) {
             app.globalData.referrerCode = null;

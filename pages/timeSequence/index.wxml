@@ -1,53 +1,7 @@
 <!-- 时序经纬页面 -->
-<!-- 加载屏幕 -->
-<view class="loading-container" wx:if="{{isLoading}}">
-  <view class="loading-content">
-    <view class="loading-animation">
-      <view class="loading-emoji">🗺️</view>
-      <!-- 城市相关 -->
-      <view class="loading-orb orb-1">🏙️</view>
-      <view class="loading-orb orb-2">🌆</view>
-      <view class="loading-orb orb-3">🌇</view>
-      
-      <!-- 春季元素 -->
-      <view class="loading-orb season-orb spring-orb-1">🌸</view>
-      <view class="loading-orb season-orb spring-orb-2">🌺</view>
-      
-      <!-- 夏季元素 -->
-      <view class="loading-orb season-orb summer-orb-1">🌿</view>
-      <view class="loading-orb season-orb summer-orb-2">🌱</view>
-      
-      <!-- 秋季元素 -->
-      <view class="loading-orb season-orb autumn-orb-1">🍂</view>
-      <view class="loading-orb season-orb autumn-orb-2">🦢</view>
-      
-      <!-- 冬季元素 -->
-      <view class="loading-orb season-orb winter-orb-1">❄️</view>
-      <view class="loading-orb season-orb winter-orb-2">☁️</view>
-    </view>
-    <view class="loading-text">正在加载城市数据...</view>
-    <view class="loading-progress">
-      <progress percent="{{loadingProgress}}" stroke-width="3" activeColor="#4CAF50" backgroundColor="#e0e0e0"/>
-      <text class="progress-text">{{loadingProgress}}%</text>
-    </view>
-  </view>
-</view>
+<!-- 加载屏幕移除 -->
 
-<!-- 寻宝发现弹窗 -->
-<view class="child-modal" wx:if="{{showTreasureModal}}" catchtap="closeTreasure">
-  <view class="child-modal-content" catchtap="stopPropagation">
-    <view class="child-modal-header treasure-header">
-      <text>寻宝发现</text>
-      <view class="child-close-btn" catchtap="closeTreasure">×</view>
-    </view>
-    <view class="child-modal-body">
-      <image wx:if="{{selectedCity.treasure && selectedCity.treasure.image}}" class="child-modal-image" src="{{selectedCity.treasure.image}}" mode="aspectFill"></image>
-      <view class="child-modal-desc-box">
-        <text>{{(selectedCity.treasure && selectedCity.treasure.description) || '暂无发现'}}</text>
-      </view>
-    </view>
-  </view>
-</view>
+<!-- 寻宝发现弹窗已移除 -->
 
 <!-- 纪念勋章弹窗 -->
 <view class="child-modal" wx:if="{{showMedalModal}}" catchtap="closeMedal">
@@ -57,7 +11,7 @@
       <view class="child-close-btn" catchtap="closeMedal">×</view>
     </view>
     <view class="child-modal-body">
-      <image wx:if="{{selectedCity.medal && selectedCity.medal.image}}" class="child-modal-image medal-img" src="{{selectedCity.medal.image}}" mode="aspectFit"></image>
+      <image wx:if="{{selectedCity.medal && selectedCity.medal.image}}" class="child-modal-image medal-img" src="{{selectedCity.medal.image}}" mode="aspectFit" lazy-load="true"></image>
       <view class="child-modal-desc-box">
         <text>{{(selectedCity.medal && selectedCity.medal.description) || '暂无勋章'}}</text>
       </view>
@@ -71,7 +25,24 @@
   </view>
 </view>
 
-<view class="time-sequence-container" wx:if="{{!isLoading}}">
+<!-- 会员提醒弹窗 -->
+<view class="child-modal" wx:if="{{showMembershipModal}}" catchtap="closeMembershipModal">
+  <view class="child-modal-content" catchtap="stopPropagation">
+    <view class="child-modal-header medal-header">
+      <text>会员提醒</text>
+      <view class="child-close-btn" catchtap="closeMembershipModal">×</view>
+    </view>
+    <view class="child-modal-body">
+      <view class="child-modal-desc-box">
+        <text>视频试看已结束，开通会员后可观看完整视频</text>
+      </view>
+      <view class="submit-btn" bindtap="goToMembership">立即开通</view>
+      <view class="submit-btn" bindtap="closeMembershipModal">稍后再说</view>
+    </view>
+  </view>
+</view>
+
+<view class="time-sequence-container">
   <!-- 页面标题 -->
   <view class="page-title">
     <text>一日一城・时节漫游</text>
@@ -86,7 +57,7 @@
             bindchange="onSwiperChange"
             current="{{currentSwiperIndex}}">
       <swiper-item wx:for="{{scenicImages}}" wx:key="index">
-        <image src="{{item.imgUrl}}" mode="aspectFill" class="scenic-image" />
+        <image src="{{item.localUrl || item.imgUrl}}" mode="aspectFill" class="scenic-image" lazy-load="true" />
         <view class="scenic-caption">{{item.caption}}</view>
       </swiper-item>
     </swiper>
@@ -146,7 +117,7 @@
           <block wx:if="{{item.unlocked}}">
             <view class="city-icon">
               <!-- 预留城市封面API接口 -->
-              <image class="city-image" src="{{item.iconUrl}}" mode="aspectFill" wx:if="{{item.iconUrl}}"></image>
+              <image class="city-image" src="{{item.iconUrl}}" mode="aspectFill" wx:if="{{item.iconUrl}}" lazy-load="true"></image>
               <view class="city-icon-placeholder" wx:else></view>
             </view>
             <!-- 预留城市名称API接口 -->
@@ -185,15 +156,15 @@
   </view>
 
   <!-- 城市详情页面 -->
-  <view class="city-detail-page" wx:if="{{showCityDetail}}" style="{{fontSizeStyle}}">
-    <view class="edge-swipe-area" catchtouchstart="onEdgeTouchStart" catchtouchmove="onEdgeTouchMove" catchtouchend="onEdgeTouchEnd"></view>
+  <view class="city-detail-page" wx:if="{{showCityDetail}}" style="{{fontSizeStyle}}" catchtouchmove="preventScroll">
+    <view class="edge-swipe-area {{edgeSwipeEnabled ? '' : 'edge-swipe-disabled'}}" catchtouchstart="onEdgeTouchStart" catchtouchmove="onEdgeTouchMove" catchtouchend="onEdgeTouchEnd"></view>
     <view class="city-detail-content">
       
       <!-- 封面和视频并排显示容器 - 只在城市详情模式显示 -->
       <view class="media-container" wx:if="{{!showCityMuseum && showMediaContainer}}">
         <view class="city-detail-header">
           <!-- 封面图片 -->
-          <image class="city-icon-large" src="{{selectedCity.iconUrl}}" mode="aspectFill" wx:if="{{selectedCity.iconUrl}}"></image>
+          <image class="city-icon-large" src="{{selectedCity.iconUrl}}" mode="aspectFill" wx:if="{{selectedCity.iconUrl}}" lazy-load="true"></image>
           <view class="city-icon-large" wx:else></view>
           
           <!-- 城市名称和国家显示区，压在底部 -->
@@ -203,41 +174,15 @@
           </view>
         </view>
         
-        <!-- 视频展示区 -->
         <view class="video-container">
-          <video 
-            wx:if="{{selectedCity.videoUrl}}" 
-            id="cityVideo"
-                 src="{{selectedCity.videoUrl}}" 
-                 class="city-video" 
-                 object-fit="cover"
-                 autoplay="{{false}}"
-                 muted="{{true}}"
-                 show-mute-btn="{{true}}"
-                 show-play-btn="{{true}}"
-            show-center-play-btn="{{true}}"
-                 controls="{{true}}"
-            show-fullscreen-btn="{{true}}"
-            enable-play-gesture="{{true}}"
-            play-btn-position="center"
-            direction="90"
-            initial-time="{{0}}"
-            poster="{{selectedCity.iconUrl}}"
-            bindfullscreenchange="onVideoFullscreenChange"
-            bindplay="onVideoPlay"
-            bindpause="onVideoPause"
-            bindended="onVideoEnded"
-            bindtimeupdate="onVideoTimeUpdate"
-            bindwaiting="onVideoWaiting"
-            binderror="onVideoError">
-          </video>
-          
-          <view wx:if="{{!selectedCity.videoUrl}}" class="video-placeholder">
-            <view class="video-icon">▶</view>
-            <view class="video-text">暂无视频</view>
-          </view>
-          
-          <!-- 视频标题条 -->
+          <image 
+            class="city-video" 
+            src="{{selectedCity.basicImageUrl}}" 
+            wx:if="{{selectedCity.basicImageUrl}}"
+            mode="aspectFill"
+            lazy-load="true"
+          ></image>
+          <view class="city-video" wx:else></view>
           <view class="video-title">
             <text class="video-city-name">{{selectedCity.nameEn || 'City Name'}}</text>
             <text class="video-date">{{selectedCity.unlockYear || '2023'}}年{{selectedCity.unlockDate || '05-15'}}</text>
@@ -255,658 +200,166 @@
       
       <!-- 操作按钮区，移至滚动区域上方 -->
       <view class="unified-actions">
-        <view class="action-btn" bindtap="disabledBackTap"><text class="btn-icon">❮</text></view>
-        <view class="action-btn" bindtap="increaseFontSize"><text class="btn-icon">A+</text></view>
-        <view class="action-btn" bindtap="decreaseFontSize"><text class="btn-icon">A-</text></view>
-        <view class="action-btn {{isBgMusicPlaying ? 'playing' : ''}}" bindtap="toggleBgMusic"><text class="btn-icon">🎵</text></view>
-        <view class="action-btn {{!isVIP ? 'vip-required' : ''}}" bindtap="onPrintCity"><text class="btn-icon">🖨️</text></view>
-        <!--<view class="action-btn {{isPlaying ? 'playing' : ''}}" bindtap="toggleAudio" wx:if="{{selectedCity.audioUrl}}"><text class="btn-icon">🔊</text></view>-->
-        <view class="action-btn" bindtap="leaveFootprint"><text class="btn-icon">👣</text></view>
-      </view>
-      
-      <!-- 地标打卡区 - 只在城市详情模式显示 -->
-      <view class="landmarks-horizontal-container" wx:if="{{!showCityMuseum}}">
-        <view class="landmarks-journey">
-          <!-- 左侧标题区 -->
-          <view class="title-section">
-            <view class="title-emoji">📍</view>
-            <view class="title-text">地标打卡</view>
-          </view>
-          
-          <!-- 右侧地标路径 -->
-          <view class="landmarks-path">
-            <block wx:for="{{cityLandmarks}}" wx:key="id" wx:for-index="idx">
-              <!-- 地标图标 -->
-              <view 
-                class="landmark-node {{item.lit ? 'lit' : ''}} landmark-wave-{{idx}}"
-                bindtap="onLandmarkTap"
-                data-index="{{idx}}">
-                <view class="landmark-emoji">{{item.emoji}}</view>
-                <view class="landmark-glow" wx:if="{{item.lit}}"></view>
-                <view class="landmark-pulse"></view>
-                <view class="landmark-name">{{item.name}}</view>
-              </view>
-              
-              <!-- 箭头连接线（最后一个不显示） -->
-              <view class="landmark-arrow {{item.lit ? 'lit' : ''}}" wx:if="{{idx < cityLandmarks.length - 1}}">
-                <view class="arrow-line"></view>
-              </view>
-            </block>
-          </view>
-        </view>
-      </view>
-      
-      <!-- Tab 导航栏 - 移出 scroll-view 以固定在顶部 -->
-      <view class="city-tabs-container" wx:if="{{!showCityMuseum}}">
-        <view class="city-tab {{currentCityTab === item.id ? 'active' : ''}}" 
-              wx:for="{{cityTabs}}" 
-              wx:key="id" 
-              bindtap="switchCityTab" 
-              data-id="{{item.id}}"
-              style="{{currentCityTab === item.id ? 'background-color:' + item.color + '; border-color:' + item.color : ''}}">
-          <image wx:if="{{currentCityTab === item.id}}" class="tab-boat-icon" src="/images/icons/小船1.png" mode="aspectFit"></image>
-          <text>{{item.name}}</text>
-        </view>
-      </view>
-
-      <scroll-view scroll-y="{{isVIP || !showMembershipLock}}" class="city-info-scroll" enhanced="true" show-scrollbar="true" bounces="true" bindscroll="onContentScroll" scroll-top="{{scrollTop}}" style="{{fontSizeStyle}}">
-
-        <!-- 探险进度条（已隐藏） -->
-        <view class="exploration-progress-container" wx:if="{{false}}">
-          <view class="exploration-progress-text">探险进度: {{explorationProgress}}%</view>
-          <view class="exploration-progress-bar-bg">
-            <view class="exploration-progress-bar-fill" style="width: {{explorationProgress}}%"></view>
-          </view>
-        </view>
-
-        <!-- 城市详情内容 - 只在城市详情模式显示 -->
-        <block wx:if="{{!showCityMuseum}}">
-          <!-- 自然地理板块 -->
-          <view class="info-section section-nature {{currentCityTab === 'nature' ? 'tab-active' : ''}}" data-index="0" id="section-0">
-            <view class="info-content-wrapper">
-              <!-- 第一部分：首句 -->
-              <view class="intro-text">
-                <text>{{selectedCity.natureMain || selectedCity.nature || '该城市的自然地理信息尚未更新'}}</text>
-              </view>
-              
-              <!-- 第二部分：趣味知识（图片 + 剩余文本） -->
-              <view class="fun-fact-box" wx:if="{{selectedCity.natureImage || selectedCity.natureFunFact}}">
-                <image class="fun-fact-image nature-image" src="{{selectedCity.natureImage}}" mode="aspectFill" wx:if="{{selectedCity.natureImage}}"></image>
-                <view style="position: relative; display: inline-block;">
-                  <image src="/images/icons/小船2.png" class="fun-fact-boat-icon" mode="aspectFit"></image>
-                  <text class="fun-fact-label">趣味知识</text>
-                </view>
-                <text class="fun-fact-text" wx:if="{{selectedCity.natureFunFact}}">{{selectedCity.natureFunFact}}</text>
-              </view>
-            </view>
-            <view class="section-audio-bar" wx:if="{{false}}">
-              <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'nature' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="nature">
-                <view wx:if="{{!(isPlaying && currentPlayingSection === 'nature')}}" class="icon-play"></view>
-                <view wx:else class="icon-pause"></view>
-              </view>
-              <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'nature') ? 'playing' : 'paused'}}" wx:if="{{true}}">
-                <view class="wave-bar bar1"></view>
-                <view class="wave-bar bar2"></view>
-                <view class="wave-bar bar3"></view>
-                <view class="wave-bar bar4"></view>
-                <view class="wave-bar bar5"></view>
-                <view class="wave-bar bar6"></view>
-                <view class="wave-bar bar7"></view>
-                <view class="wave-bar bar8"></view>
-                <view class="wave-bar bar9"></view>
-                <view class="wave-bar bar10"></view>
-                <view class="wave-bar bar11"></view>
-                <view class="wave-bar bar12"></view>
-              </view>
-              <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}</view>
-            </view>
-          </view>
-          
-          <view class="audio-bg-band bg-unified" wx:if="{{selectedCity.natureAudioRaw && currentCityTab === 'nature'}}">
-            <view class="section-audio-bar audio-nature">
-              <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'nature' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="nature">
-                <view wx:if="{{!(isPlaying && currentPlayingSection === 'nature')}}" class="icon-play"></view>
-                <view wx:else class="icon-pause"></view>
-              </view>
-              <view class="speed-btn" bindtap="toggleSpeedSelector">
-                <view class="btn-icon">{{audioPlaybackRate}}x</view>
-              </view>
-              <view class="speed-selector" wx:if="{{showSpeedSelector}}">
-                <view class="speed-options">
-                  <view wx:for="{{speedOptions}}" wx:key="index" class="speed-option {{audioPlaybackRate === item ? 'active' : ''}}" bindtap="selectPlaybackRate" data-rate="{{item}}">{{item}}x</view>
-                </view>
-              </view>
-              <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'nature') ? 'playing' : 'paused'}}" wx:if="{{true}}">
-                <view class="wave-bar bar1"></view>
-                <view class="wave-bar bar2"></view>
-                <view class="wave-bar bar3"></view>
-                <view class="wave-bar bar4"></view>
-                <view class="wave-bar bar5"></view>
-                <view class="wave-bar bar6"></view>
-                <view class="wave-bar bar7"></view>
-                <view class="wave-bar bar8"></view>
-                <view class="wave-bar bar9"></view>
-                <view class="wave-bar bar10"></view>
-                <view class="wave-bar bar11"></view>
-                <view class="wave-bar bar12"></view>
-              </view>
-              <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}</view>
-            </view>
-          </view>
-          
-          <!-- 气候时节板块 -->
-          <view class="info-section section-climate {{currentCityTab === 'climate' ? 'tab-active' : ''}}" data-index="1" id="section-1">
-            <view class="info-content-wrapper">
-              <view class="intro-text">
-                <text>{{selectedCity.climateMain || selectedCity.climate || '该城市的气候时节信息尚未更新'}}</text>
-              </view>
-              <view class="fun-fact-box" wx:if="{{selectedCity.climateImage || selectedCity.climateFunFact}}">
-                <image class="fun-fact-image climate-image" src="{{selectedCity.climateImage}}" mode="aspectFill" wx:if="{{selectedCity.climateImage}}"></image>
-                <view style="position: relative; display: inline-block;">
-                  <image src="/images/icons/小船2.png" class="fun-fact-boat-icon" mode="aspectFit"></image>
-                  <text class="fun-fact-label">趣味知识</text>
-                </view>
-                <text class="fun-fact-text" wx:if="{{selectedCity.climateFunFact}}">{{selectedCity.climateFunFact}}</text>
-              </view>
-              <view class="section-audio-bar" wx:if="{{false}}">
-                <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'climate' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="climate">
-                  <view wx:if="{{!(isPlaying && currentPlayingSection === 'climate')}}" class="icon-play"></view>
-                  <view wx:else class="icon-pause"></view>
-                </view>
-                <view class="section-playing-wave" wx:if="{{isPlaying && currentPlayingSection === 'climate'}}">
-                  <view class="wave-bar bar1"></view>
-                  <view class="wave-bar bar2"></view>
-                  <view class="wave-bar bar3"></view>
-                  <view class="wave-bar bar4"></view>
-                  <view class="wave-bar bar5"></view>
-                  <view class="wave-bar bar6"></view>
-                  <view class="wave-bar bar7"></view>
-                  <view class="wave-bar bar8"></view>
-                  <view class="wave-bar bar9"></view>
-                  <view class="wave-bar bar10"></view>
-                  <view class="wave-bar bar11"></view>
-                  <view class="wave-bar bar12"></view>
-                </view>
-                <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}</view>
-              </view>
-            </view>
-          </view>
-          <view class="audio-bg-band bg-unified" wx:if="{{selectedCity.climateAudioRaw && currentCityTab === 'climate'}}">
-            <view class="section-audio-bar audio-climate">
-              <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'climate' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="climate">
-                <view wx:if="{{!(isPlaying && currentPlayingSection === 'climate')}}" class="icon-play"></view>
-                <view wx:else class="icon-pause"></view>
-              </view>
-              <view class="speed-btn" bindtap="toggleSpeedSelector">
-                <view class="btn-icon">{{audioPlaybackRate}}x</view>
-              </view>
-              <view class="speed-selector" wx:if="{{showSpeedSelector}}">
-                <view class="speed-options">
-                  <view wx:for="{{speedOptions}}" wx:key="index" class="speed-option {{audioPlaybackRate === item ? 'active' : ''}}" bindtap="selectPlaybackRate" data-rate="{{item}}">{{item}}x</view>
-                </view>
-              </view>
-              <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'climate') ? 'playing' : 'paused'}}" wx:if="{{true}}">
-                <view class="wave-bar bar1"></view>
-                <view class="wave-bar bar2"></view>
-                <view class="wave-bar bar3"></view>
-                <view class="wave-bar bar4"></view>
-                <view class="wave-bar bar5"></view>
-                <view class="wave-bar bar6"></view>
-                <view class="wave-bar bar7"></view>
-                <view class="wave-bar bar8"></view>
-                <view class="wave-bar bar9"></view>
-                <view class="wave-bar bar10"></view>
-                <view class="wave-bar bar11"></view>
-                <view class="wave-bar bar12"></view>
-              </view>
-              <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}</view>
-            </view>
-          </view>
-          
-          <!-- 人文气息板块 -->
-          <view class="info-section section-culture {{currentCityTab === 'culture' ? 'tab-active' : ''}}" data-index="2" id="section-2">
-            <view class="info-content-wrapper">
-              <view class="intro-text">
-                <text>{{selectedCity.cultureMain || selectedCity.culture || '该城市的人文气息信息尚未更新'}}</text>
-              </view>
-              <view class="fun-fact-box" wx:if="{{selectedCity.cultureImage || selectedCity.cultureFunFact}}">
-                <image class="fun-fact-image culture-image" src="{{selectedCity.cultureImage}}" mode="aspectFill" wx:if="{{selectedCity.cultureImage}}"></image>
-                <view style="position: relative; display: inline-block;">
-                  <image src="/images/icons/小船2.png" class="fun-fact-boat-icon" mode="aspectFit"></image>
-                  <text class="fun-fact-label">趣味知识</text>
-                </view>
-                <text class="fun-fact-text" wx:if="{{selectedCity.cultureFunFact}}">{{selectedCity.cultureFunFact}}</text>
-              </view>
-              <view class="section-audio-bar" wx:if="{{false}}">
-                <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'culture' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="culture">
-                  <view wx:if="{{!(isPlaying && currentPlayingSection === 'culture')}}" class="icon-play"></view>
-                  <view wx:else class="icon-pause"></view>
-                </view>
-              <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'structure') ? 'playing' : 'paused'}}" wx:if="{{true}}">
-                  <view class="wave-bar bar1"></view>
-                  <view class="wave-bar bar2"></view>
-                  <view class="wave-bar bar3"></view>
-                  <view class="wave-bar bar4"></view>
-                  <view class="wave-bar bar5"></view>
-                  <view class="wave-bar bar6"></view>
-                  <view class="wave-bar bar7"></view>
-                  <view class="wave-bar bar8"></view>
-                  <view class="wave-bar bar9"></view>
-                  <view class="wave-bar bar10"></view>
-                  <view class="wave-bar bar11"></view>
-                  <view class="wave-bar bar12"></view>
-                </view>
-                <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}
-                </view>
-              </view>
-            </view>
-          </view>
-          <view class="audio-bg-band bg-unified" wx:if="{{selectedCity.cultureAudioRaw && currentCityTab === 'culture'}}">
-            <view class="section-audio-bar audio-culture">
-              <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'culture' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="culture">
-                <view wx:if="{{!(isPlaying && currentPlayingSection === 'culture')}}" class="icon-play"></view>
-                <view wx:else class="icon-pause"></view>
-              </view>
-              <view class="speed-btn" bindtap="toggleSpeedSelector">
-                <view class="btn-icon">{{audioPlaybackRate}}x</view>
-              </view>
-              <view class="speed-selector" wx:if="{{showSpeedSelector}}">
-                <view class="speed-options">
-                  <view wx:for="{{speedOptions}}" wx:key="index" class="speed-option {{audioPlaybackRate === item ? 'active' : ''}}" bindtap="selectPlaybackRate" data-rate="{{item}}">{{item}}x</view>
-                </view>
-              </view>
-              <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'culture') ? 'playing' : 'paused'}}" wx:if="{{true}}">
-                <view class="wave-bar bar1"></view>
-                <view class="wave-bar bar2"></view>
-                <view class="wave-bar bar3"></view>
-                <view class="wave-bar bar4"></view>
-                <view class="wave-bar bar5"></view>
-                <view class="wave-bar bar6"></view>
-                <view class="wave-bar bar7"></view>
-                <view class="wave-bar bar8"></view>
-                <view class="wave-bar bar9"></view>
-                <view class="wave-bar bar10"></view>
-                <view class="wave-bar bar11"></view>
-                <view class="wave-bar bar12"></view>
-              </view>
-              <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}
-              </view>
-            </view>
-          </view>
-          
-          <!-- 城市脉络板块 -->
-          <view class="info-section section-structure {{currentCityTab === 'structure' ? 'tab-active' : ''}}" data-index="3" id="section-3">
-            <view class="info-content-wrapper">
-              <view class="intro-text">
-                <text>{{selectedCity.cityStructureMain || selectedCity.cityStructure || '该城市的城市结构信息尚未更新'}}</text>
-              </view>
-              <view class="fun-fact-box" wx:if="{{selectedCity.cityStructureImage || selectedCity.cityStructureFunFact}}">
-                <image class="fun-fact-image city-history-image" src="{{selectedCity.cityStructureImage}}" mode="aspectFill" wx:if="{{selectedCity.cityStructureImage}}"></image>
-                <view style="position: relative; display: inline-block;">
-                  <image src="/images/icons/小船2.png" class="fun-fact-boat-icon" mode="aspectFit"></image>
-                  <text class="fun-fact-label">趣味知识</text>
-                </view>
-                <text class="fun-fact-text" wx:if="{{selectedCity.cityStructureFunFact}}">{{selectedCity.cityStructureFunFact}}</text>
-              </view>
-              <view class="section-audio-bar" wx:if="{{false}}">
-                <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'structure' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="structure">
-                  <view wx:if="{{!(isPlaying && currentPlayingSection === 'structure')}}" class="icon-play"></view>
-                  <view wx:else class="icon-pause"></view>
-                </view>
-                <view class="section-playing-wave" wx:if="{{isPlaying && currentPlayingSection === 'structure'}}">
-                  <view class="wave-bar bar1"></view>
-                  <view class="wave-bar bar2"></view>
-                  <view class="wave-bar bar3"></view>
-                  <view class="wave-bar bar4"></view>
-                  <view class="wave-bar bar5"></view>
-                  <view class="wave-bar bar6"></view>
-                  <view class="wave-bar bar7"></view>
-                  <view class="wave-bar bar8"></view>
-                  <view class="wave-bar bar9"></view>
-                  <view class="wave-bar bar10"></view>
-                  <view class="wave-bar bar11"></view>
-                  <view class="wave-bar bar12"></view>
-                </view>
-                <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}
-                </view>
-              </view>
-            </view>
-          </view>
-          <view class="audio-bg-band bg-unified" wx:if="{{selectedCity.cityStructureAudioRaw && currentCityTab === 'structure'}}">
-            <view class="section-audio-bar audio-structure">
-              <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'structure' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="structure">
-                <view wx:if="{{!(isPlaying && currentPlayingSection === 'structure')}}" class="icon-play"></view>
-                <view wx:else class="icon-pause"></view>
-              </view>
-              <view class="speed-btn" bindtap="toggleSpeedSelector">
-                <view class="btn-icon">{{audioPlaybackRate}}x</view>
-              </view>
-              <view class="speed-selector" wx:if="{{showSpeedSelector}}">
-                <view class="speed-options">
-                  <view wx:for="{{speedOptions}}" wx:key="index" class="speed-option {{audioPlaybackRate === item ? 'active' : ''}}" bindtap="selectPlaybackRate" data-rate="{{item}}">{{item}}x</view>
-                </view>
-              </view>
-              <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'structure') ? 'playing' : 'paused'}}" wx:if="{{true}}">
-                <view class="wave-bar bar1"></view>
-                <view class="wave-bar bar2"></view>
-                <view class="wave-bar bar3"></view>
-                <view class="wave-bar bar4"></view>
-                <view class="wave-bar bar5"></view>
-                <view class="wave-bar bar6"></view>
-                <view class="wave-bar bar7"></view>
-                <view class="wave-bar bar8"></view>
-                <view class="wave-bar bar9"></view>
-                <view class="wave-bar bar10"></view>
-                <view class="wave-bar bar11"></view>
-                <view class="wave-bar bar12"></view>
-              </view>
-              <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}
-              </view>
-            </view>
-          </view>
-          
-          <!-- 街巷宝库板块 -->
-          <view class="info-section section-treasures {{currentCityTab === 'treasures' ? 'tab-active' : ''}}" data-index="4" id="section-4" style="padding-bottom: 60rpx;">
-            <view class="info-content-wrapper">
-              <view class="intro-text">
-                <text>{{selectedCity.streetTreasuresMain || selectedCity.streetTreasures || '该城市的街巷宝库信息尚未更新'}}</text>
-              </view>
-              <view class="fun-fact-box" wx:if="{{selectedCity.streetTreasuresImage || selectedCity.streetTreasuresFunFact}}">
-                <image class="fun-fact-image treasure-image" src="{{selectedCity.streetTreasuresImage}}" mode="aspectFill" wx:if="{{selectedCity.streetTreasuresImage}}"></image>
-                <view style="position: relative; display: inline-block;">
-                  <image src="/images/icons/小船2.png" class="fun-fact-boat-icon" mode="aspectFit"></image>
-                  <text class="fun-fact-label">趣味知识</text>
-                </view>
-                <text class="fun-fact-text" wx:if="{{selectedCity.streetTreasuresFunFact}}">{{selectedCity.streetTreasuresFunFact}}</text>
-              </view>
-              <view class="section-audio-bar" wx:if="{{false}}">
-                <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'treasures' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="treasures">
-                  <view wx:if="{{!(isPlaying && currentPlayingSection === 'treasures')}}" class="icon-play"></view>
-                  <view wx:else class="icon-pause"></view>
-                </view>
-                <view class="section-playing-wave" wx:if="{{isPlaying && currentPlayingSection === 'treasures'}}">
-                  <view class="wave-bar bar1"></view>
-                  <view class="wave-bar bar2"></view>
-                  <view class="wave-bar bar3"></view>
-                  <view class="wave-bar bar4"></view>
-                  <view class="wave-bar bar5"></view>
-                  <view class="wave-bar bar6"></view>
-                  <view class="wave-bar bar7"></view>
-                  <view class="wave-bar bar8"></view>
-                  <view class="wave-bar bar9"></view>
-                  <view class="wave-bar bar10"></view>
-                  <view class="wave-bar bar11"></view>
-                  <view class="wave-bar bar12"></view>
-                </view>
-                <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}
-                </view>
-              </view>
-            </view>
-          </view>
-          <view class="audio-bg-band bg-unified" wx:if="{{selectedCity.streetTreasuresAudioRaw && currentCityTab === 'treasures'}}">
-            <view class="section-audio-bar audio-treasures">
-              <view class="bar-play-btn {{isPlaying && currentPlayingSection === 'treasures' ? 'playing' : ''}}" bindtap="playSectionAudio" data-section="treasures">
-                <view wx:if="{{!(isPlaying && currentPlayingSection === 'treasures')}}" class="icon-play"></view>
-                <view wx:else class="icon-pause"></view>
-              </view>
-              <view class="speed-btn" bindtap="toggleSpeedSelector">
-                <view class="btn-icon">{{audioPlaybackRate}}x</view>
-              </view>
-              <view class="speed-selector" wx:if="{{showSpeedSelector}}">
-                <view class="speed-options">
-                  <view wx:for="{{speedOptions}}" wx:key="index" class="speed-option {{audioPlaybackRate === item ? 'active' : ''}}" bindtap="selectPlaybackRate" data-rate="{{item}}">{{item}}x</view>
-                </view>
-              </view>
-              <view class="section-playing-wave {{(isPlaying && currentPlayingSection === 'treasures') ? 'playing' : 'paused'}}" wx:if="{{true}}">
-                <view class="wave-bar bar1"></view>
-                <view class="wave-bar bar2"></view>
-                <view class="wave-bar bar3"></view>
-                <view class="wave-bar bar4"></view>
-                <view class="wave-bar bar5"></view>
-                <view class="wave-bar bar6"></view>
-                <view class="wave-bar bar7"></view>
-                <view class="wave-bar bar8"></view>
-                <view class="wave-bar bar9"></view>
-                <view class="wave-bar bar10"></view>
-                <view class="wave-bar bar11"></view>
-                <view class="wave-bar bar12"></view>
-              </view>
-              <view class="bar-time">{{currentTimeStr || '00:00'}} / {{durationStr || '00:00'}}
-              </view>
-            </view>
-          </view>
-          
-          <!-- 操作按钮网格 -->
-          <view class="action-grid-container">
-            <view class="action-grid-item" bindtap="openChallenge">
-              <view class="action-icon">
-                <view class="css-icon-challenge"></view>
-              </view>
-              <text class="action-text">开始挑战</text>
-            </view>
-            <view class="action-grid-item" bindtap="openTreasure">
-              <view class="action-icon">
-                <view class="css-icon-gem"></view>
-              </view>
-              <text class="action-text">寻宝发现</text>
-            </view>
-            <view class="action-grid-item" bindtap="openMedal">
-              <view class="action-icon">
-                <view class="css-icon-medal"></view>
-              </view>
-              <text class="action-text">纪念勋章</text>
-            </view>
-          </view>
-        </block>
+        <!-- <view class="action-btn" bindtap="disabledBackTap"><text class="btn-icon">❮</text></view> -->
         
-        <!-- 博物馆内容 - 只在博物馆模式显示 -->
-        <block wx:if="{{showCityMuseum}}">
-          <!-- 1. 概念篇 -->
-          <view class="museum-section">
-            <view class="museum-section-title">
-              <view class="museum-section-number">01</view>
-              <view class="museum-section-name">概念篇</view>
+        <!-- 地标打卡区 - 只在城市详情模式显示 -->
+        <view class="landmarks-horizontal-container" wx:if="{{!showCityMuseum}}">
+          <view class="landmarks-journey">
+            <!-- 左侧标题区 -->
+            <view class="title-section">
+            <view class="back-btn" bindtap="disabledBackTap">
+              <text class="btn-icon">❮</text>
+              <text class="btn-text">返回</text>
             </view>
-            <view class="museum-content-wrapper">
-              <view class="museum-card">
-                <view class="museum-card-title">地球经纬度</view>
-                <view class="museum-card-content">
-                  <text>经纬度是用来表示地球上点位置的坐标系统。经度表示东西方向的位置，纬度表示南北方向的位置。城市分布与经纬度密切相关，影响着气候、农业生产和文化发展。</text>
-                </view>
-              </view>
-              <view class="museum-card">
-                <view class="museum-card-title">地形与地貌</view>
-                <view class="museum-card-content">
-                  <text>地形是指地表的起伏状态，地貌是地表形态的外部特征。城市选址通常依据地形地貌条件，如平原、河谷、山地、丘陵等，以适应不同的环境需求。</text>
-                </view>
-              </view>
-              <view class="museum-card">
-                <view class="museum-card-title">海拔</view>
-                <view class="museum-card-content">
-                  <text>海拔是指某地与海平面的垂直距离。城市的海拔高度直接影响当地气候、农业生产、交通建设和居民生活方式，也决定了城市建筑与规划的特点。</text>
-                </view>
-              </view>
+              <view class="title-emoji">📍</view>
+              <view class="title-text">地标打卡</view>
             </view>
-          </view>
-          
-          <!-- 2. 起源篇 -->
-          <view class="museum-section">
-            <view class="museum-section-title">
-              <view class="museum-section-number">02</view>
-              <view class="museum-section-name">起源篇</view>
-            </view>
-            <view class="museum-content-wrapper">
-              <view class="museum-card">
-                <view class="museum-card-title">农业起源</view>
-                <view class="museum-card-content">
-                  <text>农业集聚是城市形成的基础。世界上最早的城市多起源于农业发达地区，如埃及的尼罗河流域、中国的黄河流域，农业剩余产品的积累和交换促进了城市的兴起。</text>
+            
+            <!-- 右侧地标路径 -->
+            <view class="landmarks-path">
+              <block wx:for="{{cityLandmarks}}" wx:key="id" wx:for-index="idx">
+                <!-- 地标图标 -->
+                <view 
+                  class="landmark-node {{item.lit ? 'lit' : ''}} landmark-wave-{{idx}}"
+                  bindtap="onLandmarkTap"
+                  data-index="{{idx}}">
+                  <view class="landmark-emoji">{{item.emoji}}</view>
+                  <view class="landmark-glow" wx:if="{{item.lit}}"></view>
+                  <view class="landmark-pulse"></view>
+                  <view class="landmark-name">{{item.name}}</view>
                 </view>
-              </view>
-              <view class="museum-card">
-                <view class="museum-card-title">贸易起源</view>
-                <view class="museum-card-content">
-                  <text>贸易交汇点往往发展为城市。古代丝绸之路上的城市如撒马尔罕、威尼斯等，得益于东西方物资和文化的交流，成为重要的商业中心。</text>
+                
+                <!-- 箭头连接线（最后一个不显示） -->
+                <view class="landmark-arrow {{item.lit ? 'lit' : ''}}" wx:if="{{idx < cityLandmarks.length - 1}}">
+                  <view class="arrow-line"></view>
                 </view>
-              </view>
-              <view class="museum-card">
-                <view class="museum-card-title">防御与宗教起源</view>
-                <view class="museum-card-content">
-                  <text>出于防御需要建立的城堡和军事要塞，以及围绕宗教场所形成的聚居区，也是城市重要的起源类型。如耶路撒冷围绕宗教信仰发展，欧洲许多城市始于中世纪城堡。</text>
-                </view>
-              </view>
+              </block>
             </view>
           </view>
-          
-          <!-- 3. 古城篇 -->
-          <view class="museum-section">
-            <view class="museum-section-title">
-              <view class="museum-section-number">03</view>
-              <view class="museum-section-name">古城篇</view>
-            </view>
-            <view class="museum-content-wrapper">
-              <view class="museum-card">
-                <view class="museum-card-title">中国古城</view>
-                <view class="museum-card-content">
-                  <text>中国古城普遍采用规整的格局，如"方井"式布局。以西安、北京为代表的中国古都强调中轴对称、四方布局，体现着传统哲学思想和礼制观念，形成了独特的城市空间结构。</text>
-                </view>
-              </view>
-              <view class="museum-card">
-                <view class="museum-card-title">外国古城</view>
-                <view class="museum-card-content">
-                  <text>国外古城常表现出多元形态。如古罗马城市多采用"棋盘式"布局；中世纪欧洲城市则常呈现"同心圆"和"放射状"的特点；伊斯兰城市则有其独特的清真寺为中心的布局。</text>
-                </view>
-              </view>
-            </view>
-          </view>
-          
-          <!-- 4. 规模篇 -->
-          <view class="museum-section">
-            <view class="museum-section-title">
-              <view class="museum-section-number">04</view>
-              <view class="museum-section-name">规模篇</view>
-            </view>
-            <view class="museum-content-wrapper">
-              <view class="museum-card">
-                <view class="museum-card-title">城市规模标准</view>
-                <view class="museum-card-content">
-                  <text>城市规模通常以人口、面积和经济总量为标准。不同国家对城市规模有不同定义，中国通常将城市分为特大城市、大城市、中等城市和小城市。</text>
-                </view>
-              </view>
-              <view class="museum-card">
-                <view class="museum-card-title">最小与流动城市</view>
-                <view class="museum-card-content">
-                  <text>世界上有很多微型城市和流动城市，如梵蒂冈是世界上面积最小的主权国家；游牧民族的移动聚落则代表了一种流动性的城市形态，如蒙古包营地。</text>
-                </view>
-              </view>
-              <view class="museum-card">
-                <view class="museum-card-title">城市奇观与特大城市</view>
-                <view class="museum-card-content">
-                  <text>当代城市发展呈现出超大城市和城市群的趋势。东京、上海、纽约等特大型城市人口超过千万，巨大的城市群如美国东北部大西洋沿岸城市群、中国长三角城市群展现了惊人的城市规模。</text>
-                </view>
-              </view>
-            </view>
-          </view>
-          
-          <!-- 5. 职能篇 -->
-          <view class="museum-section">
-            <view class="museum-section-title">
-              <view class="museum-section-number">05</view>
-              <view class="museum-section-name">职能篇</view>
-            </view>
-            <view class="museum-content-wrapper">
-              <view class="museum-card">
-                <view class="museum-card-title">综合性城市</view>
-                <view class="museum-card-content">
-                  <text>综合性城市通常具有多重功能，如北京、巴黎、纽约等大都市，兼具政治、经济、文化和科技等多种职能，是国家或地区的核心城市。</text>
-                </view>
-              </view>
-              <view class="museum-card">
-                <view class="museum-card-title">专业化城市</view>
-                <view class="museum-card-content">
-                  <text>许多城市因特定职能而闻名，如底特律曾以汽车工业著称；拉斯维加斯以旅游娱乐业为主；硅谷以科技创新为核心；鹿特丹则是重要的港口城市和物流中心。</text>
-                </view>
-              </view>
-              <view class="museum-card">
-                <view class="museum-card-title">转型中的城市</view>
-                <view class="museum-card-content">
-                  <text>随着经济和社会发展，城市职能也在不断调整。如许多工业城市正在向服务业、创意产业转型；一些历史文化名城则利用其文化遗产优势，发展文化旅游产业。</text>
-                </view>
-              </view>
-            </view>
-          </view>
-          
-          <!-- 6. 位置篇 -->
-          <view class="museum-section">
-            <view class="museum-section-title">
-              <view class="museum-section-number">06</view>
-              <view class="museum-section-name">位置篇</view>
-            </view>
-            <view class="museum-content-wrapper">
-              <view class="museum-card">
-                <view class="museum-card-title">地形位置</view>
-                <view class="museum-card-content">
-                  <text>城市位置与地形特征密切相关。山地城市如拉萨、麦德林展现了山地建筑与环境融合的特色；平原城市如芝加哥则可以无限扩展；盆地城市如成都则呈现出独特的"盆底"区位特点。</text>
-                </view>
-              </view>
-              <view class="museum-card">
-                <view class="museum-card-title">水体与气候</view>
-                <view class="museum-card-content">
-                  <text>世界上大多数大城市与水体有密切关系。沿海城市如悉尼、香港拥有天然良港；河流城市如伦敦、巴黎则围绕河流发展。气候带的位置也决定了城市的特点，如热带城市新加坡与寒带城市雷克雅未克有着截然不同的城市风貌。</text>
-                </view>
-              </view>
-              <view class="museum-card">
-                <view class="museum-card-title">特殊位置城市</view>
-                <view class="museum-card-content">
-                  <text>一些城市因特殊位置而独特。边境城市如香港、伊斯坦布尔成为文化交融的门户；跨半球城市如新加坡位于赤道附近；跨洲城市如伊斯坦布尔横跨欧亚两洲，成为独特的地理标志。</text>
-                </view>
-              </view>
-            </view>
-          </view>
-          
-          <!-- 7. 形态篇 -->
-          <view class="museum-section">
-            <view class="museum-section-title">
-              <view class="museum-section-number">07</view>
-              <view class="museum-section-name">形态篇</view>
-            </view>
-            <view class="museum-content-wrapper">
-              <view class="museum-card">
-                <view class="museum-card-title">常见城市形态</view>
-                <view class="museum-card-content">
-                  <text>城市形态多种多样。团块状城市如传统欧洲小城镇紧凑集中；带状城市如巴塞罗那沿海岸线延伸；放射型城市如巴黎以中心向外辐射；网格型城市如纽约曼哈顿展现了几何化的城市规划。</text>
-                </view>
-              </view>
-              <view class="museum-card">
-                <view class="museum-card-title">现代城市形态</view>
-                <view class="museum-card-content">
-                  <text>现代城市规划创造了新的城市形态。卫星城如伦敦周边的新城镇缓解了中心城区压力；组团式城市如赫尔辛基实现了城市与自然的融合；多中心城市如东京形成了多个功能中心相互联系的城市网络。</text>
-                </view>
-              </view>
-              <view class="museum-card">
-                <view class="museum-card-title">特殊形态城市</view>
-                <view class="museum-card-content">
-                  <text>一些城市具有独特形态。如中国阳城的八卦城遵循古代哲学布局；巴西利亚的飞机形平面图展现了现代主义规划理念；迪拜的棕榈岛则通过人工造陆创造了标志性的城市景观。</text>
-                </view>
-              </view>
-            </view>
-          </view>
-        </block>
+        </view>
+      </view>
+
+      <scroll-view scroll-y="{{false}}" class="city-info-scroll" enhanced="true" show-scrollbar="{{false}}" bounces="false" bindscroll="onContentScroll" scroll-top="{{scrollTop}}" style="{{fontSizeStyle}}">
         
+        <!-- 新的视频区域 -->
+        <view class="video-gallery-section">
+          <view class="video-card-container">
+            <!-- 装饰性波浪背景 - 多层动态波浪 -->
+          <view class="waves-container">
+            <view class="wave wave-bg"></view>
+            <view class="wave wave-mid"></view>
+            <!-- 小船图标 - 移入波浪中间层实现沉浸感 -->
+            <view class="boat-wrapper">
+              <image src="/images/icons/小船1.png" mode="aspectFit" class="boat-icon" lazy-load="true"></image>
+            </view>
+            <view class="wave wave-fg"></view>
+          </view>
+          
+          <!-- 主视频卡片 -->
+            <view class="video-card-main">
+              <video 
+                id="galleryVideo"
+                src="{{selectedCity.videoUrl}}" 
+                class="gallery-video"
+                object-fit="cover"
+                show-center-play-btn="{{true}}"
+                show-play-btn="{{true}}"
+                controls="{{true}}"
+                enable-progress-gesture="{{isVIP}}"
+                show-progress="{{true}}"
+                title="{{selectedCity.name}} 城市映像"
+                bindplay="onVideoPlay"
+                bindpause="onVideoPause"
+                bindended="onVideoEnded"
+                bindtimeupdate="onVideoTimeUpdate"
+                bindwaiting="onVideoWaiting"
+                bindfullscreenchange="onVideoFullscreenChange"
+              >
+                <cover-view wx:if="{{!videoPlaying}}" class="double-tap-overlay" bindtap="onVideoTap"></cover-view>
+                <cover-view 
+                  wx:if="{{!isVIP}}" 
+                  class="progress-blocker" 
+                  catchtap="stopPropagation" 
+                  catchtouchstart="stopPropagation" 
+                  catchtouchmove="stopPropagation"
+                ></cover-view>
+              </video>
+              
+              <!-- 视频信息条 -->
+              <view class="gallery-video-info">
+                <!-- 背景装饰水印 -->
+                <view class="bg-watermark">TRAVEL</view>
+                
+                <view class="info-top">
+                  <text class="gallery-city-name">{{selectedCity.name}}</text>
+                  <view class="gallery-en-name">{{selectedCity.nameEn || 'City of Light'}}</view>
+                  <view class="info-divider"></view>
+                  <text class="gallery-slogan">DISCOVER</text>
+                  <view class="gallery-coords">
+                    <text>41°17'S</text>
+                    <text class="coord-dot">·</text>
+                    <text>174°46'E</text>
+                  </view>
+                </view>
+                
+                <!-- 中间装饰标签 -->
+                <view class="info-middle-deco">
+                   <view class="tech-tag">HD</view>
+                   <view class="tech-dot">●</view>
+                   <view class="tech-tag">VLOG</view>
+                </view>
+                
+                <view class="info-bottom">
+                  <view class="play-indicator">
+                    <view class="bar bar1"></view>
+                    <view class="bar bar2"></view>
+                    <view class="bar bar3"></view>
+                  </view>
+                  <text class="gallery-date">{{selectedCity.unlockYear || '2026'}}.{{selectedCity.unlockDate ? selectedCity.unlockDate.split('-')[0] : '2'}}</text>
+                </view>
+              </view>
+            </view>
+            
+            <!-- 视频下方操作网格 -->
+            <view class="action-grid-container">
+              <view class="action-grid-item" bindtap="openChallenge">
+                <view class="action-icon">
+                  <view class="css-icon-challenge"></view>
+                </view>
+                <text class="action-text">开始挑战</text>
+              </view>
+              <!-- 寻宝发现按钮已移除 -->
+              <view class="action-grid-item" bindtap="openMedal">
+                <view class="action-icon">
+                  <view class="css-icon-medal"></view>
+                </view>
+                <text class="action-text">纪念勋章</text>
+              </view>
+              <view class="action-grid-item" bindtap="leaveFootprint">
+                <view class="action-icon">
+                  <text style="font-size: 36rpx;">👣</text>
+                </view>
+                <text class="action-text">留下足迹</text>
+              </view>
+            </view>
+            
+            <!-- 底部灵感卡片 -->
+            <view class="inspiration-card">
+              <view class="inspiration-header">
+                <text class="inspiration-title">旅行·寄语</text>
+                <text class="inspiration-date">TODAY</text>
+              </view>
+              <view class="inspiration-content">
+                <text class="quote-text">“{{selectedCity.description || '读万卷书，行万里路，美好的风景就在脚下。'}}”</text>
+              </view>
+              <view class="inspiration-bg-icon">✈️</view>
+            </view>
+          </view>
+        </view>
+
         <!-- 底部额外空间 -->
         <view class="scroll-bottom-space"></view>
         
-        <!-- 右侧滑杆指示器 -->
-        <view class="scroll-indicator"></view>
-        
-        <!-- 会员锁定遮罩层 -->
-        <view class="membership-lock-overlay" wx:if="{{!isVIP && showMembershipLock}}" bindtap="onMembershipLockTap">
-          <view class="lock-content">
-            <view class="lock-icon">🔒</view>
-            <view class="lock-title">会员专享内容</view>
-            <view class="lock-description">开通会员即可查看完整城市详情</view>
-            <view class="lock-button">立即开通</view>
-          </view>
-        </view>
       </scroll-view>
     </view>
   </view>
@@ -982,32 +435,8 @@
         </view>
       </view>
       
-      <!-- 多选题 -->
-      <view class="challenge-step" wx:if="{{challengeStep === 2}}">
-        <view class="challenge-question">{{multiQuestion.question}}</view>
-        <view class="challenge-options">
-          <view 
-            class="option-item {{multiQuestion.selectedOptions[index] ? 'selected' : ''}} {{multiQuestion.showResult ? (multiQuestion.correctOptions[index] ? (multiQuestion.selectedOptions[index] ? 'correct' : 'missed') : (multiQuestion.selectedOptions[index] ? 'incorrect' : '')) : ''}}" 
-            wx:for="{{multiQuestion.options}}" 
-            wx:key="index" 
-            bindtap="{{multiQuestion.showResult ? '' : 'selectMultiOption'}}" 
-            data-index="{{index}}"
-          >
-            <view class="option-checkbox multi-checkbox {{multiQuestion.selectedOptions[index] ? 'selected' : ''}} {{multiQuestion.showResult ? (multiQuestion.correctOptions[index] ? (multiQuestion.selectedOptions[index] ? 'correct' : 'missed') : (multiQuestion.selectedOptions[index] ? 'incorrect' : '')) : ''}}">
-              <block wx:if="{{multiQuestion.selectedOptions[index]}}">✓</block>
-              <block wx:elif="{{multiQuestion.showResult && multiQuestion.correctOptions[index] && !multiQuestion.selectedOptions[index]}}">✓</block>
-              <block wx:elif="{{multiQuestion.showResult && !multiQuestion.correctOptions[index] && multiQuestion.selectedOptions[index]}}">✗</block>
-            </view>
-            <view class="option-text">{{item}}</view>
-          </view>
-        </view>
-        <view class="feedback-message" wx:if="{{multiQuestion.showResult}}">
-          <text class="{{multiQuestion.isCorrect ? 'success-text' : 'error-text'}}">{{multiQuestion.isCorrect ? '回答正确！' : '回答错误'}}</text>
-        </view>
-      </view>
-      
       <!-- 拼图挑战 -->
-      <view class="challenge-step" wx:if="{{challengeStep === 3}}">
+      <view class="challenge-step" wx:if="{{challengeStep === 2}}">
         <view class="puzzle-container">
           <view class="puzzle-header">
             <text class="puzzle-title">图片拼图</text>
@@ -1052,7 +481,7 @@
       </view>
       
       <!-- 挑战结果 -->
-      <view class="challenge-step" wx:if="{{challengeStep === 4}}">
+      <view class="challenge-step" wx:if="{{challengeStep === 3}}">
         <view class="result-container">
           <!-- 成功获得小树情况 -->
           <block wx:if="{{earnedTrees > 0}}">
@@ -1088,14 +517,13 @@
     </view>
     <view class="challenge-footer">
       <view 
-        class="submit-btn {{(challengeStep === 1 && singleQuestion.selectedOption === null && !singleQuestion.showResult) || (challengeStep === 2 && !multiQuestion.hasSelected && !multiQuestion.showResult) ? 'disabled' : ''}} {{(challengeStep === 1 && singleQuestion.showResult) || (challengeStep === 2 && multiQuestion.showResult) || challengeStep >= 3 ? 'submit-btn-answered' : ''}}" 
-        bindtap="{{(challengeStep === 1 && !singleQuestion.showResult) ? 'submitSingleAnswer' : (challengeStep === 2 && !multiQuestion.showResult) ? 'submitMultiAnswer' : 'nextChallengeStep'}}"
+        class="submit-btn {{(challengeStep === 1 && singleQuestion.selectedOption === null && !singleQuestion.showResult) ? 'disabled' : ''}} {{(challengeStep === 1 && singleQuestion.showResult) || challengeStep >= 2 ? 'submit-btn-answered' : ''}}" 
+        bindtap="{{(challengeStep === 1 && !singleQuestion.showResult) ? 'submitSingleAnswer' : 'nextChallengeStep'}}"
         data-index="{{singleQuestion.selectedOption}}"
       >
         <text wx:if="{{challengeStep === 1 && !singleQuestion.showResult}}">提交答案</text>
-        <text wx:elif="{{challengeStep === 2 && !multiQuestion.showResult}}">提交答案</text>
-        <text wx:elif="{{challengeStep < 3}}">下一题</text>
-        <text wx:elif="{{challengeStep === 3}}">{{puzzleComplete ? '完成挑战' : '提交答案'}}</text>
+        <text wx:elif="{{challengeStep === 1 && singleQuestion.showResult}}">下一题</text>
+        <text wx:elif="{{challengeStep === 2}}">{{puzzleComplete ? '完成挑战' : '提交答案'}}</text>
         <text wx:else>完成</text>
       </view>
     </view>
@@ -1171,7 +599,7 @@
       <block wx:if="{{a4Pages.richTextContent && a4Pages.richTextContent.length > 0}}">
         <swiper class="a4-swiper" indicator-dots="{{true}}" autoplay="{{false}}">
           <swiper-item wx:for="{{a4Pages.richTextContent}}" wx:key="index">
-            <image src="{{item}}" mode="aspectFit" class="a4-image" data-url="{{item}}" bindtap="previewImage" data-urls="{{a4Pages.richTextContent}}" data-current="{{item}}"/>
+            <image src="{{item}}" mode="aspectFit" class="a4-image" data-url="{{item}}" bindtap="previewImage" data-urls="{{a4Pages.richTextContent}}" data-current="{{item}}" lazy-load="true"/>
           </swiper-item>
         </swiper>
       </block>
@@ -1188,7 +616,7 @@
       <block wx:if="{{a4Pages.plainTextContent1 && a4Pages.plainTextContent1.length > 0}}">
         <swiper class="a4-swiper" indicator-dots="{{true}}" autoplay="{{false}}">
           <swiper-item wx:for="{{a4Pages.plainTextContent1}}" wx:key="index">
-            <image src="{{item}}" mode="aspectFit" class="a4-image" data-url="{{item}}" bindtap="previewImage" data-urls="{{a4Pages.plainTextContent1}}" data-current="{{item}}"/>
+            <image src="{{item}}" mode="aspectFit" class="a4-image" data-url="{{item}}" bindtap="previewImage" data-urls="{{a4Pages.plainTextContent1}}" data-current="{{item}}" lazy-load="true"/>
           </swiper-item>
         </swiper>
       </block>

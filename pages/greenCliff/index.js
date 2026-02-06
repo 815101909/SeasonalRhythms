@@ -4,6 +4,19 @@
 const tempUrlCache = {}; // 缓存对象
 const CACHE_EXPIRATION_TIME = 3 * 60 * 60 * 1000; // 缓存有效期3小时
 
+let __sharedCloud = null;
+async function getSharedCloud() {
+  if (__sharedCloud) return __sharedCloud;
+  const c = new wx.cloud.Cloud({
+    identityless: true,
+    resourceAppid: 'wx85d92d28575a70f4',
+    resourceEnv: 'cloud1-1gsyt78b92c539ef',
+  });
+  await c.init();
+  __sharedCloud = c;
+  return c;
+}
+
 async function getTemporaryImageUrl(imageUrl, type) {
   if (!imageUrl) {
     console.warn(`${type || 'Resource'} URL is empty`);
@@ -30,13 +43,7 @@ async function getTemporaryImageUrl(imageUrl, type) {
 
     // 如果是云存储链接，转换为临时链接
     if (finalImageUrl.startsWith('cloud://')) {
-      // 创建跨环境调用的Cloud实例
-      const c = new wx.cloud.Cloud({ 
-        identityless: true, 
-        resourceAppid: 'wx85d92d28575a70f4', 
-        resourceEnv: 'cloud1-1gsyt78b92c539ef', 
-      });
-      await c.init();
+      const c = await getSharedCloud();
       
       // 添加超时处理
       const timeoutPromise = new Promise((_, reject) => 
@@ -351,17 +358,42 @@ Page({
       console.log('获取到的博物馆章节数据:', result);
 
       if (result.success) {
-        // 并行处理章节封面图片URL
-        const imagePromises = result.data.map(chapter => 
-          getTemporaryImageUrl(chapter.cover_image, 'chapter_cover')
-        );
-        
-        const processedImages = await Promise.all(imagePromises);
-        
-        const processedChapters = result.data.map((chapter, index) => ({
-          ...chapter,
-          cover_image: processedImages[index]
-        }));
+        const chapters = result.data;
+        const fileIds = [];
+        const prefix = 'cloud://cloud1-1gsyt78b92c539ef.636c-cloud1-1gsyt78b92c539ef-1345335463/';
+        chapters.forEach(chapter => {
+          let u = chapter.cover_image;
+          if (u && typeof u === 'string' && !u.startsWith('http') && !u.startsWith('cloud://')) {
+            u = prefix + u;
+          }
+          if (u && typeof u === 'string' && u.startsWith('cloud://')) {
+            fileIds.push(u);
+          }
+        });
+        const uniqueIds = Array.from(new Set(fileIds));
+        let map = {};
+        if (uniqueIds.length > 0) {
+          try {
+            const tempRes = await c.getTempFileURL({ fileList: uniqueIds });
+            if (tempRes && tempRes.fileList && tempRes.fileList.length > 0) {
+              tempRes.fileList.forEach(f => {
+                if (f.fileID && f.tempFileURL) {
+                  map[f.fileID] = f.tempFileURL;
+                }
+              });
+            }
+          } catch (e) {}
+        }
+        const processedChapters = chapters.map(chapter => {
+          let u = chapter.cover_image;
+          if (u && typeof u === 'string' && !u.startsWith('http') && !u.startsWith('cloud://')) {
+            u = prefix + u;
+          }
+          if (u && typeof u === 'string' && u.startsWith('cloud://')) {
+            u = map[u] || u;
+          }
+          return { ...chapter, cover_image: u };
+        });
         
         this.setData({
           'cityMuseum.chapters': processedChapters
@@ -699,17 +731,42 @@ Page({
       });
 
       if (result.success) {
-        // 并行处理展区数据，包括封面图片URL转换
-        const imagePromises = result.data.map(area => 
-          getTemporaryImageUrl(area.cover_image, 'area_cover')
-        );
-        
-        const processedImages = await Promise.all(imagePromises);
-        
-        const processedAreas = result.data.map((area, index) => ({
-          ...area,
-          cover_image: processedImages[index]
-        }));
+        const areas = result.data;
+        const fileIds = [];
+        const prefix = 'cloud://cloud1-1gsyt78b92c539ef.636c-cloud1-1gsyt78b92c539ef-1345335463/';
+        areas.forEach(area => {
+          let u = area.cover_image;
+          if (u && typeof u === 'string' && !u.startsWith('http') && !u.startsWith('cloud://')) {
+            u = prefix + u;
+          }
+          if (u && typeof u === 'string' && u.startsWith('cloud://')) {
+            fileIds.push(u);
+          }
+        });
+        const uniqueIds = Array.from(new Set(fileIds));
+        let map = {};
+        if (uniqueIds.length > 0) {
+          try {
+            const tempRes = await c.getTempFileURL({ fileList: uniqueIds });
+            if (tempRes && tempRes.fileList && tempRes.fileList.length > 0) {
+              tempRes.fileList.forEach(f => {
+                if (f.fileID && f.tempFileURL) {
+                  map[f.fileID] = f.tempFileURL;
+                }
+              });
+            }
+          } catch (e) {}
+        }
+        const processedAreas = areas.map(area => {
+          let u = area.cover_image;
+          if (u && typeof u === 'string' && !u.startsWith('http') && !u.startsWith('cloud://')) {
+            u = prefix + u;
+          }
+          if (u && typeof u === 'string' && u.startsWith('cloud://')) {
+            u = map[u] || u;
+          }
+          return { ...area, cover_image: u };
+        });
         
         this.setData({
           timeMuseumAreas: processedAreas,

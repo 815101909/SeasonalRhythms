@@ -21,7 +21,7 @@
     </view>
 
     <!-- API文档图片展示区 -->
-    <view class="api-content">
+    <view class="api-content {{!isVIP ? 'locked-mode' : ''}}" bindtouchmove="{{!isVIP ? 'handleLockTouch' : ''}}">
       <block wx:if="{{images.length > 0}}">
         <view class="content-item" wx:for="{{images}}" wx:key="index">
           <!-- A4纸图片容器 -->
@@ -39,11 +39,33 @@
           <text>内容准备中，敬请期待...</text>
         </view>
       </view>
+
+      <!-- 雾霾遮罩 -->
+      <view class="fog-mask" wx:if="{{!isVIP}}" bindtap="showMemberModal">
+        <!-- 可以在这里放一个小锁图标或者文字提示，或者保持纯雾霾 -->
+      </view>
     </view>
     
-    <!-- 底部装饰 -->
-    <view class="article-footer">
+    <!-- 底部装饰 - 仅会员可见或未锁定时 -->
+    <view class="article-footer" wx:if="{{isVIP}}">
       <text>〰〰〰 小舟摇风溪 〰〰〰</text>
+    </view>
+  </view>
+
+  <!-- 会员提醒弹窗 -->
+  <view class="child-modal" wx:if="{{showMembershipModal}}" catchtap="closeMembershipModal">
+    <view class="child-modal-content" catchtap="stopPropagation">
+      <view class="child-modal-header medal-header">
+        <text>会员提醒</text>
+        <view class="child-close-btn" catchtap="closeMembershipModal">×</view>
+      </view>
+      <view class="child-modal-body">
+        <view style="font-size: 80rpx; margin-bottom: 20rpx;">🔒</view>
+        <view class="child-modal-desc-box">
+          <text>全文内容仅限会员阅读，开通会员后可解锁全部精彩内容。</text>
+        </view>
+        <view class="submit-btn" bindtap="goToMembership">去开通</view>
+      </view>
     </view>
   </view>
 </view> 

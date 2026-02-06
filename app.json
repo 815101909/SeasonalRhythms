@@ -3,8 +3,6 @@
     "pages/timeSequence/index",
     "pages/greenCliff/index",
     "pages/cloudDwelling/index",
-    "pages/lanTing/index",
-    "pages/pkBattle/index",
     "pages/articleDetail/index",
     "pages/membership/index",
     "pages/badges/index",
@@ -42,12 +40,6 @@
         "text": "漫游记",
         "iconPath": "images/icons/note.png",
         "selectedIconPath": "images/icons/note.png"
-      },
-      {
-        "pagePath": "pages/lanTing/index",
-        "text": "晓竞赛",
-        "iconPath": "images/icons/competition.png",
-        "selectedIconPath": "images/icons/competition.png"
       }
     ]
   },

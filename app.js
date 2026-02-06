@@ -8,6 +8,11 @@ App({
     this.globalData.launchOptions = options;
     console.log('启动场景值:', options.scene);
     
+    wx.setInnerAudioOption({
+      mixWithOther: true,
+      obeyMuteSwitch: false
+    });
+    
     // 处理推荐人信息
     if (options.query && options.query.scene) {
       this.globalData.referrerCode = options.query.scene;
@@ -65,6 +70,21 @@ App({
         wx.setStorageSync('referrerCode', options.query.scene);
       }
     }
+    
+    if (!this.globalData.isBgMusicPlaying) {
+      this.toggleGlobalBgMusic();
+    }
+  },
+  
+  onHide: function () {
+    if (this.globalData.bgMusicContext) {
+      try {
+        this.globalData.bgMusicContext.stop();
+        this.globalData.bgMusicContext.destroy();
+      } catch (e) {}
+      this.globalData.bgMusicContext = null;
+      this.globalData.isBgMusicPlaying = false;
+    }
   },
 
   // 获取推荐人代码的方法
@@ -78,6 +98,71 @@ App({
     wx.removeStorageSync('referrerCode');
     console.log('推荐人代码已清除');
   },
+  toggleGlobalBgMusic: async function() {
+    if (this.globalData.isBgMusicPlaying) {
+      if (this.globalData.bgMusicContext) {
+        this.globalData.bgMusicContext.stop();
+        this.globalData.bgMusicContext.destroy();
+      }
+      this.globalData.bgMusicContext = null;
+      this.globalData.isBgMusicPlaying = false;
+      wx.showToast({
+        title: '背景音乐已停止',
+        icon: 'none',
+        duration: 1000
+      });
+    } else {
+      try {
+        const bgMusicContext = wx.createInnerAudioContext();
+        const bgMusicUrl = this.globalData.bgMusicUrl;
+        if (bgMusicUrl && bgMusicUrl.startsWith('cloud://')) {
+          const cloudInstance = new wx.cloud.Cloud({
+            identityless: true,
+            resourceAppid: 'wx85d92d28575a70f4',
+            resourceEnv: 'cloud1-1gsyt78b92c539ef'
+          });
+          await cloudInstance.init();
+          const res = await cloudInstance.getTempFileURL({
+            fileList: [bgMusicUrl]
+          });
+          const tempUrl = res && res.fileList && res.fileList[0] && res.fileList[0].tempFileURL ? res.fileList[0].tempFileURL : '';
+          bgMusicContext.src = tempUrl || bgMusicUrl;
+        } else {
+          bgMusicContext.src = bgMusicUrl;
+        }
+        bgMusicContext.loop = true;
+        bgMusicContext.volume = 0.1;
+        bgMusicContext.obeyMuteSwitch = false;
+        this.globalData.isBgMusicPlaying = true;
+        bgMusicContext.onPlay(() => {
+          wx.showToast({
+            title: '背景音乐已开启',
+            icon: 'none',
+            duration: 1000
+          });
+        });
+        bgMusicContext.onError(() => {
+          this.globalData.isBgMusicPlaying = false;
+          this.globalData.bgMusicContext = null;
+          wx.showToast({
+            title: '背景音乐播放失败',
+            icon: 'none',
+            duration: 1000
+          });
+        });
+        bgMusicContext.play();
+        this.globalData.bgMusicContext = bgMusicContext;
+      } catch (error) {
+        this.globalData.isBgMusicPlaying = false;
+        this.globalData.bgMusicContext = null;
+        wx.showToast({
+          title: '背景音乐播放失败',
+          icon: 'none',
+          duration: 1000
+        });
+      }
+    }
+  },
   globalData: {
     userInfo: null,
     themeColor: '#e8f5e9',
@@ -89,6 +174,9 @@ App({
     selectedCityId: null,  // 从足迹页面选择的城市ID
     referrerCode: null,  // 推荐码参数，用于新用户注册时关联推荐关系
     scene: null,  // 启动场景值
-    launchOptions: null  // 完整的启动参数
+    launchOptions: null,  // 完整的启动参数
+    bgMusicContext: null,
+    isBgMusicPlaying: false,
+    bgMusicUrl: '/static/宁静的樱花日落旋律_轻松的器乐灵感源于宁静的动漫樱花场景_钢_爱给网_aigei_com.mp3'
   }
 })

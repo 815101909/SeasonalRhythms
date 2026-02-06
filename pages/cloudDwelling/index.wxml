@@ -5,7 +5,7 @@
     <view class="user-info">
       <view class="avatar-container">
         <block wx:if="{{avatarUrl}}">
-          <image class="user-avatar-image" src="{{avatarUrl}}" mode="aspectFill"></image>
+          <image class="user-avatar-image" src="{{avatarUrl}}" mode="aspectFill" lazy-load="true"></image>
         </block>
         <view class="user-avatar" wx:else style="background: {{randomAvatarBg}}">舟</view>
       </view>
@@ -97,64 +97,42 @@
       <text>当前时节</text>
     </view>
     
-    <view class="current-season">
-      <view class="season-image-container">
-        <image class="season-image" src="{{currentSeason.imageUrl || '../../images/placeholder-a4.svg'}}" mode="aspectFill"></image>
-      </view>
-      <view class="season-info">
-        <view class="season-header">
-          <view class="season-name-date">
-            <text class="season-name">{{currentSeason.name}}</text>
-            <text class="season-date">{{currentSeason.date}}</text>
-          </view>
-          <view class="season-countdown" wx:if="{{!isExactlyOnSolarTerm}}">
-            <text>今天是{{currentSeason.currentMonth}}月{{currentSeason.currentDay}}日，距离{{nextSeasonName}}还有{{daysToNextSeason}}天</text>
-          </view>
+    <block wx:if="{{loadingSeason}}">
+      <view class="season-skeleton">
+        <view class="season-image-container skeleton-image"></view>
+        <view class="season-info">
+          <view class="skeleton-text-line" style="width: 60%"></view>
+          <view class="skeleton-text-line" style="width: 40%"></view>
+          <view class="skeleton-text-line" style="width: 90%"></view>
+          <view class="skeleton-text-line" style="width: 80%"></view>
         </view>
-        <view class="season-description">{{currentSeason.description}}</view>
       </view>
-    </view>
+    </block>
+    <block wx:else>
+      <view class="current-season">
+        <view class="season-image-container">
+          <image class="season-image" src="{{currentSeason.imageUrl || '../../images/placeholder-a4.svg'}}" mode="aspectFill" lazy-load="true" binderror="onImageError"></image>
+        </view>
+        <view class="season-info">
+          <view class="season-header">
+            <view class="season-name-date">
+              <text class="season-name">{{currentSeason.name}}</text>
+              <text class="season-date">{{currentSeason.date}}</text>
+            </view>
+            <view class="season-countdown" wx:if="{{!isExactlyOnSolarTerm}}">
+              <text>今天是{{currentSeason.currentMonth}}月{{currentSeason.currentDay}}日，距离{{nextSeasonName}}还有{{daysToNextSeason}}天</text>
+            </view>
+          </view>
+          <view class="season-description">{{currentSeason.description}}</view>
+        </view>
+      </view>
+    </block>
     
     <view class="season-quote">
       <text>"{{currentSeason.quote}}"</text>
     </view>
   </view>
 
-  <!-- 时节探索区域 -->
-  <view class="exploration-section">
-    <view class="section-title">
-      <text>时节探索</text>
-    </view>
-    
-    <view class="exploration-cards">
-      <!-- 时城博览 (关联 greenCliff 页面) -->
-      <view class="exploration-card" bindtap="navigateTo" data-page="greenCliff">
-        <view class="card-icon">🏞️</view>
-        <view class="card-content">
-          <view class="card-title">时城博览</view>
-          <view class="card-description">博览时城岁月迹，探寻节令往来踪</view>
-        </view>
-      </view>
-      
-      <!-- 时城漫游 (关联 timeSequence 页面) -->
-      <view class="exploration-card" bindtap="navigateTo" data-page="timeSequence">
-        <view class="card-icon">🍃</view>
-        <view class="card-content">
-          <view class="card-title">时城漫游</view>
-          <view class="card-description">每日一城寻故事，应时应景游四方</view>
-        </view>
-      </view>
-      
-      <!-- 时城竞答 (关联 lanTing 页面) -->
-      <view class="exploration-card" bindtap="navigateTo" data-page="lanTing">
-        <view class="card-icon">📜</view>
-        <view class="card-content">
-          <view class="card-title">时城竞答</view>
-          <view class="card-description">漫步楼台烟雨中，细品好雨知时节</view>
-        </view>
-      </view>
-    </view>
-  </view>
 
   <!-- 勋章展示区域 -->
   <view class="badge-section">
@@ -221,31 +199,7 @@
     </view>
   </view>
 
-  <!-- 用户活动区域 -->
-  <view class="activity-section">
-    <view class="section-title">
-      <text>近期活动</text>
-    </view>
-    
-    <view class="activity-list">
-      <block wx:if="{{activities && activities.length > 0}}">
-        <view class="activity-item" wx:for="{{activities}}" wx:key="_id">
-          <view class="activity-time">{{item.time}}</view>
-          <view class="activity-content">
-            <text class="activity-text">{{item.description}}</text>
-            <view class="activity-reward" wx:if="{{item.reward}}">
-              <text>+ {{item.reward}} 🌳</text>
-            </view>
-          </view>
-        </view>
-      </block>
-      <view class="empty-activities" wx:else>
-        <view class="empty-icon">📝</view>
-        <view class="empty-text">暂无活动记录</view>
-      </view>
-    </view>
-  </view>
-
+  
   <!-- 系统设置区域 -->
   <view class="settings-section">
     <view class="section-title">
@@ -253,6 +207,13 @@
     </view>
     
     <view class="settings-list">
+      <view class="settings-item" bindtap="toggleGlobalBgMusic">
+        <view class="settings-icon">🎵</view>
+        <view class="settings-content">
+          <text class="settings-text">背景音乐：{{isBgMusicPlaying ? '开启' : '关闭'}}</text>
+        </view>
+        <view class="settings-arrow">></view>
+      </view>
       <view class="settings-item" bindtap="navigateToSystemPage" data-page="about">
         <view class="settings-icon">📖</view>
         <view class="settings-content">
@@ -328,9 +289,9 @@
       <view class="tree-rules-dialog-content">
         <view class="tree-rules-text">
           <view class="rule-item">去阅读和挑战可以积累小树数量哦！</view>
-          <view class="rule-item">消耗500颗可以换1天会员</view>
-          <view class="rule-item">消耗1000颗可以换3天会员</view>
-          <view class="rule-item">消耗2000颗可以换7天会员</view>
+          <view class="rule-item">消耗188颗可以换1天会员</view>
+          <view class="rule-item">消耗388颗可以换3天会员</view>
+          <view class="rule-item">消耗888颗可以换7天会员</view>
         </view>
       </view>
     </view>
@@ -350,39 +311,39 @@
         </view>
         
         <view class="exchange-options">
-          <view class="exchange-option" bindtap="exchangeMembership" data-days="1" data-cost="500">
+          <view class="exchange-option" bindtap="exchangeMembership" data-days="1" data-cost="188">
             <view class="option-info">
               <view class="option-title">1天会员</view>
-              <view class="option-cost">消耗 500 🌳</view>
+              <view class="option-cost">消耗 188 🌳</view>
             </view>
-            <view class="option-status {{treeCount >= 500 ? 'available' : 'unavailable'}}">
-              {{treeCount >= 500 ? '可兑换' : '小树不足'}}
+            <view class="option-status {{treeCount >= 188 ? 'available' : 'unavailable'}}">
+              {{treeCount >= 188 ? '可兑换' : '小树不足'}}
             </view>
           </view>
           
-          <view class="exchange-option" bindtap="exchangeMembership" data-days="3" data-cost="1000">
+          <view class="exchange-option" bindtap="exchangeMembership" data-days="3" data-cost="388">
             <view class="option-info">
               <view class="option-title">3天会员</view>
-              <view class="option-cost">消耗 1000 🌳</view>
+              <view class="option-cost">消耗 388 🌳</view>
             </view>
-            <view class="option-status {{treeCount >= 1000 ? 'available' : 'unavailable'}}">
-              {{treeCount >= 1000 ? '可兑换' : '小树不足'}}
+            <view class="option-status {{treeCount >= 388 ? 'available' : 'unavailable'}}">
+              {{treeCount >= 388 ? '可兑换' : '小树不足'}}
             </view>
           </view>
           
-          <view class="exchange-option" bindtap="exchangeMembership" data-days="7" data-cost="2000">
+          <view class="exchange-option" bindtap="exchangeMembership" data-days="7" data-cost="888">
             <view class="option-info">
               <view class="option-title">7天会员</view>
-              <view class="option-cost">消耗 2000 🌳</view>
+              <view class="option-cost">消耗 888 🌳</view>
             </view>
-            <view class="option-status {{treeCount >= 2000 ? 'available' : 'unavailable'}}">
-              {{treeCount >= 2000 ? '可兑换' : '小树不足'}}
+            <view class="option-status {{treeCount >= 888 ? 'available' : 'unavailable'}}">
+              {{treeCount >= 888 ? '可兑换' : '小树不足'}}
             </view>
           </view>
         </view>
         
         <view class="exchange-tips">
-          <text>💡 小贴士：通过时城竞答和时城漫游可以获得更多小树哦！</text>
+          <text>💡 小贴士：通过时城漫游可以获得更多小树哦！</text>
         </view>
       </view>
     </view>
